@@ -32,7 +32,7 @@ missão original ("considerar API 36 como requisito atual do projeto para public
 
 Como esta é uma regra de política de plataforma sujeita a atualização anual, a validação final antes de cada
 submissão/atualização deve ser refeita contra as fontes oficiais vigentes no momento — `REQUER VALIDAÇÃO
-OFICIAL` a cada ciclo de release (ver `24-operacao-manutencao.md`).
+OFICIAL` a cada ciclo de release (ver `27-operacao-manutencao.md`).
 
 ## 16.2 Versões suportadas
 
@@ -47,8 +47,8 @@ OFICIAL` a cada ciclo de release (ver `24-operacao-manutencao.md`).
 | Item | Status |
 |---|---|
 | `applicationId` / package name | `PENDENTE DE DECISÃO` — deve ser definido e reservado antes da criação do app no Play Console (ver `20-google-play.md`); não pode ser alterado após a primeira publicação. |
-| `versionCode` | Inteiro incremental a cada release enviado ao Play Console; controle de versionamento detalhado em `22-deploy-operacao.md`. |
-| `versionName` | String de versão legível ao usuário (ex.: semântica `MAJOR.MINOR.PATCH`), decisão de convenção em `20-decisoes-arquiteturais.md`. |
+| `versionCode` | Inteiro incremental a cada release enviado ao Play Console; controle de versionamento detalhado em `22-deploy-operacao-ambientes.md`. |
+| `versionName` | String de versão legível ao usuário (ex.: semântica `MAJOR.MINOR.PATCH`), decisão de convenção em `29-decisoes-arquiteturais.md`. |
 
 ## 16.4 Identidade visual do app (nível de sistema operacional)
 
@@ -70,7 +70,7 @@ OFICIAL` a cada ciclo de release (ver `24-operacao-manutencao.md`).
 
 - Desenvolvimento e testes iniciais podem ocorrer em emulador Android (via Android Studio/Expo).
 - Testes finais antes de cada release devem incluir ao menos um dispositivo físico real (ver
-  `19-testes-android-distribuicao.md` para estratégia detalhada).
+  `18-android-build-assinatura-testes.md` para estratégia detalhada).
 
 ## 16.7 Ciclo de vida do aplicativo
 
@@ -83,14 +83,10 @@ OFICIAL` a cada ciclo de release (ver `24-operacao-manutencao.md`).
 
 ## 16.8 Armazenamento
 
-Detalhado em `18-android-armazenamento-seguranca-local.md`... consolidado nesta mesma família de documentos —
-ver seção de armazenamento em `12-arquitetura-frontend-mobile.md`, seção 12.5, e reforço de segurança local
-abaixo:
+Consolidado em `12-arquitetura-frontend-mobile.md`, seção 12.5, com os seguintes princípios de segurança:
 
 - Nenhuma senha em texto puro é armazenada localmente.
-- Token de sessão armazenado via mecanismo de armazenamento seguro do sistema operacional (ex.: keystore/
-  armazenamento criptografado nativo do Android, acessado através de biblioteca apropriada do Expo/React
-  Native) — mecanismo concreto a validar na documentação oficial do Expo (`REQUER VALIDAÇÃO OFICIAL`).
+- Token de sessão armazenado via mecanismo de armazenamento seguro do sistema operacional (Android KeyStore via `expo-secure-store`).
 - Logout limpa todo dado sensível armazenado localmente.
 - Troca de usuário no mesmo dispositivo (logout de Ana 1, login de Ana 2) deve garantir que nenhum dado de
   sessão/cache de Ana 1 permaneça acessível a Ana 2.
@@ -116,4 +112,4 @@ Conectividade: ver `12-arquitetura-frontend-mobile.md`, seção 12.9.
 
 - O backend deve permanecer compatível com versões anteriores do app ainda em uso por usuários que não
   atualizaram, dentro de uma janela razoável — política exata de descontinuação de versões antigas é
-  `PENDENTE DE DECISÃO` (ver `22-deploy-operacao.md` e `24-operacao-manutencao.md`).
+  `PENDENTE DE DECISÃO` (ver `22-deploy-operacao-ambientes.md` e `27-operacao-manutencao.md`).

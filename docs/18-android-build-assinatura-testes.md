@@ -9,7 +9,7 @@ VALIDAÇÃO OFICIAL` contra a documentação vigente do Expo/EAS no momento da i
 | Tipo | Finalidade | Formato | Uso |
 |---|---|---|---|
 | Development build | Build com runtime de desenvolvimento, permite uso de ferramentas de depuração e recarregamento rápido. | APK (ou instalação direta em dispositivo/emulador) | Uso exclusivo da equipe de desenvolvimento durante a construção do produto. |
-| Preview build | Build de pré-visualização, próxima da configuração de produção, mas ainda destinada a testes internos/privados. | APK | Demonstração para a cliente antes da publicação (ver `19-testes-android-distribuicao.md`... consolidado abaixo em 18.5) e testes internos da equipe. |
+| Preview build | Build de pré-visualização, próxima da configuração de produção, mas ainda destinada a testes internos/privados. | APK | Demonstração para a cliente antes da publicação (ver `19-distribuicao-privada-cliente.md`) e testes internos da equipe. |
 | Production build | Build final, assinada para distribuição pelo Google Play. | AAB (Android App Bundle) | Envio ao Google Play Console (testes internos/fechados/produção). |
 
 O Google Play exige o formato **AAB** (Android App Bundle) para novos aplicativos publicados, não mais APK
@@ -24,7 +24,7 @@ documentação oficial do Google Play no momento da implementação (`REQUER VAL
 - **EAS Submit**: serviço do Expo para enviar o artefato de build (AAB) diretamente ao Google Play Console,
   reduzindo passos manuais de upload.
 - Ambos exigem credenciais específicas (ver 18.3) e variáveis de ambiente/segredos de build (ver
-  `21-ambientes-secrets.md`, consolidado em `22-deploy-operacao.md`).
+  `22-deploy-operacao-ambientes.md`).
 
 ## 18.3 Credenciais de build (`credentials`)
 
@@ -32,8 +32,7 @@ documentação oficial do Google Play no momento da implementação (`REQUER VAL
   armazenadas pelo próprio serviço gerenciado, ou fornecidas pelo proprietário do projeto.
 - Independentemente do gerenciamento (serviço gerenciado ou local), a **responsabilidade final** pelas
   credenciais deve pertencer à proprietária do produto/negócio, não exclusivamente à conta pessoal do
-  desenvolvedor — ver `19-propriedade-contas.md` (consolidado em `22-deploy-operacao.md`, seção de
-  propriedade).
+  desenvolvedor — ver `22-deploy-operacao-ambientes.md`, seção 22.6.
 
 ## 18.4 Assinatura — signing key, upload key e Play App Signing
 
@@ -50,9 +49,9 @@ documentação oficial do Google Play no momento da implementação (`REQUER VAL
   exatamente na documentação oficial no momento em que for necessário, `REQUER VALIDAÇÃO OFICIAL`).
 - Nenhuma credencial real (senha de keystore, chave privada) é registrada em qualquer documento deste
   projeto, em controle de versão (Git) ou em qualquer lugar acessível publicamente — ver
-  `21-ambientes-secrets.md`.
+  `22-deploy-operacao-ambientes.md`.
 - A titularidade da conta do Google Play Console (que controla o Play App Signing) deve pertencer à
-  proprietária do negócio (ver `19-propriedade-contas.md`), não apenas ao desenvolvedor, para evitar
+  proprietária do negócio (ver `22-deploy-operacao-ambientes.md`, seção 22.6), não apenas ao desenvolvedor, para evitar
   dependência exclusiva de uma pessoa física externa ao negócio.
 
 ### 18.4.2 Rotação
@@ -65,7 +64,7 @@ documentação oficial do Google Play no momento da implementação (`REQUER VAL
 
 - `versionCode` incrementado a cada build enviado ao Google Play (obrigatoriamente crescente).
 - `versionName` seguindo convenção legível (ex.: semântica) — convenção exata `PENDENTE DE DECISÃO` em
-  `20-decisoes-arquiteturais.md`.
+  `29-decisoes-arquiteturais.md`.
 - Estratégia de incremento automático via EAS (auto-incremento gerenciado) é uma opção conceitual válida, a
   confirmar disponibilidade/configuração na documentação oficial do Expo (`REQUER VALIDAÇÃO OFICIAL`).
 
@@ -74,7 +73,7 @@ documentação oficial do Google Play no momento da implementação (`REQUER VAL
 - URLs de API (produção/homologação), chaves públicas de serviços de terceiros e outras configurações não
   sensíveis podem ser injetadas via variáveis de ambiente de build.
 - Segredos verdadeiros (credenciais de assinatura, chaves privadas de serviços de backend) nunca residem no
-  repositório de código-fonte nem em arquivos versionados — ver `21-ambientes-secrets.md`.
+  repositório de código-fonte nem em arquivos versionados — ver `22-deploy-operacao-ambientes.md`.
 
 ---
 
@@ -90,7 +89,7 @@ documentação oficial do Google Play no momento da implementação (`REQUER VAL
 | Conectividade | Teste com conexão estável, conexão instável (throttling) e ausência de conexão. |
 | Notificações | Teste de recebimento em foreground, background e app encerrado. |
 | Permissões | Teste de fluxo com permissão concedida e negada. |
-| Login/Agendamento/Agenda admin | Cobertos como parte do fluxo funcional principal (ver `23-testes-qa.md`). |
+| Login/Agendamento/Agenda admin | Cobertos como parte do fluxo funcional principal (ver `24-testes-qa.md`). |
 | Ciclo de vida | Teste de app em background prolongado, retomada, encerramento pelo sistema. |
 | Atualização/reinstalação | Teste de atualização de versão anterior e de reinstalação limpa. |
 
@@ -101,6 +100,6 @@ massa). Expansão da matriz de testes é `PENDENTE DE DECISÃO` conforme necessi
 ### 18.7.2 Emulador vs. dispositivo físico
 
 - Emuladores são adequados para desenvolvimento e primeira validação funcional.
-- Testes finais antes de cada release (candidatos a release, ver `22-deploy-operacao.md`) devem incluir ao
+- Testes finais antes de cada release (candidatos a release, ver `22-deploy-operacao-ambientes.md`) devem incluir ao
   menos um dispositivo físico real, dado que comportamentos de notificação, permissões e desempenho real
   podem divergir do emulador.

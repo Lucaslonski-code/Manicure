@@ -1,147 +1,100 @@
-# 10. API e Contratos
+# 10. API e Contratos (Supabase / PostgREST / RPC)
 
-Status: CONFIRMADO. Especificação documental — nenhum endpoint é implementado aqui.
+Status: CONFIRMADO. Especificação técnica oficial baseada na arquitetura BaaS Supabase.
 
-Convenções: rotas ilustrativas em estilo REST; formato de payload conceitual (não literal); autenticação via
-sessão/token de portador (Bearer), a validar formato exato na documentação oficial do provedor de
-autenticação escolhido (`REQUER VALIDAÇÃO OFICIAL`).
+A interface entre o aplicativo mobile e o backend é organizada em três mecanismos complementares:
 
-Códigos de erro padronizados usados nesta especificação: `400` (entrada inválida), `401` (não autenticado),
-`403` (autenticado mas não autorizado), `404` (recurso inexistente ou não visível ao solicitante), `409`
-(conflito, ex.: horário indisponível), `422` (entidade não processável / regra de negócio violada).
+1. **Supabase SDK / PostgREST:** Para todas as operações de consulta, criação, atualização e exclusão direta protegidas por Row Level Security (RLS).
+2. **PostgreSQL RPCs (Stored Functions):** Para operações atômicas, transacionais ou com validações complexas de concorrência (ex.: agendamento e cálculo de disponibilidade).
+3. **Supabase Edge Functions:** Exclusivamente para operações privilegiadas ou integrações externas que exigem segredos de servidor (`service_role key`), como envio de push notifications e exclusão externa de conta.
 
 ---
 
-## 10.1 Autenticação (`/auth`)
+## 10.1 Autenticação (`Supabase Auth SDK`)
 
-| Endpoint | Método | Auth | Role | Finalidade |
-|---|---|---|---|---|
-| `/auth/register` | POST | Não | — | Cadastro público (RF-AUTH-001). Sempre cria `role = client`. |
-| `/auth/verify-email` | POST | Não (token no corpo) | — | Confirma e-mail via token/código (RF-AUTH-002). |
-| `/auth/resend-verification` | POST | Sim (parcial — conta existente) | — | Reenvia e-mail de confirmação. |
-| `/auth/login` | POST | Não | — | Autenticação única (RF-AUTH-003); retorna sessão + `role` + `professional_id` (se admin). |
-| `/auth/logout` | POST | Sim | Qualquer | Encerra sessão (RF-AUTH-004). |
-| `/auth/forgot-password` | POST | Não | — | Solicita recuperação (RF-AUTH-005). Resposta genérica, independente de o e-mail existir. |
-| `/auth/reset-password` | POST | Não (token no corpo) | — | Redefine senha (RF-AUTH-006). |
-| `/auth/me` | GET | Sim | Qualquer | Retorna identidade atual: `id`, `name`, `email`, `role`, `email_verified`, `professional_id` (se admin). |
+| Operação | Método SDK | Auth Requerida | Descrição |
+|---|---|---|---|
+| Cadastro | `supabase.auth.signUp(...)` | Não | Cria conta em `auth.users`; trigger cria `public.users` (`role = 'client'`). |
+| Confirmação de e-mail | `supabase.auth.verifyOtp(...)` / Link | Não | Valida posse do e-mail via código/link transacional. |
+| Reenvio de confirmação | `supabase.auth.resend(...)` | Não | Reenvia e-mail de ativação. |
+| Login | `supabase.auth.signInWithPassword(...)` | Não | Retorna sessão JWT e usuário autenticado. |
+| Logout | `supabase.auth.signOut()` | Sim | Revoga sessão ativa e limpa armazenamento local. |
+| Recuperação de senha | `supabase.auth.resetPasswordForEmail(...)` | Não | Envia e-mail de recuperação seguro. |
+| Redefinição de senha | `supabase.auth.updateUser({ password })` | Sim (token de recuperação) | Define nova senha e invalida sessões anteriores. |
+| Obter sessão ativa | `supabase.auth.getSession()` / `getUser()` | Sim | Recupera identidade autenticada atual. |
 
-### Exemplo de contrato — `POST /auth/register`
+## 10.2 Perfil do Usuário (`PostgREST / public.users`)
 
-- Request: `name`, `email`, `phone`, `password`, `password_confirmation`.
-- Response (201): `user_id`, `email_verified = false`.
-- Erros: `400` (campos inválidos/ausentes), `409` (e-mail já cadastrado).
-- Regra de negócio: `role` nunca é aceito como campo de entrada; sempre resolvido como `client` no backend.
+| Operação | Chamada PostgREST | RLS / Permissão | Finalidade |
+|---|---|---|---|
+| Consultar perfil | `supabase.from('users').select('*').eq('id', auth.uid()).single()` | `id = auth.uid()` | Dados do perfil do usuário autenticado. |
+| Atualizar perfil | `supabase.from('users').update({ name, phone }).eq('id', auth.uid())` | `id = auth.uid()` | Atualiza nome e telefone (role imutável pelo cliente). |
+| Exclusão de conta (app) | `supabase.functions.invoke('delete-account')` / RPC | `auth.uid()` | Executa anonimização e exclusão da conta no Supabase Auth. |
 
-### Exemplo de contrato — `POST /auth/login`
+## 10.3 Catálogo e Disponibilidade (`PostgREST` e `RPC`)
 
-- Request: `email`, `password`.
-- Response (200): token/sessão, `role`, `email_verified`, `professional_id` (quando `role = admin`).
-- Erros: `401` (credenciais inválidas ou conta desativada — mensagem genérica única para ambos os casos).
+| Operação | Chamada | Tipo | Finalidade |
+|---|---|---|---|
+| Listar profissionais | `supabase.from('professionals').select('*').eq('is_active', true)` | PostgREST (RLS) | Lista profissionais ativos para seleção. |
+| Listar serviços do profissional | `supabase.from('professional_services').select('*, service:services(*)').eq('professional_id', id).eq('is_active', true)` | PostgREST (RLS) | Catálogo de serviços com duração e preço. |
+| Consultar horários disponíveis | `supabase.rpc('get_available_slots', { p_professional_id, p_service_id, p_date })` | PostgreSQL RPC | Retorna horários livres calculados no PostgreSQL. |
 
-## 10.2 Perfil (`/me`)
+## 10.4 Agendamento — Cliente (`PostgREST` e `RPC`)
 
-| Endpoint | Método | Auth | Role | Finalidade |
-|---|---|---|---|---|
-| `/me/profile` | GET | Sim | Qualquer | Dados do próprio perfil (RF-PROFILE-001). |
-| `/me/profile` | PATCH | Sim | Qualquer | Editar nome/telefone (RF-PROFILE-002); alteração de e-mail reinicia verificação. |
-| `/me/account` | DELETE | Sim | Qualquer | Solicita exclusão da própria conta (RF-AUTH-009), ver `15-privacidade-exclusao-conta.md`. |
+| Operação | Chamada | Tipo | Finalidade |
+|---|---|---|---|
+| Criar agendamento | `supabase.rpc('book_appointment', { p_professional_id, p_service_id, p_start_at, p_client_note })` | PostgreSQL RPC | Criação atômica com validação concorrente (retorna `201` ou `409 Conflict`). |
+| Listar meus agendamentos | `supabase.from('appointments').select('*, professional:professionals(*), service:services(*)').eq('client_user_id', auth.uid()).order('start_at')` | PostgREST (RLS) | Lista agendamentos da própria cliente (futuros/histórico). |
+| Detalhes do agendamento | `supabase.from('appointments').select('*, professional:professionals(*), service:services(*)').eq('id', id).single()` | PostgREST (RLS) | Consulta detalhe do agendamento próprio. |
+| Cancelar agendamento | `supabase.rpc('cancel_appointment_by_client', { p_appointment_id, p_reason })` | PostgreSQL RPC / PostgREST | Cancela agendamento próprio respeitando prazo mínimo. |
 
-## 10.3 Catálogo — Cliente (`/professionals`, `/services`)
+## 10.5 Agenda Administrativa (`PostgREST` e `RPC`)
 
-| Endpoint | Método | Auth | Role | Finalidade |
-|---|---|---|---|---|
-| `/professionals` | GET | Sim | client/admin | Lista profissionais ativos (RF-CAT-001). |
-| `/professionals/{id}/services` | GET | Sim | client/admin | Lista serviços ativos oferecidos pelo profissional (RF-CAT-002). |
-| `/professionals/{id}/availability` | GET | Sim | client/admin | Consulta horários disponíveis (RF-AVAIL-003), parâmetros `service_id`, `date`/intervalo de datas. |
+| Operação | Chamada | Tipo | Regra RLS / Autorização |
+|---|---|---|---|
+| Visualizar Agenda Global | `supabase.from('appointments').select('*, client:users(name, phone, email), professional:professionals(*), service:services(*)').order('start_at')` | PostgREST (RLS) | **Permitido a qualquer admin** (`get_auth_role() = 'admin'`). |
+| Detalhes do agendamento (admin) | `supabase.from('appointments').select('*, client:users(name, phone, email), professional:professionals(*), service:services(*)').eq('id', id).single()` | PostgREST (RLS) | **Permitido a qualquer admin** (Leitura Global ampla). |
+| Alterar / Reagendar | `supabase.rpc('reschedule_appointment_by_admin', { p_appointment_id, p_new_start_at })` OU PostgREST `update` | RPC / PostgREST (RLS) | **Restrito ao admin responsável:** `professional_id = get_auth_professional_id()`. |
+| Cancelar agendamento (admin) | `supabase.from('appointments').update({ status: 'cancelled', cancelled_at: now(), cancelled_by_user_id: auth.uid() }).eq('id', id)` | PostgREST (RLS) | **Restrito ao admin responsável:** `professional_id = get_auth_professional_id()`. |
+| Excluir agendamento (admin) | `supabase.from('appointments').delete().eq('id', id)` | PostgREST (RLS) | **Restrito ao admin responsável:** `professional_id = get_auth_professional_id()`. |
 
-Resposta de disponibilidade retorna apenas horários já validados quanto a jornada, bloqueios e ausência de
-conflito (ver `07-motor-disponibilidade.md`). Erros: `404` (profissional ou serviço inexistente/inativo),
-`422` (combinação profissional/serviço inválida).
+## 10.6 Gestão Administrativa de Disponibilidade e Serviços
 
-## 10.4 Agendamento — Cliente (`/appointments`)
+| Operação | Chamada | Tipo | Autorização |
+|---|---|---|---|
+| Consultar própria jornada | `supabase.from('availability').select('*').eq('professional_id', get_auth_professional_id())` | PostgREST (RLS) | Apenas o próprio profissional. |
+| Atualizar jornada | `supabase.from('availability').upsert(...)` | PostgREST (RLS) | Restrito ao próprio `professional_id`. |
+| Gerenciar bloqueios | `supabase.from('blocked_times').insert / delete` | PostgREST (RLS) | Restrito ao próprio `professional_id`. |
+| Gerenciar serviços | `supabase.from('professional_services').upsert / delete` | PostgREST (RLS) | Restrito ao próprio `professional_id`. |
 
-| Endpoint | Método | Auth | Role | Finalidade |
-|---|---|---|---|---|
-| `/appointments` | POST | Sim | client | Cria agendamento (RF-APPT-001). |
-| `/appointments/mine` | GET | Sim | client | Lista agendamentos do próprio cliente (RF-APPT-003), com filtro futuro/histórico. |
-| `/appointments/{id}` | GET | Sim | client/admin | Detalhes; cliente só vê os próprios, admin vê qualquer (agenda global). |
-| `/appointments/{id}/cancel` | POST | Sim | client | Cancela o próprio agendamento (RF-APPT-004), sujeito a prazo mínimo se definido. |
+## 10.7 Supabase Edge Functions (Lógica Server-side Privilegiada)
 
-### Exemplo de contrato — `POST /appointments`
+| Edge Function | Invocação | Finalidade |
+|---|---|---|
+| `send-push-notification` | Database Webhook em `appointments` | Envia notificação push via Expo Push API com payload estruturado. |
+| `delete-account-external` | Chamada HTTP pública autenticada | Processa solicitações de exclusão de conta vindas da página web externa (requisito Google Play). |
 
-- Request: `professional_id`, `service_id`, `start_at`, `client_note` (opcional).
-- Response (201): recurso `appointment` criado com `status = confirmed`.
-- Erros: `400` (campos inválidos), `404` (profissional/serviço inexistente), `409` (conflito de horário —
-  ver `07-motor-disponibilidade.md`, seção 7.7), `422` (profissional/serviço inativo, combinação inválida,
-  horário fora de jornada, `start_at` no passado).
-- Regra de negócio: `client_user_id` é sempre resolvido a partir da sessão autenticada, nunca aceito como
-  campo de entrada.
+## 10.8 Regra de Autorização Central Aplicada à API
 
-## 10.5 Agenda administrativa (`/admin/appointments`)
-
-| Endpoint | Método | Auth | Role | Finalidade |
-|---|---|---|---|---|
-| `/admin/appointments` | GET | Sim | admin | Agenda global (RF-APPT-005), com filtros `professional_id`, `service_id`, `status`, `date_from`, `date_to`, busca `q` por nome da cliente (RF-AGENDA-002/003). Permitida a **qualquer** admin, sem restrição de propriedade. |
-| `/admin/appointments/{id}` | GET | Sim | admin | Detalhes completos, incluindo contato da cliente (RF-APPT-013). Permitido a qualquer admin (leitura global). |
-| `/admin/appointments/{id}` | PATCH | Sim | admin | Alterar dados/observação/reagendar (RF-APPT-006/009). **Restrito** ao admin responsável — ver 10.7. |
-| `/admin/appointments/{id}/cancel` | POST | Sim | admin | Cancelar (RF-APPT-007). **Restrito** ao admin responsável. |
-| `/admin/appointments/{id}` | DELETE | Sim | admin | Excluir (RF-APPT-008). **Restrito** ao admin responsável. |
-
-## 10.6 Disponibilidade e bloqueios — Admin (`/admin/availability`, `/admin/blocked-times`)
-
-| Endpoint | Método | Auth | Role | Finalidade |
-|---|---|---|---|---|
-| `/admin/availability` | GET | Sim | admin | Consulta a própria jornada (RF-AVAIL-001). |
-| `/admin/availability` | PUT | Sim | admin | Define a própria jornada. Restrito ao próprio `professional_id`. |
-| `/admin/blocked-times` | GET | Sim | admin | Lista os próprios bloqueios. |
-| `/admin/blocked-times` | POST | Sim | admin | Cria bloqueio (RF-AVAIL-002). Restrito ao próprio `professional_id`. |
-| `/admin/blocked-times/{id}` | DELETE | Sim | admin | Remove bloqueio. Restrito ao próprio `professional_id`. |
-
-## 10.7 Serviços — Admin (`/admin/services`, `/admin/professional-services`)
-
-| Endpoint | Método | Auth | Role | Finalidade |
-|---|---|---|---|---|
-| `/admin/services` | POST/PATCH | Sim | admin | Gerencia catálogo (RF-CAT-003) — escopo de propriedade `PENDENTE DE DECISÃO` (ver `08-modelo-banco-dados.md`, seção 8.4). |
-| `/admin/professional-services` | POST/PATCH/DELETE | Sim | admin | Vincula serviço ao próprio profissional, com duração (RF-CAT-004). Restrito ao próprio `professional_id`. |
-
-## 10.8 Regra de autorização aplicada a cada operação de escrita sobre agendamento
-
-Para `PATCH /admin/appointments/{id}`, `POST /admin/appointments/{id}/cancel`, `DELETE
-/admin/appointments/{id}`:
+Para qualquer operação de mutação (`UPDATE`, `DELETE`, RPC de reagendamento) sobre a tabela `appointments`:
 
 ```
-autenticado = verdadeiro
-E email_verified = verdadeiro
-E current_user.role = "admin"
-E current_user.professional_id = appointment.professional_id
-   → PERMITIR
-CASO CONTRÁRIO
-   → 403 Forbidden
+PERMITIR SE E SOMENTE SE:
+  auth.uid() is not null
+  E get_auth_role() = 'admin'
+  E appointment.professional_id = get_auth_professional_id()
+CASO CONTRÁRIO:
+  Operação rejeitada pelo RLS (0 linhas afetadas) ou RPC com erro de autorização.
 ```
 
-Isso vale mesmo quando o `appointment_id` existe e é visível na agenda global — a leitura é ampla, a escrita
-é restrita. `GET /admin/appointments` e `GET /admin/appointments/{id}` **não** aplicam a checagem de
-`professional_id`, apenas checagem de `role = admin`.
+Essa regra garante que **Ana 1 não pode alterar/cancelar/excluir agendamentos de Ana 2**, mesmo que consiga visualizá-los na consulta de agenda global.
 
-## 10.9 Auditoria por endpoint
+## 10.9 Tratamento e Padronização de Erros
 
-Toda operação de escrita sobre `appointments` (criação, atualização, cancelamento, exclusão) e toda tentativa
-negada por autorização deve gerar um registro em `audit_logs` (ver `08-modelo-banco-dados.md`, seção 8.10),
-incluindo o resultado (sucesso/negado) e o motivo em caso de negação.
-
-## 10.10 Resumo de códigos de erro por situação
-
-| Situação | Código |
-|---|---|
-| Sessão ausente/inválida/expirada | 401 |
-| Autenticado mas sem papel/relação exigida (ex.: admin tentando alterar agendamento de outro profissional; client tentando acessar rota `/admin/*`) | 403 |
-| Recurso inexistente ou não pertencente ao solicitante em contexto de leitura restrita (ex.: cliente tentando ver agendamento de outra cliente) | 404 (preferencialmente, para não confirmar existência a terceiros) |
-| Conflito de horário na criação/alteração | 409 |
-| Regra de negócio violada (profissional/serviço inativo, combinação inválida, horário fora de jornada, `start_at` no passado) | 422 |
-| Campos ausentes/mal formatados | 400 |
-
-A escolha entre `403` e `404` para "cliente tentando ver agendamento de outra cliente" segue o princípio de
-exposição mínima de dados (seção 4.6 de `04-autorizacao-seguranca.md`): preferir `404` nesse caso específico
-para não confirmar a existência do recurso a quem não tem relação com ele. Já para admin tentando **escrever**
-em agendamento de outro profissional, `403` é preferível, pois a existência do recurso já é conhecida (a
-leitura da agenda global é permitida).
+| Situação | Código HTTP / PostgREST | Comportamento no App |
+|---|---|---|
+| Token ausente / expirado | `401 Unauthorized` | Redirecionamento imediato para a tela de Login. |
+| Acesso negado por RLS (escrita em agendamento alheio) | `403 Forbidden` / 0 rows affected | Exibição de mensagem de permissão negada. |
+| Recurso inexistente | `404 Not Found` | Mensagem "registro não encontrado". |
+| Conflito de horário no agendamento (`double booking`) | `409 Conflict` (via RPC / constraint) | Alerta "horário não está mais disponível" e atualização de grade. |
+| Violação de regra de negócio / validação | `422 Unprocessable Entity` | Feedback no formulário com o motivo do erro. |

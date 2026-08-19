@@ -29,7 +29,7 @@ Fontes oficiais consultadas:
  9. Política de privacidade (URL pública)
 10. Formulário de Data Safety (segurança e privacidade de dados)
 11. Declaração de permissões utilizadas
-12. Fluxo de exclusão de conta (dentro do app + acesso externo, ver doc 15)
+12. Fluxo de exclusão de conta (dentro do app + acesso externo, ver `15-privacidade-exclusao-conta.md`)
 13. Acesso para revisão (credenciais de teste, se necessário, para o revisor do Google)
 14. Teste interno
 15. Teste fechado (com requisito de testadores/duração para contas pessoais novas)
@@ -46,9 +46,9 @@ Fontes oficiais consultadas:
 - Verificação de identidade é etapa obrigatória do Google antes de liberar certas capacidades da conta
   (varia conforme tipo de conta — pessoal ou organização) — processo e prazos exatos a confirmar na
   documentação oficial vigente (`REQUER VALIDAÇÃO OFICIAL`).
-- **Propriedade da conta:** ver `22-deploy-operacao.md`, seção de propriedade — recomenda-se que a conta
+- **Propriedade da conta:** ver `22-deploy-operacao-ambientes.md`, seção 22.6 — recomenda-se que a conta
   pertença à proprietária do negócio, não exclusivamente ao desenvolvedor (mitigação de risco descrita em
-  `24-riscos-pendencias.md`).
+  `30-riscos-pendencias-glossario.md`).
 
 ## 20.3 Configuração do aplicativo
 
@@ -124,7 +124,7 @@ insumo, e deve ser revisado a cada mudança relevante na coleta de dados do prod
   distinta de contas reais de clientes do negócio — `PENDENTE DE DECISÃO` quanto ao mecanismo de criação
   dessa conta de demonstração (manual vs. automatizado).
 
-## 20.11 Testes — visão geral (detalhado em `21-teste-interno-fechado.md`)
+## 20.11 Testes — visão geral (detalhado em `21-teste-interno-fechado-conformidade.md`)
 
 | Track | Obrigatório para contas pessoais novas? | Observação |
 |---|---|---|
@@ -146,4 +146,4 @@ insumo, e deve ser revisado a cada mudança relevante na coleta de dados do prod
 - Cada atualização subsequente segue o mesmo pipeline de build (AAB) e passa por revisão do Google, embora
   tipicamente mais rápida que a primeira submissão — sem presumir prazo fixo.
 - `targetSdkVersion` deve ser mantido em conformidade com a política vigente a cada ciclo anual do Google
-  (ver `16-android.md`, seção 16.1, e `24-operacao-manutencao.md`).
+  (ver `16-android.md`, seção 16.1, e `27-operacao-manutencao.md`).

@@ -67,34 +67,27 @@ profissional. Uma verificação de disponibilidade feita apenas no momento da co
 não é suficiente, pois outra requisição pode ser confirmada no intervalo entre a consulta e a escrita.
 
 **Requisito formal (RNF-CONCUR-001):** a garantia de ausência de sobreposição deve ser assegurada pelo
-backend/banco no momento da escrita, não apenas pela interface ou por uma checagem prévia isolada.
+PostgreSQL/Supabase no momento da escrita, não apenas pela interface ou por uma checagem prévia isolada.
 
-**Estratégias conceituais aceitáveis** (a decisão de qual mecanismo concreto usar é de implementação,
-documentada aqui apenas conceitualmente):
+**Estratégia oficial adotada no PostgreSQL (Supabase):**
 
-1. **Constraint de exclusão no banco** — o banco de dados relacional impede, a nível de integridade, a
-   existência de dois registros ativos de `appointments` para o mesmo `professional_id` com intervalos de
-   tempo sobrepostos. Esta é a estratégia de maior garantia, pois independe da lógica de aplicação.
-2. **Transação com verificação e bloqueio** — a operação de criação de agendamento é executada dentro de
-   uma transação que verifica ausência de conflito e insere o novo registro de forma atômica, com nível de
-   isolamento suficiente para impedir leitura de dados desatualizados durante a verificação concorrente.
+1. **Constraint de exclusão no PostgreSQL (`EXCLUDE USING gist`):**
+   Utilização da extensão `btree_gist` para garantir, a nível de engine do banco de dados, que não possam existir dois registros em `appointments` com o mesmo `professional_id`, com intervalos de tempo `tsrange(start_at, end_at)` sobrepostos, onde `status = 'confirmed'`.
+2. **Operação Atômica via PostgreSQL RPC (`book_appointment`):**
+   A criação de agendamento é encapsulada em uma Stored Function `SECURITY DEFINER` que executa todas as validações de disponibilidade (jornada, bloqueios, conflitos) e insere o registro de forma estritamente atômica dentro de uma transação.
 
-A escolha entre essas estratégias (ou combinação de ambas) é `PENDENTE DE DECISÃO` técnica de implementação,
-mas **qualquer** escolha deve satisfazer o requisito formal acima. A validação exclusivamente no aplicativo
-mobile (frontend) nunca é suficiente e não substitui a garantia no backend/banco.
+A validação exclusivamente no aplicativo mobile (frontend) nunca é suficiente e atua apenas como feedback visual; a garantia definitiva reside no banco de dados.
 
 ## 7.7 Comportamento quando o horário deixa de estar disponível entre seleção e confirmação
 
 Fluxo esperado:
 
-1. Cliente seleciona horário na tela "Horários disponíveis" (consulta de leitura, sem reserva).
+1. Cliente seleciona horário na tela "Horários disponíveis" (consulta de leitura via PostgREST).
 2. Cliente revisa o Resumo.
-3. Cliente confirma — requisição de criação de agendamento é enviada.
-4. Backend revalida disponibilidade no momento da escrita (seção 7.6).
-5. Se o horário não estiver mais disponível: a criação é rejeitada com erro específico de conflito (HTTP
-   409, ver `08-api-especificacao.md`), e o frontend informa a cliente e retorna à tela de horários com a
-   lista atualizada.
-6. Se disponível: agendamento é criado e confirmado.
+3. Cliente confirma — chamada à RPC `supabase.rpc('book_appointment', { ... })`.
+4. O PostgreSQL executa as validações atômicas de jornada, bloqueio e colisão de horário.
+5. Se o horário não estiver mais disponível (ou violar constraint de exclusão): a criação é rejeitada com erro de conflito (`409 Conflict`), e o frontend informa a cliente e retorna à tela de horários com a lista atualizada.
+6. Se disponível: agendamento é inserido com `status = 'confirmed'` e retornado ao app.
 
 Não existe "reserva temporária" de horário durante a navegação da cliente (ex.: trava de 5 minutos ao
 selecionar) no escopo do MVP — comportamento futuro possível, registrado como `PENDENTE DE DECISÃO`.

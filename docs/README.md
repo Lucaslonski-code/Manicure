@@ -69,24 +69,26 @@ no momento da implementação estão marcados como `REQUER VALIDAÇÃO OFICIAL`.
 ### Especificação consolidada
 - [PRODUCT-SPECIFICATION.md](PRODUCT-SPECIFICATION.md) — visão central que amarra todos os documentos acima, sem substituí-los.
 
-## Decisões principais já confirmadas (resumo)
+## Decisões principais confirmadas (resumo)
 
 - Android é a primeira plataforma; arquitetura preparada para expansão futura a iOS (`28`).
 - Stack de frontend: React Native + Expo + TypeScript (`12`, `29` ADR-02).
-- Banco de dados: PostgreSQL (`08`, `29` ADR-03).
+- Backend / BaaS: Supabase com PostgreSQL gerenciado (`08`, `11`, `29` ADR-03, ADR-12).
+- Autenticação: Supabase Auth gerenciado, com verificação de e-mail obrigatória antes do uso funcional (`03`, `29` ADR-04).
+- Banco de dados e API: PostgreSQL com PostgREST/Supabase SDK para CRUD, Stored Functions/RPCs para operações transacionais e Row Level Security (RLS) mandatório em todas as tabelas (`08`, `10`, `11`).
+- Lógica server-side privilegiada: Supabase Edge Functions (Deno/TypeScript) apenas para operações que exigem privilégios elevados (push notifications, exclusão externa de conta) (`11`, `14`, `15`).
 - Login único para `client` e `admin`, com role resolvido no backend (`03`, `12`).
 - Cadastro público sempre cria `client`; `admin` é provisionado manualmente (`03`, `29` ADR-05).
-- Verificação de e-mail obrigatória antes do uso funcional (`03`).
 - **Regra central:** agenda global de leitura para todos os admins; escrita restrita ao admin vinculado ao
-  profissional responsável pelo agendamento, aplicada em backend/banco, nunca apenas no frontend (`04`, `29`
+  profissional responsável pelo agendamento, aplicada no PostgreSQL via RLS e validações server-side, nunca apenas no frontend (`04`, `29`
   ADR-06/ADR-07).
-- Prevenção formal de double booking garantida no backend/banco (`07`).
+- Prevenção formal de double booking garantida no PostgreSQL com constraints e RPC atômica (`07`).
 - Publicação via Google Play, com `targetSdkVersion` = API 36 (Android 16), AAB e Play App Signing (`16`,
   `18`, `20`, `29` ADR-08/ADR-09).
 - Teste fechado com requisito de 12 testadores optados por 14 dias para contas pessoais novas, podendo
   incluir clientes reais do negócio de forma voluntária (`21`).
 - Exclusão de conta disponível dentro do app e por página externa, conforme exigência do Google Play (`15`).
-- Contas críticas (Google Play, backend, domínio) devem pertencer à proprietária do negócio, não apenas ao
+- Contas críticas (Google Play, Supabase, domínio) devem pertencer à proprietária do negócio, não apenas ao
   desenvolvedor (`22`, `29` ADR-10).
 
 ## Dependências entre documentos
@@ -109,5 +111,6 @@ vigente antes de cada submissão real, conforme registrado em `27-operacao-manut
 
 ## Pendências e riscos
 
-Consolidados em `30-riscos-pendencias-glossario.md`. Nenhuma decisão pendente foi resolvida por suposição em
-qualquer documento desta pasta.
+Consolidados em `30-riscos-pendencias-glossario.md`. A escolha de backend/banco/autenticação está formalmente
+fechada como Supabase. Nenhuma decisão pendente restante foi resolvida por suposição em qualquer documento
+desta pasta.

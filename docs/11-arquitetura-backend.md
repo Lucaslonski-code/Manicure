@@ -1,125 +1,87 @@
-# 11. Arquitetura Backend
+# 11. Arquitetura Backend (Supabase BaaS / RLS / Edge Functions)
 
-Status: CONFIRMADO. Documento conceitual/arquitetural — nenhuma implementação.
+Status: CONFIRMADO. Documento de arquitetura oficial baseado na plataforma Supabase.
 
-## 11.1 Responsabilidades por camada (visão consolidada)
+## 11.1 Responsabilidades por camada
 
-| Camada | Responsabilidade | Confiável para segurança? |
-|---|---|---|
-| Frontend (app mobile) | Coleta de entrada, validação de UX (feedback imediato), exibição condicional de ações, cache local, navegação. | Não — apenas UX. |
-| API/Backend | Autenticação da requisição, resolução de identidade e role, validação de regra de negócio, orquestração de escrita, envio de notificações, geração de auditoria. | Sim — camada primária. |
-| Banco de dados | Integridade referencial, constraints de unicidade/exclusão, políticas de acesso em nível de linha (RLS ou equivalente) quando aplicável. | Sim — camada de defesa em profundidade. |
+| Camada | Tecnologia | Responsabilidade | Confiável para segurança? |
+|---|---|---|---|
+| Frontend Mobile | React Native + Expo (TypeScript) | Coleta de entradas, validação de formato (feedback imediato), navegação e ocultação condicional de UI. | Não — apenas UX. |
+| Autenticação & API BaaS | Supabase Auth + PostgREST | Emissão/validação de tokens JWT, exposição de queries/mutações protegidas. | Sim — camada de acesso gerenciada. |
+| Banco de Dados & Autorização | PostgreSQL + Row Level Security (RLS) | **Defesa primária e definitiva:** integridade referencial, constraints de exclusão temporal, controle de acesso a nível de linha. | Sim — autoridade máxima de segurança. |
+| Mutações Críticas / Concorrência | PostgreSQL RPCs (Stored Functions) | Operações atômicas transacionais (cálculo de slots livres e reserva sem sobreposição). | Sim — camada transacional. |
+| Processos Privilegiados Assíncronos | Supabase Edge Functions (Deno) | Disparo de push notifications (Expo Push API) e exclusão externa de conta. | Sim — execução server-side com `service_role`. |
 
-Todo dado enviado pelo cliente (app) é tratado como não confiável até validado no backend — inclusive
-campos que o frontend já valida (ver `RNF-SEC-001`, `04-autorizacao-seguranca.md`).
+## 11.2 Estrutura do projeto Supabase / Backend
 
-## 11.2 Módulos conceituais do backend
-
-```
-backend/
-  auth/            → cadastro, login, verificação, recuperação, sessão
-  users/           → perfil, exclusão de conta
-  professionals/   → CRUD de profissionais (provisionamento controlado)
-  services/        → catálogo de serviços
-  availability/    → jornada e bloqueios
-  appointments/     → motor de agendamento, disponibilidade, conflito, transições de estado
-  admin-agenda/    → consultas de agenda global (leitura ampla) e escrita restrita
-  notifications/   → orquestração de envio (push/local) — ver 14
-  audit/           → registro de eventos sensíveis
-  shared/
-    authz/         → middleware/helpers de autorização (regra Ana 1 / Ana 2)
-    validation/    → validação de entrada
-    errors/        → padronização de respostas de erro
-```
-
-Esta é uma organização conceitual por domínio; a tecnologia concreta do backend (framework, linguagem)
-consta como decisão arquitetural em `20-decisoes-arquiteturais.md`.
-
-## 11.3 Fluxo conceitual de uma escrita administrativa (exemplo: cancelar agendamento)
+Em vez de um servidor Node.js/Express tradicional intermediário para CRUD básico, a estrutura é organizada em artefatos gerenciados no repositório:
 
 ```
-1. Requisição chega com token de sessão.
-2. Middleware de autenticação resolve current_user a partir do token (não do payload).
-3. Middleware de autorização verifica current_user.role = admin.
-4. Handler busca appointment pelo id.
-   4.1. Se não existir → 404.
-5. Handler compara appointment.professional_id com current_user.professional_id
-   (resolvido via tabela professionals, nunca enviado pelo cliente).
-   5.1. Se divergente → 403 + registro em audit_logs (negado).
-6. Handler aplica regra de transição de estado (ex.: não cancelar já cancelado).
-7. Handler executa a escrita em transação, com constraints do banco como defesa adicional.
-8. Handler dispara notificação (assíncrona, ver 14).
-9. Handler registra sucesso em audit_logs.
-10. Resposta 200 ao cliente.
+supabase/
+  config.toml              # Configurações do projeto Supabase
+  migrations/              # Migrations declarativas SQL (tabelas, constraints, RLS, triggers, RPCs)
+    0001_initial_schema.sql
+    0002_rls_policies.sql
+    0003_functions_rpcs.sql
+    0004_triggers_audit.sql
+  functions/               # Supabase Edge Functions (Deno / TypeScript)
+    send-push-notification/ # Disparo assíncrono de notificações via Expo Push API
+    delete-account-external/# Endpoint seguro para solicitação externa de exclusão (Google Play)
+  seed.sql                 # Dados iniciais para ambiente local/desenvolvimento
 ```
 
-## 11.4 RLS (Row Level Security) — papel na arquitetura
+## 11.3 Fluxo de uma escrita administrativa com RLS (exemplo: alterar/cancelar agendamento)
 
-Quando o mecanismo de acesso ao banco permitir que múltiplas conexões representem diretamente o usuário
-final (padrão comum em certas plataformas de backend gerenciado sobre PostgreSQL), políticas de RLS devem
-replicar, na tabela `appointments`, a mesma regra central:
+```
+1. Cliente envia mutação via Supabase SDK (PostgREST) com JWT Bearer Token.
+2. Supabase Auth valida a assinatura e expiração do JWT e injeta auth.uid().
+3. PostgreSQL avalia as políticas de Row Level Security (RLS) da tabela appointments:
+   - SELECT get_auth_role() -> verifica se é 'admin'.
+   - SELECT get_auth_professional_id() -> obtém o ID do profissional vinculado a auth.uid().
+   - Compara appointments.professional_id = get_auth_professional_id().
+4. Se divergente (ex.: Ana 1 tentando cancelar agendamento de Ana 2):
+   - A operação é rejeitada pelo banco (0 linhas afetadas ou erro de permissão).
+   - Trigger registra tentativa negada em public.audit_logs.
+5. Se autorizado (Ana 1 operando sobre agendamento de Ana 1):
+   - A mutação é persistida com sucesso no PostgreSQL.
+   - Trigger registra evento em public.audit_logs.
+   - Database Webhook aciona a Edge Function send-push-notification para notificar a cliente.
+```
 
-- Política de leitura (`SELECT`): permitida se `current_setting('app.role') = 'admin'` (ou equivalente) —
-  sem restrição adicional de propriedade, refletindo a agenda global.
-- Política de escrita (`UPDATE`/`DELETE`): permitida apenas se, além do papel `admin`, o `professional_id`
-  da linha corresponder ao profissional associado ao usuário autenticado na sessão de banco.
+## 11.4 Row Level Security (RLS) — papel central e mandatório
 
-Caso a arquitetura escolhida utilize um backend de aplicação convencional com uma única credencial de banco
-compartilhada (sem RLS por usuário final), a responsabilidade de aplicar a regra recai integralmente sobre a
-camada de aplicação (seção 11.3), e RLS não é aplicável dessa forma — decisão concreta sobre o modelo de
-acesso ao banco é registrada em `20-decisoes-arquiteturais.md` como `PENDENTE DE DECISÃO` até a escolha do
-backend específico.
+O RLS é a **linha de defesa definitiva** do sistema:
+- Habilitado obrigatoriamente em 100% das tabelas do esquema `public`.
+- Funções auxiliares `SECURITY DEFINER` (`get_auth_role()`, `get_auth_professional_id()`) encapsulam a leitura de perfis sem vazar privilégios ao cliente.
+- Garante imunidade absoluta contra vulnerabilidades IDOR/BOLA e adulteração de payloads HTTP.
 
-## 11.5 Funções de banco (conceito)
+## 11.5 Funções de banco (PostgreSQL RPCs)
 
-Quando funções armazenadas forem utilizadas (ex.: para encapsular a checagem de conflito de horário de forma
-atômica — ver `07-motor-disponibilidade.md`, seção 7.6), elas devem:
-
-- Ser a única via de escrita para a tabela `appointments` quando a estratégia de constraint de exclusão não
-  for suficiente isoladamente.
-- Nunca aceitar `professional_id` de "quem está autorizado" como parâmetro livre — a identidade deve vir do
-  contexto de sessão/autenticação, não de argumento arbitrário.
+Utilizadas para encapsular lógicas transacionais que exigem atomicidade:
+- `book_appointment`: verifica jornada, bloqueios e conflitos temporais de horários, realizando a inserção atômica e prevenindo *double booking*.
+- `get_available_slots`: calcula em tempo de execução os intervalos livres para um profissional/serviço/data.
 
 ## 11.6 Validação — divisão de responsabilidade
 
-| Tipo de validação | Frontend | Backend |
+| Tipo de validação | Frontend | PostgreSQL / Supabase |
 |---|---|---|
-| Formato de e-mail/telefone | Sim (feedback imediato) | Sim (obrigatório, não confiar no frontend) |
-| Senha e confirmação idênticas | Sim | Sim |
-| Campos obrigatórios preenchidos | Sim | Sim |
-| Unicidade de e-mail | Não (não é possível verificar com segurança/atomicidade no cliente) | Sim |
-| Disponibilidade de horário | Consulta de leitura (não reserva) | Sim — validação definitiva na escrita |
-| Autorização (role, propriedade do agendamento) | Não é validação — é apenas ocultação de UI | Sim — única fonte de verdade |
+| Formato de e-mail/telefone | Sim (feedback imediato) | Sim (CHECK constraints / validações de schema) |
+| Senha e confirmação | Sim | Sim (política de senha do Supabase Auth) |
+| Unicidade de e-mail | Não (inseguro no cliente) | Sim (constraint única em `auth.users`) |
+| Disponibilidade de horários | Leitura visual | Sim (validação atômica na RPC e constraint temporal) |
+| Autorização (regra Ana 1 vs. Ana 2) | Ocultação de botões (apenas UX) | **Sim (Políticas de RLS no PostgreSQL)** |
 
-## 11.7 Notificações (papel do backend)
+## 11.7 Notificações Push e Edge Functions
 
-O backend é responsável por orquestrar o envio de notificações (ver `14-notificacoes.md`) de forma
-assíncrona em relação à operação principal (criação/alteração/cancelamento de agendamento), de modo que uma
-falha no envio de notificação não deve impedir nem reverter a operação de agendamento em si.
+O envio de notificações push é desacoplado das transações de banco:
+- Triggers ou Database Webhooks no PostgreSQL disparam a Edge Function `send-push-notification` de forma assíncrona.
+- Uma falha na entrega de push notification não reverte a operação de agendamento no banco de dados.
 
-## 11.8 Storage
+## 11.8 Storage (Avaliação no MVP)
 
-O MVP não possui requisito funcional de upload de arquivos/imagens (ex.: fotos de unhas, avatar) — não
-definido como parte obrigatória do escopo (ver `01-visao-escopo-atores.md`). Caso isso seja introduzido no
-futuro, um serviço de storage de objetos deve ser adicionado como novo módulo, sem impacto na regra central
-de autorização. Status: `PENDENTE DE DECISÃO` (fora do MVP).
+O MVP **não necessita** de Supabase Storage, pois não há funcionalidade de upload de fotos ou documentos (ver `01-visao-escopo-atores.md`). Caso surja necessidade futura (ex.: fotos de serviços concluídos), buckets serão configurados mantendo RLS isolado.
 
-## 11.9 Tratamento de erros — padronização
+## 11.9 Observabilidade e Auditoria
 
-- Respostas de erro seguem estrutura conceitual única: código HTTP + código de erro interno estável (ex.:
-  `PROFESSIONAL_MISMATCH`, `SLOT_CONFLICT`, `EMAIL_NOT_VERIFIED`) + mensagem — para permitir tratamento
-  consistente no frontend sem depender de parsing de texto livre.
-- Mensagens voltadas ao usuário final não devem expor detalhes internos (stack trace, nomes de tabela,
-  queries).
-
-## 11.10 Concorrência e integridade
-
-Ver detalhamento em `07-motor-disponibilidade.md`, seção 7.6. O backend não deve depender exclusivamente de
-uma checagem "ler depois escrever" sem garantia atômica — a garantia final deve residir em constraint de
-banco e/ou transação com isolamento adequado.
-
-## 11.11 Logs (técnicos, distintos de auditoria de negócio)
-
-- Logs técnicos (erros de aplicação, exceções não tratadas, tempos de resposta) são distintos dos registros
-  de `audit_logs` (que documentam eventos de negócio/segurança). Ambos são necessários; detalhamento de
-  observabilidade em `18-deploy-operacao.md`.
+- **Auditoria de Negócio:** Tabela `public.audit_logs` alimentada por triggers no PostgreSQL.
+- **Logs Técnicos de Servidor:** Supabase Logflare / Postgres Logs para monitoramento de latência, erros de RPCs e execução de Edge Functions.

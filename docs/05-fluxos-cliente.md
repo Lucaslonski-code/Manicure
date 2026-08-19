@@ -87,7 +87,7 @@ Splash
 ### Horários disponíveis
 
 - Lista apenas horários compatíveis com jornada, bloqueios, duração do serviço e ausência de conflito
-  (ver `06-motor-disponibilidade.md`... consolidado em `07-modelo-banco-dados.md` e no domínio próprio).
+  (ver `07-motor-disponibilidade.md`).
 - Estado vazio: nenhum horário disponível na data selecionada — sugestão de nova data.
 
 ### Resumo
@@ -126,7 +126,7 @@ Splash
 
 ### Exclusão de conta
 
-- Fluxo detalhado em `14-privacidade-exclusao-conta.md`.
+- Fluxo detalhado em `15-privacidade-exclusao-conta.md`.
 - Exige confirmação explícita (dupla confirmação ou digitação de confirmação — decisão de UX,
   `PENDENTE DE DECISÃO` quanto ao mecanismo exato de confirmação).
 

@@ -49,12 +49,12 @@ exista no futuro (ex.: dono do negócio sem atender clientes), fica registrado c
 - Chat entre cliente e profissional.
 - Programa de fidelidade, cupons, promoções, gamificação.
 - Recomendação/IA de horários, chatbots, assistentes automatizados.
-- Aplicativo iOS (apenas arquitetura preparatória é considerada — ver `19-arquitetura-futura-ios.md`).
+- Aplicativo iOS (apenas arquitetura preparatória é considerada — ver `28-arquitetura-futura-ios.md`).
 - Multi-idioma (idioma único: português do Brasil, salvo decisão contrária).
 - Avaliações/reviews públicas de profissionais.
 
 Qualquer funcionalidade não listada explicitamente como incluída é considerada fora de escopo do MVP até
-decisão contrária registrada em `20-decisoes-arquiteturais.md`.
+decisão contrária registrada em `29-decisoes-arquiteturais.md`.
 
 ## 1.5 Premissas
 
@@ -69,8 +69,8 @@ decisão contrária registrada em `20-decisoes-arquiteturais.md`.
 - Serviço de autenticação com suporte a verificação de e-mail (ver `03-identidade-roles-autenticacao.md`).
 - Backend com banco de dados relacional (PostgreSQL) capaz de aplicar regras de autorização de forma
   confiável (ver `04-autorizacao-seguranca.md`).
-- Conta de desenvolvedor Google Play (ver `17-google-play.md`).
-- Serviço de notificações push compatível com Android (ver `13-notificacoes.md`).
+- Conta de desenvolvedor Google Play (ver `20-google-play.md`).
+- Serviço de notificações push compatível com Android (ver `14-notificacoes.md`).
 
 ## 1.7 Decisões pendentes
 

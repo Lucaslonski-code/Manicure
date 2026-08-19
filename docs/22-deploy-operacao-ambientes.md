@@ -60,49 +60,42 @@ Desenvolvimento
 - Processo formal de resposta a incidentes (papéis, prazos de comunicação) é `PENDENTE DE DECISÃO` — não
   presumido neste documento além do princípio de priorização.
 
-## 22.6 Propriedade de contas e ativos (evitar dependência exclusiva do desenvolvedor)
+## 22.6 Propriedade de contas e ativos
 
 | Ativo | Titularidade recomendada |
 |---|---|
-| Conta do Google Play Console | Proprietária do negócio (ou entidade formal do negócio, quando existir) |
-| Backend (conta do provedor de hospedagem/serviço gerenciado) | Proprietária do negócio, com acesso operacional concedido ao desenvolvedor |
-| Banco de dados | Mesmo provedor do backend; backups sob controle da titular da conta |
-| E-mail transacional (serviço de envio) | Proprietária do negócio (conta do serviço), com credenciais técnicas geridas como secrets (ver 22.7) |
-| Domínio (se houver site/página de exclusão de conta) | Proprietária do negócio |
-| Storage (se necessário no futuro) | Proprietária do negócio |
-| Certificados/chaves de assinatura Android | Play App Signing sob a conta do Google Play da proprietária (ver `18-android-build-assinatura-testes.md`) |
-| Secrets operacionais | Cofre de segredos sob controle conjunto, nunca apenas no dispositivo/máquina pessoal do desenvolvedor |
+| Conta do Google Play Console | Proprietária do negócio |
+| Projeto Supabase (Auth, Postgres, Edge Functions) | Proprietária do negócio (organização Supabase com acesso concedido ao desenvolvedor) |
+| Banco de dados PostgreSQL | Gerenciado pelo Supabase; backups automáticos sob a conta da organização |
+| Conta Expo / EAS Build | Conta organizacional do negócio / desenvolvedor com permissões controladas |
+| Domínio / Hospedagem externa (página de exclusão de conta) | Proprietária do negócio |
+| Certificados de assinatura Android | Google Play App Signing + EAS Credentials |
 
-Princípio orientador: o produto não deve ficar **dependente exclusivamente** da conta pessoal do
-desenvolvedor para continuar operando, sendo atualizado ou republicado. Isso é tratado como risco de negócio
-em `24-riscos-pendencias.md`.
+Princípio: a infraestrutura deve ser autônoma e pertencer à organização do negócio, evitando dependência de contas pessoais do desenvolvedor.
 
-## 22.7 Ambientes e variáveis de ambiente
+## 22.7 Ambientes e Secrets (Supabase e Expo)
 
-| Ambiente | Finalidade |
-|---|---|
-| Desenvolvimento | Uso exclusivo da equipe de desenvolvimento, dados fictícios/de teste. |
-| Homologação/Staging | Opcional — `PENDENTE DE DECISÃO` se será mantido um ambiente intermediário além de desenvolvimento e produção, dado o porte do projeto. |
-| Produção | Dados reais do negócio e das clientes. |
+| Ambiente | Projeto Supabase | Mobile Build Profile (EAS) | Finalidade |
+|---|---|---|---|
+| Desenvolvimento | Projeto Supabase Dev / Local | `development` / `preview` | Testes locais, dados fictícios, migrations em teste. |
+| Produção | Projeto Supabase Prod | `production` | Dados reais do negócio, RLS estrito, backups ativos. |
 
-Variáveis de ambiente típicas (sem valores reais registrados em nenhum documento):
+### Separação e Classificação de Variáveis / Secrets:
 
-- URL base da API por ambiente.
-- Credenciais de conexão com banco de dados (produção nunca compartilhada com desenvolvimento).
-- Chaves de serviço de notificações push.
-- Chaves de serviço de e-mail transacional.
-- Segredos de assinatura Android (gerenciados preferencialmente pelo Play App Signing/EAS, ver doc 18).
+1. **Cliente Mobile (Públicas, injetadas no bundle via Expo):**
+   - `EXPO_PUBLIC_SUPABASE_URL`: Endpoint da API do projeto Supabase.
+   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`: Chave anônima pública (todas as requisições protegidas por RLS).
+2. **Ambiente de Servidor / Edge Functions (Privadas e Críticas):**
+   - `SUPABASE_SERVICE_ROLE_KEY`: Chave mestre com privilégios administrativos. **NUNCA entra no bundle do app**, configurada unicamente nos secrets do Supabase (`supabase secrets set`).
+   - `EXPO_ACCESS_TOKEN`: Token para autenticação segura com a Expo Push API.
 
-## 22.8 O que nunca entra no Git (controle de versão)
+## 22.8 O que NUNCA entra no Git
 
-- Senhas, chaves privadas, tokens de API, arquivos de keystore, arquivos de credenciais de serviços em nuvem.
-- Qualquer arquivo de variáveis de ambiente com valores reais (apenas arquivos de exemplo, sem valores, podem
-  ser versionados).
-- Dumps de banco de dados de produção.
-- Nenhuma credencial real é registrada em nenhum documento desta pasta `docs/` — todos os exemplos aqui são
-  estruturais/conceituais.
+- Arquivos `.env` contendo chaves reais (apenas `.env.example` sem valores é versionado).
+- Chaves de serviço (`service_role key`), keystores locais e tokens de acesso pessoal.
+- Backups ou dados reais de produção.
+- Nenhuma credencial real é documentada em `docs/`.
 
-## 22.9 Observabilidade (ligação com auditoria e backup — ver `23-backup-auditoria-observabilidade.md`)
+## 22.9 Observabilidade e Backup
 
-Detalhamento completo de backup, auditoria e observabilidade em documento dedicado, para não sobrecarregar
-este arquivo — ver `23-backup-auditoria-observabilidade.md`.
+Detalhamento de backups gerenciados pelo Supabase, logs do PostgreSQL e trilha de auditoria em `23-backup-auditoria-observabilidade.md`.

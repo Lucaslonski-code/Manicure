@@ -39,15 +39,17 @@ resolvido no backend, nunca escolhido pelo usuário ou pelo frontend. Detalhes:
 
 ## 4. Autenticação e verificação de e-mail
 
-- Tela única de login para todos os usuários; o backend resolve o papel (`role`) após autenticação, e o app
+- Autoridade de autenticação: **Supabase Auth** (GoTrue gerenciado), com tokens JWT e ciclo de vida de sessão controlados pela plataforma.
+- Tela única de login para todos os usuários (`supabase.auth.signInWithPassword`); o backend/banco resolve o papel (`role`) após autenticação, e o app
   direciona ao fluxo correspondente.
-- Cadastro exige nome, e-mail, telefone, senha e confirmação de senha.
-- Verificação de e-mail é obrigatória: enquanto `email_verified = false`, nenhuma funcionalidade além da
+- Cadastro exige nome, e-mail, telefone, senha e confirmação de senha (`supabase.auth.signUp`), com trigger de banco inserindo o registro em `public.users` com `role = client`.
+- Verificação de e-mail é obrigatória: enquanto `email_verified = false` (`email_confirmed_at` nulo no Supabase Auth), nenhuma funcionalidade além da
   confirmação é acessível.
 - Fluxo: cadastro → e-mail de confirmação → confirmação → login → identificação de role → fluxo
   correspondente.
 - Recuperação/redefinição de senha, logout, sessão expirada e conta desativada são tratados de forma
-  padronizada (mensagens genéricas, sem vazar informação sobre existência de contas).
+  padronizada via Supabase Auth (mensagens genéricas, sem vazar informação sobre existência de contas).
+- A tabela `public.users` não armazena senha nem hash de senha (gerenciados exclusivamente em `auth.users`).
 
 Detalhes completos: [`03-identidade-roles-autenticacao.md`](03-identidade-roles-autenticacao.md). Fluxos de
 tela: [`05-fluxos-cliente.md`](05-fluxos-cliente.md), [`06-fluxos-admin-agenda-global.md`](06-fluxos-admin-agenda-global.md).
@@ -79,7 +81,7 @@ outra.
 Esta regra é tratada como **requisito de negócio** (agenda colaborativa com responsabilidade individual) e
 como **requisito de segurança** (prevenção de acesso horizontal indevido — IDOR/BOLA). Esconder um botão na
 interface não é considerado segurança suficiente: a autorização efetiva é sempre revalidada no
-backend/banco, independentemente do que a interface exibe.
+PostgreSQL via Row Level Security (RLS) e validações server-side, independentemente do que a interface exibe.
 
 Rastreabilidade completa desta regra (banco, API, backend, frontend, testes, critérios de aceitação):
 [`04-autorizacao-seguranca.md`](04-autorizacao-seguranca.md) (documento normativo) e
@@ -91,8 +93,8 @@ Fluxo da cliente: profissional → serviço → data → horário → resumo →
 (`status = confirmed`). O motor de disponibilidade considera jornada do profissional, bloqueios/folgas,
 duração do serviço e agendamentos existentes para oferecer apenas horários válidos.
 
-A prevenção de conflito (double booking) é garantida no **backend/banco** (constraint de exclusão e/ou
-transação atômica), não apenas por uma checagem prévia na interface — duas requisições concorrentes para o
+A prevenção de conflito (double booking) é garantida no **PostgreSQL** via constraint de exclusão temporal
+e/ou Stored Procedure / RPC atômica (`book_appointment`), não apenas por uma checagem prévia na interface — duas requisições concorrentes para o
 mesmo profissional/horário nunca resultam em duas criações bem-sucedidas.
 
 Detalhes: [`07-motor-disponibilidade.md`](07-motor-disponibilidade.md). Estados e transições do
@@ -100,7 +102,8 @@ agendamento: [`09-entidade-appointment.md`](09-entidade-appointment.md).
 
 ## 7. Banco de dados
 
-Entidades principais: `users`, `professionals`, `services`, `professional_services`, `appointments`,
+PostgreSQL gerenciado pelo Supabase com Row Level Security (RLS) mandatório em 100% das tabelas públicas.
+Entidades principais: `users` (vinculada a `auth.users`), `professionals`, `services`, `professional_services`, `appointments`,
 `availability`, `blocked_times`, `notifications`, `audit_logs`, `business_settings`. A FK
 `appointments.professional_id` é a base estrutural da regra central de autorização (seção 5).
 
@@ -109,26 +112,24 @@ Detalhes: [`08-modelo-banco-dados.md`](08-modelo-banco-dados.md),
 
 ## 8. API
 
-Contratos documentais organizados em três grupos: autenticação (`/auth/*`), cliente (`/professionals`,
-`/services`, `/appointments`) e administração (`/admin/appointments`, `/admin/availability`,
-`/admin/blocked-times`, `/admin/services`). Toda escrita administrativa sobre agendamento aplica a regra da
-seção 5; leitura da agenda global (`GET /admin/appointments`) é permitida a qualquer admin.
+Acesso unificado via **Supabase SDK / PostgREST** para operações CRUD protegidas por RLS, **PostgreSQL RPCs** para
+operações transacionais críticas (reserva atômica de horários com prevenção de concorrência) e **Supabase Edge Functions**
+para tarefas com privilégios elevados (envio de push notifications via Expo Push API, exclusão externa de conta).
+Toda escrita administrativa sobre agendamento aplica a regra da seção 5; leitura da agenda global é permitida a qualquer admin.
 
 Detalhes: [`10-api-especificacao.md`](10-api-especificacao.md).
 
 ## 9. Backend
 
-Camadas: API (autenticação, autorização, regra de negócio) → Banco (integridade referencial, constraints,
-RLS quando aplicável). Frontend nunca é fonte de verdade de autorização. Divisão de responsabilidade de
-validação entre frontend (UX) e backend (definitivo) documentada explicitamente.
+Arquitetura BaaS (Backend as a Service) baseada em Supabase: PostgREST + PostgreSQL RLS + Stored Procedures/RPCs + Triggers + Edge Functions.
+Frontend nunca é fonte de verdade de autorização. Divisão de responsabilidade de validação entre frontend (UX) e banco/backend (definitivo) documentada explicitamente.
 
 Detalhes: [`11-arquitetura-backend.md`](11-arquitetura-backend.md).
 
 ## 10. Frontend, navegação e UX/UI
 
-Stack: React Native + Expo + TypeScript. Estrutura conceitual de pastas, estado, formulários, API client e
-armazenamento seguro. Navegação com quatro pilhas (`PublicStack`, `EmailVerificationStack`, `ClientStack`,
-`AdminStack`), resolvidas exclusivamente por dado de backend. A tela de login é única e compartilhada.
+Stack: React Native + Expo + TypeScript + `@supabase/supabase-js` com persistência de sessão segura via `expo-secure-store`.
+Navegação com quatro pilhas (`PublicStack`, `EmailVerificationStack`, `ClientStack`, `AdminStack`), resolvidas exclusivamente por dado retornado pelo Supabase (`auth.users` e `public.users`). A tela de login é única e compartilhada.
 
 UX/UI cobre todas as telas de cliente e admin, com princípios de simplicidade, clareza, confiança, poucos
 passos, feedback, prevenção de erro e acessibilidade. A interface administrativa diferencia visualmente
@@ -238,14 +239,15 @@ conteúdo/PI, acesso para revisão, publicação): [`21-teste-interno-fechado-co
 Ciclo: desenvolvimento → build → teste local/com a cliente → correções → release candidate → teste interno →
 teste fechado → solicitação de produção → revisão → publicação → monitoramento → atualização.
 
-Contas críticas (Google Play Console, backend, banco, e-mail transacional, domínio) devem pertencer à
+Contas críticas (Google Play Console, Supabase, domínio) devem pertencer à
 proprietária do negócio, não apenas ao desenvolvedor, evitando dependência exclusiva de uma pessoa física.
 Nenhuma credencial real é registrada em qualquer documento ou em controle de versão.
+Chaves públicas seguras (`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`) residem no cliente, enquanto chaves privilegiadas (`service_role`) ficam restritas a Edge Functions e infraestrutura interna.
 
-Backup automatizado do banco, com verificação periódica de restaurabilidade. Auditoria de eventos sensíveis
+Backup automatizado do banco gerenciado pelo Supabase, com verificação periódica de restaurabilidade. Auditoria de eventos sensíveis
 (autenticação, criação/alteração/cancelamento/exclusão de agendamento, mudanças administrativas, tentativas
 negadas de autorização) via tabela `audit_logs`. Observabilidade de logs técnicos, erros, métricas e
-disponibilidade, com ferramentas concretas dependentes do provedor de backend escolhido.
+disponibilidade via Postgres Logs e Supabase Logflare.
 
 Detalhes: [`22-deploy-operacao-ambientes.md`](22-deploy-operacao-ambientes.md),
 [`23-backup-auditoria-observabilidade.md`](23-backup-auditoria-observabilidade.md).
@@ -254,9 +256,9 @@ Detalhes: [`22-deploy-operacao-ambientes.md`](22-deploy-operacao-ambientes.md),
 
 Pós-publicação: novas versões seguem o mesmo pipeline; backend pode ser atualizado independentemente do app,
 respeitando compatibilidade entre versões; requisito de `targetSdkVersion` deve ser revalidado a cada ciclo
-anual do Google Play; dependências (Expo/React Native/backend) mantidas atualizadas periodicamente.
+anual do Google Play; dependências (Expo/React Native/Supabase) mantidas atualizadas periodicamente.
 
-A arquitetura atual (modelo de dados, regras de autorização, API, motor de disponibilidade, stack React
+A arquitetura atual (modelo de dados, regras de autorização RLS, API PostgREST/RPC, motor de disponibilidade, stack React
 Native/Expo) já é portável para uma futura versão iOS sem redesenho estrutural. Itens especificamente
 Android (permissões, build/assinatura, processo de publicação) não são portáveis e exigirão levantamento
 próprio quando/se a expansão for decidida — não desenvolvida nesta fase.
@@ -266,16 +268,14 @@ Detalhes: [`27-operacao-manutencao.md`](27-operacao-manutencao.md),
 
 ## 19. Decisões arquiteturais, riscos e pendências
 
-Onze decisões arquiteturais principais registradas em formato contexto/decisão/justificativa/alternativas/
-consequências/riscos, cobrindo: Android first, React Native/Expo/TypeScript, PostgreSQL, verificação de
-e-mail obrigatória, roles com admin provisionado manualmente, agenda global com escrita restrita, autorização
-aplicada em backend/banco, AAB com Play App Signing, `targetSdkVersion` = API 36, propriedade de contas
-independente do desenvolvedor, e preparação para iOS.
+Doze decisões arquiteturais principais registradas em formato contexto/decisão/justificativa/alternativas/
+consequências/riscos, cobrindo: Android first, React Native/Expo/TypeScript, Supabase com PostgreSQL gerenciado, verificação de
+e-mail obrigatória via Supabase Auth, roles com admin provisionado manualmente, agenda global com escrita restrita, autorização
+aplicada no PostgreSQL via Row Level Security (RLS), AAB com Play App Signing, `targetSdkVersion` = API 36, propriedade de contas
+independente do desenvolvedor, preparação para iOS e adoção do Supabase como BaaS oficial (ADR-12).
 
 Doze riscos identificados (segurança, produto, operação, publicação, privacidade, manutenção), cada um com
-mitigação documentada. Lista consolidada de todas as decisões ainda não tomadas (`PENDENTE DE DECISÃO`) e de
-itens que exigem confirmação em documentação oficial no momento da implementação (`REQUER VALIDAÇÃO
-OFICIAL`) — nenhuma dessas lacunas foi preenchida por suposição em qualquer parte desta documentação.
+mitigação documentada. Lista consolidada de todas as decisões ainda não tomadas (`PENDENTE DE DECISÃO`) — a escolha de backend e autenticação está oficialmente resolvida em favor do Supabase; pendências restantes (como identidade visual e package name) estão listadas em `30-riscos-pendencias-glossario.md`.
 
 Detalhes: [`29-decisoes-arquiteturais.md`](29-decisoes-arquiteturais.md),
 [`30-riscos-pendencias-glossario.md`](30-riscos-pendencias-glossario.md).

@@ -31,95 +31,60 @@ sem câmera/fotos — ver `17-android-permissoes.md`).
 
 ## 15.3 Armazenamento e segurança
 
-- Dados armazenados no banco de dados do backend (PostgreSQL — ver `20-decisoes-arquiteturais.md`), com
-  acesso restrito por credenciais de serviço (não expostas ao app — ver `16-ambientes-secrets.md`,
-  consolidado em `18-deploy-operacao.md`).
-- Senhas armazenadas exclusivamente como hash (nunca texto puro) — ver `RNF-SEC-002`.
-- Comunicação sempre via HTTPS/TLS — ver `RNF-SEC-003`.
-- Armazenamento local no dispositivo restrito a sessão/token (armazenamento seguro) — ver `16-android.md`.
+- Dados armazenados no PostgreSQL gerenciado pelo Supabase com Row Level Security (RLS) mandatório.
+- Senhas gerenciadas exclusivamente pelo Supabase Auth em `auth.users` (nunca no frontend, nunca em `public.users`).
+- Comunicação 100% criptografada via HTTPS/TLS.
+- Tokens de sessão armazenados no KeyStore do Android via `expo-secure-store`.
 
 ## 15.4 Compartilhamento
 
-- Nenhum dado pessoal é compartilhado com terceiros para fins de marketing ou publicidade no MVP.
-- Compartilhamento técnico necessário à operação (ex.: serviço de envio de e-mail transacional, serviço de
-  push notification) é limitado ao mínimo necessário para a funcionalidade (endereço de e-mail para envio de
-  confirmação; token de dispositivo para push) — fornecedores concretos a definir em
-  `20-decisoes-arquiteturais.md`.
+- Nenhum dado pessoal é compartilhado com terceiros para fins de publicidade.
+- Serviços de infraestrutura essenciais: Supabase (BaaS / Database / Auth) e Expo / Google FCM (Push Notifications).
 
 ## 15.5 Retenção
 
 - Dados de conta e agendamentos são retidos enquanto a conta estiver ativa.
-- Após exclusão de conta (ver 15.7), dados pessoais diretamente identificáveis são removidos ou anonimizados,
-  conforme detalhado a seguir, preservando o mínimo necessário para integridade de histórico de terceiros
-  (ex.: o admin ainda enxerga que houve um atendimento, sem necessariamente reter dados de contato da
-  cliente que excluiu a conta).
-- Prazo exato de retenção de registros de auditoria (`audit_logs`) após exclusão de conta: `PENDENTE DE
-  DECISÃO`.
+- Após a exclusão, dados identificáveis são anonimizados para preservar o histórico contábil e operacional do estabelecimento.
+- Prazo de retenção de `audit_logs`: `PENDENTE DE DECISÃO`.
 
 ## 15.6 Anonimização
 
-Quando a exclusão completa de um registro comprometeria a integridade de um relacionamento necessário a
-terceiros (ex.: um `appointment` histórico que o admin responsável precisa manter em seu próprio histórico
-de atendimentos), a estratégia é **anonimização** dos dados identificáveis da cliente associados àquele
-registro (ex.: substituição de nome/telefone/e-mail exibidos por indicação de "cliente removida"), mantendo
-o registro do agendamento em si (data, horário, serviço, status) para fins de histórico do profissional.
+Quando uma conta é excluída, os agendamentos passados são mantidos com dados anonimizados (`name = 'Cliente Removida'`, `email = null`, `phone = null`) para garantir a integridade dos relatórios e histórico do profissional responsável.
 
-## 15.7 Fluxo de exclusão de conta
+## 15.7 Fluxo técnico de exclusão de conta
 
-### 15.7.1 Cliente
+### 15.7.1 Cliente (In-App)
 
 ```
-Perfil → Excluir Conta → Confirmação explícita → Requisição ao backend
-   → Backend:
-       - Marca a conta como excluída (deleted_at) e desativa autenticação.
-       - Anonimiza dados diretamente identificáveis (nome, e-mail, telefone) nos registros
-         de appointments históricos vinculados, preservando o registro para o histórico do
-         profissional responsável.
-       - Cancela agendamentos futuros ainda ativos (status = cancelled), notificando o admin
-         responsável.
-       - Remove tokens de push associados.
-       - Registra o evento em audit_logs.
-   → App: encerra sessão local, retorna à tela de login com confirmação de exclusão concluída.
+Perfil → Excluir Conta → Confirmação explícita no App
+   → Invocação de Edge Function ou RPC segura
+   → Execução de supabase.auth.admin.deleteUser(user_id)
+   → Trigger no PostgreSQL:
+       - Marca public.users.deleted_at = now() e anonimiza dados de contato.
+       - Cancela agendamentos futuros pendentes (status = 'cancelled').
+       - Remove tokens de notificação em notifications_tokens.
+       - Registra evento de exclusão em public.audit_logs.
+   → App: supabase.auth.signOut(), limpeza de SecureStore e retorno à Splash/Login.
 ```
 
-### 15.7.2 Admin
+### 15.7.2 Admin (In-App)
 
 ```
-Perfil → Excluir Conta → Confirmação explícita → Requisição ao backend
-   → Backend:
-       - Marca a conta como excluída e desativa autenticação.
-       - Marca o registro em `professionals` vinculado como inativo (is_active = false),
-         impedindo novos agendamentos para esse profissional.
-       - Agendamentos futuros já existentes: PENDENTE DE DECISÃO quanto ao tratamento exato
-         (cancelamento automático com notificação à cliente, ou transferência a outro admin —
-         não definido; não deve ser resolvido silenciosamente na implementação sem decisão de
-         produto).
-       - Histórico de agendamentos passados é preservado para consulta futura por outros
-         admins (agenda global), com o profissional identificado como inativo.
-       - Registra o evento em audit_logs.
+Perfil → Excluir Conta → Confirmação explícita
+   → Inativação do registro em public.professionals (is_active = false).
+   → Exclusão da conta no Supabase Auth e anonimização do perfil.
+   → Agendamentos futuros: PENDENTE DE DECISÃO quanto ao cancelamento automático ou realocação.
+   → Histórico passado mantido com profissional inativo.
+   → Registro em public.audit_logs.
 ```
 
-O tratamento de agendamentos futuros de um admin que exclui a própria conta é registrado explicitamente como
-`PENDENTE DE DECISÃO` — não deve ser assumido nem implementado silenciosamente sem definição de produto,
-dado o impacto direto em clientes com atendimentos marcados.
+## 15.8 Requisitos Google Play (Exclusão Externa de Conta)
 
-## 15.8 Requisitos da Google Play para exclusão de conta
+Para atender à política de conformidade da Google Play (Data Safety / Account Deletion):
+- **Página Web Externa:** Uma página web simples acessível via navegador para clientes solicitarem a exclusão de conta sem ter o aplicativo instalado.
+- **Backend / Edge Function:** A página externa submete a requisição para a Supabase Edge Function `delete-account-external`, que valida o e-mail/senha ou link de confirmação e executa a exclusão com os mesmos triggers de anonimização.
+- **Hospedagem da página:** `PENDENTE DE DECISÃO` quanto ao domínio/hospedagem da página estática (ex.: Vercel, Netlify, GitHub Pages ou Supabase Storage/Hosting).
 
-A Google Play exige, para aplicativos que permitem criação de conta, que a exclusão de conta esteja
-disponível tanto **dentro do aplicativo** quanto por meio de um **recurso acessível fora do aplicativo**
-(tipicamente uma página web), permitindo que a solicitação de exclusão seja feita mesmo por quem não tem mais
-acesso ao app instalado. Este é um requisito de política vigente da Google Play — os detalhes exatos de
-formato e prazo devem ser conferidos na documentação oficial da Google Play Console vigente no momento da
-publicação (`REQUER VALIDAÇÃO OFICIAL`; ver também `17-google-play.md`, seção de Data Safety/exclusão de
-conta).
+## 15.9 Dados retidos por auditoria
 
-Consequência arquitetural: além do fluxo dentro do app (15.7), o produto precisa de uma página externa
-simples (fora do app) onde o usuário possa solicitar a exclusão de sua conta, mesmo sem o aplicativo
-instalado. A existência, hospedagem e responsável por essa página é `PENDENTE DE DECISÃO` de implementação
-(ver também `19-propriedade-contas.md`, quando consolidado em `18-deploy-operacao.md`).
-
-## 15.9 Dados não excluídos por obrigação legal/operacional
-
-Registros de auditoria/segurança podem ser retidos por período limitado mesmo após exclusão de conta, para
-fins de investigação de fraude/abuso, sem incluir dados diretamente identificáveis desnecessários. Prazo
-exato: `PENDENTE DE DECISÃO`.
+Registros em `public.audit_logs` registram apenas que uma conta com determinado UUID foi excluída, sem preservar dados pessoais desnecessários.

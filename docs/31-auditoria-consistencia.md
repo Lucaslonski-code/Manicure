@@ -79,10 +79,24 @@ nenhuma dessas pendências foi preenchida com suposição em nenhum documento �
 identificadas como `PENDENTE DE DECISÃO` ou `REQUER VALIDAÇÃO OFICIAL` de forma consistente em todos os
 locais onde são mencionadas.
 
-## 31.5 Conclusão da auditoria
+## 31.6 Auditoria de Fechamento Arquitetural — Supabase BaaS (19 de agosto de 2026)
 
-A documentação, no conjunto dos arquivos `01` a `30`, está consistente quanto à regra central de autorização
-(agenda global de leitura, escrita restrita ao profissional responsável) e demais requisitos obrigatórios
-verificados. Nenhuma correção estrutural foi necessária além do esclarecimento registrado em 31.3. A
-documentação é considerada apta a servir como fonte de verdade para implementação, observadas as decisões
-pendentes e itens de validação oficial listados em `30-riscos-pendencias-glossario.md`.
+Auditoria formal realizada após o fechamento arquitetural oficial adotando **Supabase** como backend do projeto:
+
+| # | Item de Fechamento Arquitetural | Status | Evidência / Validação |
+|---|---|---|---|
+| A1 | Stack Frontend confirmada | Conforme | React Native + Expo + TypeScript + `@supabase/supabase-js` (`docs/12-arquitetura-frontend-mobile.md`). |
+| A2 | Provedor de Backend / BaaS | Conforme | Supabase oficializado em `docs/README.md`, `docs/PRODUCT-SPECIFICATION.md` e `docs/29-decisoes-arquiteturais.md` (ADR-12). |
+| A3 | Autenticação gerenciada | Conforme | Supabase Auth (GoTrue) oficializado em `docs/03-identidade-roles-autenticacao.md`; senhas e hashes removidos de `public.users`. |
+| A4 | Autorização no Banco (RLS) | Conforme | Row Level Security (RLS) mandatório em 100% das tabelas em `docs/04-autorizacao-seguranca.md`, `docs/08-modelo-banco-dados.md` e `docs/11-arquitetura-backend.md`. |
+| A5 | Regra Central Ana 1 vs. Ana 2 | Conforme | Garantida estruturalmente no PostgreSQL via RLS: `appointments.professional_id = get_auth_professional_id()` para UPDATE/DELETE e SELECT irrestrito para admins na leitura da agenda global. |
+| A6 | Prevenção de Double Booking | Conforme | PostgreSQL constraint `btree_gist` + RPC atômica `book_appointment` (`docs/07-motor-disponibilidade.md`). |
+| A7 | Integração de API | Conforme | Contratos mapeados para Supabase PostgREST, RPCs e Edge Functions (`docs/10-api-especificacao.md`). |
+| A8 | Notificações Push | Conforme | Database Webhooks + Supabase Edge Function (`send-push-notification`) + Expo Push API (`docs/14-notificacoes.md`). |
+| A9 | Exclusão de Conta Google Play | Conforme | Edge Function (`delete-account-external`) + Triggers de anonimização no PostgreSQL (`docs/15-privacidade-exclusao-conta.md`). |
+| A10 | Gestão de Ambientes e Secrets | Conforme | `EXPO_PUBLIC_SUPABASE_ANON_KEY` no client; `SUPABASE_SERVICE_ROLE_KEY` estritamente server-side nas Edge Functions (`docs/22-deploy-operacao-ambientes.md`). |
+| A11 | Target Android API 36 e EAS | Conforme | EAS Build configurado para gerar AAB com targetSdkVersion 36 (`docs/18-android-build-assinatura-testes.md`). |
+
+### Conclusão Final
+
+A documentação do projeto está **100% consistente, unificada e auditada** sob a arquitetura oficial Supabase BaaS. Todas as pendências arquiteturais de escolha de backend, banco de dados e autenticação foram encerradas. O projeto está apto para o início da **Fase 1 de Implementação**.

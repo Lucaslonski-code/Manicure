@@ -31,19 +31,14 @@ alternativas/consequências/riscos.
 - **Riscos:** dependência da manutenção do ecossistema Expo/React Native; mitigação: acompanhar
   documentação oficial a cada ciclo de manutenção (`27-operacao-manutencao.md`).
 
-## ADR-03 — Backend com PostgreSQL
+## ADR-03 — Banco de Dados PostgreSQL Gerenciado pelo Supabase
 
-- **Contexto:** necessidade de banco relacional com suporte a integridade referencial forte e constraints
-  avançadas (ex.: prevenção de sobreposição de horários).
-- **Decisão:** usar PostgreSQL como banco de dados.
-- **Justificativa:** suporte maduro a constraints de integridade, transações com isolamento configurável, e
-  (dependendo do provedor de hospedagem escolhido) suporte a políticas de RLS — relevante para a regra
-  central de autorização (`04-autorizacao-seguranca.md`, `11-arquitetura-backend.md`, seção 11.4).
-- **Alternativas:** banco NoSQL — rejeitado por não oferecer garantias de integridade referencial e
-  constraints necessárias ao motor de disponibilidade com a mesma naturalidade.
-- **Consequências:** modelo de dados (`08`, `09`) documentado em termos relacionais.
-- **Riscos:** escolha do provedor gerenciado específico ainda pendente (`PENDENTE DE DECISÃO`), pode afetar
-  disponibilidade de recursos como RLS nativo.
+- **Contexto:** necessidade de banco relacional com integridade referencial forte, suporte nativo a Row Level Security (RLS) e constraints avançadas de exclusão temporal para prevenção de double booking.
+- **Decisão:** usar PostgreSQL gerenciado pela plataforma Supabase.
+- **Justificativa:** suporte maduro a constraints relacionais (`btree_gist`), transações atômicas com isolamento estrito e aplicação nativa de políticas RLS integradas ao JWT do Supabase Auth.
+- **Alternativas:** banco NoSQL / MongoDB (rejeitado por fragilidade em constraints de concorrência); banco Postgres auto-hospedado (rejeitado por custo operacional elevado).
+- **Consequências:** modelo de dados (`08`, `09`) implementado via migrations declarativas SQL no Supabase.
+- **Riscos:** dependência da infraestrutura Supabase; mitigação: PostgreSQL padrão permite migração direta com pg_dump caso necessário.
 
 ## ADR-04 — Autenticação com verificação de e-mail obrigatória
 
@@ -87,17 +82,14 @@ alternativas/consequências/riscos.
 - **Riscos:** falha de implementação desta regra é o risco de segurança mais crítico do produto — ver
   `30-riscos-pendencias-glossario.md`.
 
-## ADR-07 — Autorização aplicada no backend/banco, não no frontend
+## ADR-07 — Autorização aplicada no PostgreSQL via Row Level Security (RLS)
 
-- **Contexto:** necessidade de garantir que a regra central (ADR-06) não seja contornável.
-- **Decisão:** toda autorização de escrita é revalidada no backend (e, quando aplicável, reforçada por
-  RLS no banco); o frontend apenas oculta ações não permitidas como medida de UX.
-- **Justificativa:** princípio de segurança fundamental — esconder botão não é controle de acesso.
-- **Alternativas:** confiar apenas no frontend — rejeitada explicitamente por violar requisito de
-  segurança do produto.
-- **Consequências:** `04-autorizacao-seguranca.md` é o documento normativo desta decisão.
-- **Riscos:** implementação incorreta (ex.: endpoint que esquece a checagem) é mitigada por teste
-  automatizado obrigatório dos casos negativos (`24-testes-qa.md`, seção 24.3).
+- **Contexto:** necessidade de garantir que a regra central (ADR-06) não seja contornável, mesmo sob ataques diretos à API ou manipulação de parâmetros.
+- **Decisão:** toda autorização é imposta no motor do banco de dados PostgreSQL através de políticas de RLS e funções `SECURITY DEFINER`. O frontend apenas oculta botões para UX.
+- **Justificativa:** princípio de segurança fundamental — autorização reside na camada de dados inviolável.
+- **Alternativas:** confiar exclusivamente em validações client-side ou middleware de servidor intermediário (rejeitado por vulnerabilidade a bugs e bypass).
+- **Consequências:** `04-autorizacao-seguranca.md`, `08-modelo-banco-dados.md` e `11-arquitetura-backend.md`.
+- **Riscos:** complexidade em queries administrativas com múltiplos joins; mitigado por funções de segurança auxiliares indexadas.
 
 ## ADR-08 — Formato AAB e Play App Signing para publicação
 
@@ -144,3 +136,12 @@ alternativas/consequências/riscos.
 - **Alternativas:** ignorar portabilidade — rejeitada, aumentaria custo de uma eventual expansão futura.
 - **Consequências:** `28-arquitetura-futura-ios.md`.
 - **Riscos:** nenhum risco imediato — decisão de baixo custo presente.
+
+## ADR-12 — Supabase como Plataforma Backend as a Service (BaaS) Oficial
+
+- **Contexto:** necessidade de backend robusto, escalável, seguro e de rápida iteração para suportar autenticação, banco de dados relacional, controle de concorrência e autorização por RLS.
+- **Decisão:** adotar o Supabase como backend oficial do produto, incluindo Supabase Auth, PostgreSQL gerenciado, PostgREST para CRUD com RLS, PostgreSQL RPCs para operações atômicas e Supabase Edge Functions para tarefas privilegiadas.
+- **Justificativa:** elimina complexidade de manter servidores manuais (Node/Express), fornece autenticação segura pronta (GoTrue), integra nativamente segurança via PostgreSQL RLS e reduz substancialmente o custo de infraestrutura e tempo de entrega.
+- **Alternativas:** servidor backend customizado em Node.js/Express (rejeitado por maior esforço de manutenção, infraestrutura e riscos de reimplementação de segurança); Firebase (rejeitado por modelo Firestore NoSQL ser inadequado para prevenção de double booking e consultas relacionais complexas).
+- **Consequências:** elimina dependências de servidores de aplicação manuais; concentra toda a segurança e regras de negócio em PostgreSQL SQL declarativo + Edge Functions; frontend consome diretamente `@supabase/supabase-js`.
+- **Riscos:** acoplamento ao ecossistema Supabase; mitigação: PostgreSQL aberto e migrável com exportação padrão SQL.

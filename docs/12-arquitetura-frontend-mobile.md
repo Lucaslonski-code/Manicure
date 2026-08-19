@@ -2,7 +2,7 @@
 
 Status: CONFIRMADO. Documento conceitual — nenhum código é escrito aqui.
 
-Stack de referência: React Native + Expo + TypeScript (ver `20-decisoes-arquiteturais.md`). Versões
+Stack de referência: React Native + Expo + TypeScript (ver `29-decisoes-arquiteturais.md`). Versões
 específicas de SDK/bibliotecas devem ser validadas na documentação oficial vigente do Expo/React Native no
 momento da implementação — `REQUER VALIDAÇÃO OFICIAL`.
 
@@ -17,10 +17,10 @@ app/
                         Meus Agendamentos, Detalhes, Histórico, Perfil, Exclusão de Conta
     admin/           → Dashboard, Agenda Global, Detalhes do Agendamento, Disponibilidade,
                         Bloqueios, Serviços, Perfil, Exclusão de Conta
-  components/        → componentes reutilizáveis (ver design system, doc 13)
+  components/        → componentes reutilizáveis (ver design system, 13-ux-ui-design-system.md)
   hooks/             → hooks de estado/efeitos reutilizáveis (ex.: sessão, disponibilidade)
   services/
-    api/             → cliente HTTP e definição de contratos (espelha doc 10)
+    api/             → cliente HTTP e definição de contratos (espelha 10-api-especificacao.md)
     auth/            → integração com provedor de autenticação
     notifications/   → registro de push, tratamento de recebimento
     storage/         → armazenamento seguro local (sessão, preferências)
@@ -50,20 +50,41 @@ A tecnologia concreta de gerenciamento de estado (ex.: biblioteca de estado glob
 - Essa validação é exclusivamente de UX — a validação definitiva ocorre no backend (ver `11-arquitetura-backend.md`,
   seção 11.6). Nenhuma regra de autorização é decidida no formulário.
 
-## 12.4 Serviços e API client
+## 12.4 Cliente Supabase e Gerenciamento de Sessão
 
-- Um único cliente HTTP centralizado é responsável por anexar o token de sessão às requisições autenticadas,
-  tratar renovação/expiração de sessão de forma uniforme, e mapear erros padronizados (ver
-  `10-api-especificacao.md`, seção 10.9) para tratamento consistente na UI.
-- Nenhuma tela realiza chamada direta sem passar por esse cliente centralizado.
+- O aplicativo utiliza o SDK oficial `@supabase/supabase-js` instanciado como singleton em `src/services/supabase.ts`.
+- O armazenamento seguro de tokens de sessão (JWT e refresh token) é integrado ao SDK via adaptador customizado usando `expo-secure-store`:
+  ```typescript
+  import { createClient } from '@supabase/supabase-js';
+  import * as SecureStore from 'expo-secure-store';
+
+  const ExpoSecureStoreAdapter = {
+    getItem: (key: string) => SecureStore.getItemAsync(key),
+    setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
+    removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+  };
+
+  export const supabase = createClient(
+    process.env.EXPO_PUBLIC_SUPABASE_URL!,
+    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        storage: ExpoSecureStoreAdapter,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false,
+      },
+    }
+  );
+  ```
+- O ciclo de vida da autenticação é monitorado globalmente via `supabase.auth.onAuthStateChange((event, session) => ...)`.
+- As variáveis públicas `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY` são as únicas credenciais presentes no bundle do app. A chave `service_role` **nunca** é incluída no frontend.
 
 ## 12.5 Armazenamento local
 
-- Token/sessão: armazenamento seguro do dispositivo (mecanismo específico do Android detalhado em
-  `16-android.md`).
-- Preferências não sensíveis (ex.: última visão de calendário usada): armazenamento local simples.
-- Nenhum dado sensível (senha, token) é armazenado em texto simples ou em local acessível a outros
-  aplicativos.
+- **Sessão / Tokens JWT:** Gerenciados via `expo-secure-store` no KeyStore seguro do Android.
+- **Preferências locais (ex.: filtros de data na agenda):** Armazenadas via AsyncStorage / SQLite local simples.
+- Nenhum dado sensível (senhas, chaves privadas) é persistido em texto claro.
 
 ## 12.6 Cache, loading, erro e estados vazios — padrão transversal
 
@@ -73,8 +94,8 @@ dados, sucesso sem dados (estado vazio, ver docs 05/06), e erro (com opção de 
 
 ## 12.7 Notificações (papel do frontend)
 
-- Solicitação de permissão de notificações ao usuário (Android — ver `16-android.md`).
-- Registro do token de dispositivo junto ao backend após login bem-sucedido.
+- Solicitação de permissão de notificações ao usuário (Android 13+ `POST_NOTIFICATIONS` — ver `16-android.md`).
+- Obtenção do Expo Push Token via `expo-notifications` e persistência do token no banco Supabase (`notifications_tokens` ou metadados de perfil) após login.
 - Tratamento de abertura de tela a partir do toque em notificação (deep link interno) — ver `14-notificacoes.md`.
 
 ## 12.8 Deep links
@@ -83,14 +104,14 @@ dados, sucesso sem dados (estado vazio, ver docs 05/06), e erro (com opção de 
   normal: um deep link para detalhe de agendamento exige sessão válida e, no caso administrativo, é
   resolvido como leitura ampla (qualquer admin visualiza) com ações de escrita condicionadas à regra central
   de autorização.
-- Deep links externos (ex.: link universal para abrir o app a partir de um e-mail de confirmação) são
-  tratados como parte do fluxo de autenticação (ver `03-identidade-roles-autenticacao.md`).
+- Deep links externos (ex.: link de confirmação de e-mail ou reset de senha do Supabase Auth) são
+  capturados pelo Expo Linking e tratados no fluxo de autenticação.
 
 ## 12.9 Conectividade / offline
 
 O MVP não define suporte funcional a uso offline (criação de agendamento sem conexão, por exemplo). O app
-deve, no mínimo, detectar ausência de conectividade e apresentar mensagem apropriada, sem permitir ações que
-dependam do backend. Suporte offline mais avançado é `PENDENTE DE DECISÃO` (fora do MVP).
+deve detectar ausência de conectividade (via `NetInfo`) e apresentar feedback claro, sem permitir mutações que
+dependam do backend/banco.
 
 ---
 
@@ -114,38 +135,30 @@ RootNavigator
 
 ### 12.10.2 Regra de resolução de pilha
 
-A pilha ativa é determinada exclusivamente pelo estado de autenticação resolvido a partir do backend
-(`/auth/me`, ver `10-api-especificacao.md`), nunca por escolha do usuário na interface:
+A pilha ativa é determinada pelo estado retornado pelo Supabase (`auth.session` e perfil em `public.users`):
 
 ```
-SE não autenticado           → PublicStack
-SENÃO SE email_verified = falso → EmailVerificationStack
-SENÃO SE role = "client"     → ClientStack
-SENÃO SE role = "admin"      → AdminStack
+SE session é nula             → PublicStack
+SENÃO SE email_confirmed_at é nulo → EmailVerificationStack
+SENÃO SE role = "client"      → ClientStack
+SENÃO SE role = "admin"       → AdminStack
 ```
 
 ### 12.10.3 Login único
 
-A tela de Login pertence exclusivamente à `PublicStack` e é a mesma para todos os usuários. Não existe rota,
-parâmetro ou botão que direcione para uma "versão admin" da tela de login (ver `03-identidade-roles-autenticacao.md`).
+A tela de Login pertence exclusivamente à `PublicStack` e é a mesma para todos os usuários (`supabase.auth.signInWithPassword`). Não existe seletor de perfil na tela de login.
 
 ### 12.10.4 Proteção de rotas
 
-- Toda tela fora da `PublicStack` exige sessão válida; tentativa de navegação direta (ex.: deep link) sem
-  sessão redireciona para Login.
-- Toda tela da `AdminStack` exige `role = admin`; uma conta `client` que tente acessar (por manipulação de
-  estado local, deep link, ou navegação indevida) é redirecionada, e qualquer chamada de API subjacente
-  retorna `403` (ver `10-api-especificacao.md`).
-- Toda tela fora da `EmailVerificationStack` exige `email_verified = true`.
+- Toda tela fora da `PublicStack` exige sessão válida; tentativa de navegação direta sem sessão redireciona para Login.
+- Toda tela da `AdminStack` exige `role = admin`; contas de cliente não possuem acesso visual e qualquer tentativa de chamada ao PostgREST é bloqueada pelo RLS com `403`.
+- Toda tela funcional fora da `EmailVerificationStack` exige confirmação de e-mail.
 
 ### 12.10.5 Logout e sessão expirada
 
-- Logout limpa estado global e armazenamento local sensível, retornando à `PublicStack`.
-- Qualquer resposta `401` de qualquer endpoint aciona o mesmo comportamento de logout local (sessão inválida)
-  e redirecionamento para Login, com mensagem informativa.
+- `supabase.auth.signOut()` encerra a sessão, limpa `expo-secure-store` e direciona imediatamente à `PublicStack`.
+- Eventos de expiração de token capturados por `onAuthStateChange` realizam o logout automático.
 
 ### 12.10.6 Navegação "voltar" (back navigation)
 
-- Botão "voltar" do sistema Android não deve permitir retornar a uma pilha para a qual o usuário não tem
-  mais permissão (ex.: usuário que fez logout não deve conseguir "voltar" para telas autenticadas via botão
-  físico/gesto de voltar) — a troca de pilha reinicia a árvore de navegação.
+- O botão "voltar" do sistema Android é controlado para não permitir retorno a telas autenticadas após logout — a mudança de pilha reseta a árvore de navegação do React Navigation.

@@ -117,7 +117,7 @@ Quando `appointment.professional_id ≠ current_admin.professional_id`:
 ## 6.8 Perfil e exclusão de conta (admin)
 
 - Mesma estrutura conceitual do fluxo da cliente (ver `05-fluxos-cliente.md`, seção "Perfil"), com o
-  detalhamento de exclusão de conta administrativa em `14-privacidade-exclusao-conta.md` (inclui tratamento
+  detalhamento de exclusão de conta administrativa em `15-privacidade-exclusao-conta.md` (inclui tratamento
   específico dos agendamentos vinculados ao profissional).
 
 ## 6.9 Cenários de erro e exceção (transversais ao fluxo administrativo)

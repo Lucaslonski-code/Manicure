@@ -1,7 +1,7 @@
 # 02. Requisitos Funcionais e Não Funcionais
 
 Status: CONFIRMADO. Cada requisito possui ID único, reutilizado na matriz de rastreabilidade
-(`21-matriz-rastreabilidade-criterios-aceitacao.md`).
+(`26-matriz-rastreabilidade-criterios-aceitacao.md`).
 
 Convenção de IDs: `RF-<DOMÍNIO>-<NNN>` para funcionais, `RNF-<DOMÍNIO>-<NNN>` para não funcionais.
 
@@ -21,7 +21,7 @@ Convenção de IDs: `RF-<DOMÍNIO>-<NNN>` para funcionais, `RNF-<DOMÍNIO>-<NNN>
 | RF-AUTH-006 | Redefinição de senha | Visitante/Cliente/Admin | Definir nova senha a partir de link/token de recuperação válido. |
 | RF-AUTH-007 | Identificação de role pós-login | Sistema | Determinar `client` ou `admin` a partir de dado de backend, nunca do frontend. |
 | RF-AUTH-008 | Bloqueio de conta não verificada | Sistema | Impedir uso funcional do app enquanto e-mail não estiver confirmado. |
-| RF-AUTH-009 | Exclusão de conta | Cliente/Admin | Permitir que o usuário solicite exclusão da própria conta (ver `14-privacidade-exclusao-conta.md`). |
+| RF-AUTH-009 | Exclusão de conta | Cliente/Admin | Permitir que o usuário solicite exclusão da própria conta (ver `15-privacidade-exclusao-conta.md`). |
 
 ### Perfil (PROFILE)
 
@@ -83,7 +83,7 @@ Convenção de IDs: `RF-<DOMÍNIO>-<NNN>` para funcionais, `RNF-<DOMÍNIO>-<NNN>
 | RF-NOTIF-003 | Cancelamento | Sistema | Notificar partes envolvidas no cancelamento. |
 | RF-NOTIF-004 | Lembrete | Sistema | Notificar cliente antes do horário agendado. |
 
-Detalhamento completo em `13-notificacoes.md`.
+Detalhamento completo em `14-notificacoes.md`.
 
 ---
 
@@ -92,19 +92,19 @@ Detalhamento completo em `13-notificacoes.md`.
 | ID | Categoria | Descrição |
 |---|---|---|
 | RNF-SEC-001 | Segurança | Toda decisão de autorização deve ser aplicada em camada de backend/banco, nunca somente no frontend. |
-| RNF-SEC-002 | Segurança | Senhas nunca armazenadas em texto puro; uso de hashing por biblioteca reconhecida do provedor de autenticação escolhido. |
+| RNF-SEC-002 | Segurança | Senhas nunca armazenadas em texto puro; uso de hashing pelo Supabase Auth. |
 | RNF-SEC-003 | Segurança | Comunicação cliente-servidor exclusivamente via HTTPS/TLS. |
-| RNF-PRIV-001 | Privacidade | Dados pessoais coletados apenas com finalidade declarada (ver `14-privacidade-exclusao-conta.md`). |
+| RNF-PRIV-001 | Privacidade | Dados pessoais coletados apenas com finalidade declarada (ver `15-privacidade-exclusao-conta.md`). |
 | RNF-DISP-001 | Disponibilidade | Indisponibilidade planejada deve ser comunicável; sem SLA numérico definido para o MVP — `PENDENTE DE DECISÃO`. |
 | RNF-CONF-001 | Confiabilidade | Nenhuma operação de escrita em `appointments` pode resultar em sobreposição de horários para o mesmo profissional, mesmo sob concorrência. |
-| RNF-INTEG-001 | Integridade | Toda alteração de dado sensível (agendamento, conta) deve ser auditável (ver `16-backup-auditoria-observabilidade.md`, quando consolidado). |
+| RNF-INTEG-001 | Integridade | Toda alteração de dado sensível (agendamento, conta) deve ser auditável (ver `23-backup-auditoria-observabilidade.md`). |
 | RNF-PERF-001 | Desempenho | Sem metas numéricas de latência definidas no MVP sem medição prévia — `PENDENTE DE DECISÃO`. Não inventar valores. |
 | RNF-ESCALA-001 | Escalabilidade | Arquitetura deve suportar crescimento do número de profissionais e agendamentos sem redesenho estrutural do modelo de dados. |
-| RNF-ACESS-001 | Acessibilidade | Interface deve seguir práticas mínimas de acessibilidade mobile (contraste, tamanho de toque, leitura por leitor de tela) — detalhado em `12-ux-ui-design-system.md`. |
+| RNF-ACESS-001 | Acessibilidade | Interface deve seguir práticas mínimas de acessibilidade mobile (contraste, tamanho de toque, leitura por leitor de tela) — detalhado em `13-ux-ui-design-system.md`. |
 | RNF-MANUT-001 | Manutenibilidade | Código e documentação organizados por domínio, permitindo manutenção por terceiros sem depender do autor original. |
 | RNF-OBS-001 | Observabilidade | Erros críticos (falha de autenticação, falha de agendamento) devem ser registráveis para diagnóstico. |
-| RNF-COMPAT-001 | Compatibilidade | Compatibilidade com Android conforme `15-android.md` (API mínima e alvo definidas ali). |
-| RNF-COMPAT-002 | Compatibilidade futura | Decisões de arquitetura não devem impedir futura versão iOS (ver `19-arquitetura-futura-ios.md`). |
+| RNF-COMPAT-001 | Compatibilidade | Compatibilidade com Android conforme `16-android.md` (API mínima e alvo definidas ali). |
+| RNF-COMPAT-002 | Compatibilidade futura | Decisões de arquitetura não devem impedir futura versão iOS (ver `28-arquitetura-futura-ios.md`). |
 | RNF-CONCUR-001 | Concorrência | Duas requisições simultâneas de agendamento para o mesmo profissional/horário não podem ambas ser aceitas. |
 
 Nenhum valor numérico de SLA, throughput ou latência foi definido pelo produto até o momento; onde necessário,

@@ -15,55 +15,39 @@ Notificações consideradas **essenciais** ao MVP: as quatro acima. Candidatas *
 notificação de aniversário, campanhas promocionais, notificação de avaliação pós-atendimento — todas
 `PENDENTE DE DECISÃO` e fora do escopo atual (ver `01-visao-escopo-atores.md`).
 
-## 14.2 Push vs. local
+## 14.2 Push Notifications via Supabase Edge Function e Expo Push API
 
-| Tipo | Definição | Uso no produto |
-|---|---|---|
-| Push notification | Enviada pelo backend através de um serviço de push (ex.: serviço de mensagens do Expo/Android), entregue mesmo com app fechado. | Confirmação, alteração, cancelamento, lembrete (gerado no momento certo pelo backend). |
-| Notificação local | Agendada diretamente pelo dispositivo, sem depender do backend no momento da exibição. | Uso possível como reforço complementar do lembrete (ex.: agendado no momento da criação do agendamento, cancelado se o agendamento for alterado/cancelado) — `PENDENTE DE DECISÃO` se será usada além do push. |
+| Componente | Função |
+|---|---|
+| Database Trigger / Webhook | Detecta inserções ou atualizações na tabela `appointments` e aciona a Edge Function. |
+| Supabase Edge Function (`send-push-notification`) | Monta o payload, recupera o token do destinatário e envia a requisição HTTP para a Expo Push API. |
+| Expo Push Service / FCM | Entrega a notificação push no dispositivo Android da cliente ou profissional. |
+| `expo-notifications` (Frontend) | Registra o token no app, solicita permissões e trata o toque na notificação (deep link). |
 
 ## 14.3 Permissões (Android)
 
-- O app solicita permissão de notificações ao usuário no momento apropriado (não necessariamente no
-  primeiro uso — ver `16-android.md`, seção de permissões, para diretriz de solicitação contextual).
-- Caso a permissão seja negada, o app continua funcional; apenas notificações push não são recebidas — o
-  usuário ainda pode consultar agendamentos manualmente no app.
+- O app solicita permissão de notificações ao usuário no momento apropriado (Android 13+ `POST_NOTIFICATIONS` — ver `16-android.md`).
+- Caso a permissão seja negada, o app continua 100% funcional; o usuário ainda pode consultar seus agendamentos normalmente na interface.
 
-## 14.4 Token de dispositivo
+## 14.4 Registro e Gestão do Token de Push
 
-- Após login bem-sucedido e concessão de permissão, o app registra o token de push do dispositivo junto ao
-  backend, associado ao `user_id`.
-- Um usuário pode ter múltiplos dispositivos registrados (ex.: troca de aparelho) — tokens antigos inválidos
-  devem ser tratados (ver 14.6).
-- No logout, o token do dispositivo é desassociado do usuário (ou marcado inativo) para evitar envio de
-  notificações após a sessão ser encerrada localmente.
+- Após autenticação, o app obtém o `ExpoPushToken` e o persiste na tabela `notifications_tokens` vinculada ao `user_id`.
+- Ao realizar logout (`supabase.auth.signOut()`), o token associado ao dispositivo é desativado ou removido para evitar disparos indevidos.
 
-## 14.5 Falhas e reenvio
+## 14.5 Falhas, Resiliência e Desacoplamento
 
-- Falha no envio de uma notificação push não deve impedir nem reverter a operação de negócio que a originou
-  (criação/alteração/cancelamento de agendamento) — ver `11-arquitetura-backend.md`, seção 11.7.
-- Registro de falha é mantido em `notifications.status = failed` (ver `08-modelo-banco-dados.md`, seção 8.9)
-  para eventual diagnóstico; reenvio automático não é requisito obrigatório do MVP —
-  `PENDENTE DE DECISÃO`.
+- O envio da notificação via Edge Function é completamente assíncrono. Falhas na Expo Push API não revertem nem afetam a transação de agendamento no PostgreSQL.
+- O status de disparo é registrado em `notifications` (`status = 'sent' | 'failed'`).
 
-## 14.6 Duplicação e token inválido
+## 14.6 Idempotência e Limpeza de Tokens Inválidos
 
-- O backend deve evitar disparo duplicado do mesmo evento de notificação (ex.: idempotência baseada no
-  evento de origem, como `appointment_id` + `type`).
-- Token de dispositivo que retorna erro de "inválido/não registrado" do serviço de push deve ser marcado
-  como inativo no backend, evitando novas tentativas de envio para aquele token.
+- A Edge Function utiliza uma chave de idempotência (`appointment_id` + `status` + `timestamp`) para evitar disparos repetidos.
+- Tokens que retornam `DeviceNotRegistered` da Expo Push API são automaticamente removidos da base.
 
 ## 14.7 Abertura de tela a partir da notificação
 
-- Toque em notificação de confirmação/alteração/cancelamento/lembrete abre diretamente o detalhe do
-  agendamento relacionado (deep link interno — ver `12-arquitetura-frontend-mobile.md`, seção 12.8),
-  respeitando a mesma proteção de rota da navegação normal (sessão válida exigida; se a sessão não for mais
-  válida, redireciona para Login e, após novo login, pode direcionar ao destino original — comportamento
-  exato de retomada é `PENDENTE DE DECISÃO`).
+- O toque na notificação aciona o handler de `expo-notifications`, abrindo o detalhe do agendamento correspondente (respeitando a proteção de rotas e a validação de sessão).
 
 ## 14.8 Escopo por destinatário
 
-- Notificações para o **admin responsável** referem-se apenas a agendamentos do próprio `professional_id` —
-  um admin não recebe notificações de eventos de agendamentos de outro profissional, preservando
-  consistência com a regra central de autorização (ainda que a leitura da agenda global permaneça possível
-  dentro do app).
+- O admin responsável recebe notificações **exclusivamente** dos agendamentos de seu próprio `professional_id`. Ana 1 não recebe notificações de eventos de Ana 2.
