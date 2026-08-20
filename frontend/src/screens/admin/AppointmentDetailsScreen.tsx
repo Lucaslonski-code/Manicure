@@ -48,7 +48,9 @@ export default function AppointmentDetailsScreen({ route }: any) {
 
       <View style={styles.section}>
         <Text style={styles.label}>Status</Text>
-        <Text style={styles.value}>{appointment.status}</Text>
+        <Text style={styles.value}>
+          {appointment.status === 'confirmed' ? 'Confirmado' : appointment.status === 'cancelled' ? 'Cancelado' : 'Concluído'}
+        </Text>
       </View>
 
       {appointment.client_note && (

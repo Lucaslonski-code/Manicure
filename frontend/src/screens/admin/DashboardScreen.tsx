@@ -15,6 +15,7 @@ export default function DashboardScreen({ navigation }: any) {
 
   const renderAppointment = ({ item }: { item: any }) => {
     const professional = professionals.find(p => p.id === item.professional_id);
+    const statusLabel = item.status === 'confirmed' ? 'Confirmado' : item.status === 'cancelled' ? 'Cancelado' : 'Concluído';
     return (
       <TouchableOpacity
         style={styles.card}
@@ -24,14 +25,14 @@ export default function DashboardScreen({ navigation }: any) {
         <Text style={styles.date}>
           {format(parseISO(item.start_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
         </Text>
-        <Text style={styles.status}>{item.status}</Text>
+        <Text style={styles.status}>{statusLabel}</Text>
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Dashboard</Text>
+      <Text style={styles.title}>Painel</Text>
       <Text style={styles.subtitle}>Próximos atendimentos</Text>
       {upcomingAppointments.length === 0 ? (
         <Text style={styles.empty}>Nenhum agendamento próximo.</Text>

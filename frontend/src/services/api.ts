@@ -1,6 +1,47 @@
 import { supabase } from '../supabase/client';
 import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings } from '../supabase/types';
 
+function mapApiError(error: any): string {
+  if (!error || typeof error.message !== 'string') {
+    return 'Erro inesperado';
+  }
+  const message = error.message.toLowerCase();
+  if (message.includes('row count') || message.includes('no rows')) {
+    return 'Registro não encontrado';
+  }
+  if (message.includes('network') || message.includes('fetch')) {
+    return 'Erro de conexão. Verifique sua internet.';
+  }
+  if (message.includes('unauthorized') || message.includes('401')) {
+    return 'Sessão expirada. Entre novamente.';
+  }
+  if (message.includes('forbidden') || message.includes('403')) {
+    return 'Acesso negado';
+  }
+  if (message.includes('not found') || message.includes('404')) {
+    return 'Recurso não encontrado';
+  }
+  if (message.includes('conflict') || message.includes('409') || message.includes('overlap')) {
+    return 'Horário indisponível ou conflitante';
+  }
+  if (message.includes('time outside availability') || message.includes('422')) {
+    return 'Horário fora da disponibilidade';
+  }
+  if (message.includes('blocked') || message.includes('block')) {
+    return 'Horário bloqueado';
+  }
+  if (message.includes('service not available') || message.includes('professional not available')) {
+    return 'Serviço ou profissional indisponível';
+  }
+  if (message.includes('appointment cannot be cancelled') || message.includes('cannot be rescheduled')) {
+    return 'Operação não permitida para este agendamento';
+  }
+  if (message.includes('time conflict')) {
+    return 'Conflito de horário';
+  }
+  return 'Erro ao processar solicitação';
+}
+
 export async function fetchProfessionals(): Promise<Professional[]> {
   const { data, error } = await supabase
     .from('professionals')
@@ -8,7 +49,7 @@ export async function fetchProfessionals(): Promise<Professional[]> {
     .eq('is_active', true)
     .order('display_name');
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
   return data || [];
 }
 
@@ -30,7 +71,7 @@ export async function fetchServices(): Promise<Service[]> {
     .eq('is_active', true)
     .order('name');
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
   return data || [];
 }
 
@@ -42,7 +83,7 @@ export async function fetchProfessionalServices(professionalId: string): Promise
     .eq('is_active', true)
     .order('service:services(name)');
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
   return data || [];
 }
 
@@ -53,7 +94,7 @@ export async function fetchAvailability(professionalId: string): Promise<Availab
     .eq('professional_id', professionalId)
     .order('weekday');
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
   return data || [];
 }
 
@@ -65,7 +106,7 @@ export async function fetchBlockedTimes(professionalId: string): Promise<Blocked
     .gte('start_at', new Date().toISOString())
     .order('start_at');
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
   return data || [];
 }
 
@@ -75,7 +116,7 @@ export async function fetchAppointments(): Promise<Appointment[]> {
     .select('*')
     .order('start_at', { ascending: true });
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
   return data || [];
 }
 
@@ -90,7 +131,7 @@ export async function fetchMyAppointments(): Promise<Appointment[]> {
     .eq('client_user_id', userId)
     .order('start_at', { ascending: true });
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
   return data || [];
 }
 
@@ -118,7 +159,7 @@ export async function createAppointment(
     p_client_note: clientNote,
   });
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
 
   const { data: appointment, error: fetchError } = await supabase
     .from('appointments')
@@ -126,7 +167,7 @@ export async function createAppointment(
     .eq('id', data)
     .single();
 
-  if (fetchError) throw fetchError;
+  if (fetchError) throw new Error(mapApiError(fetchError));
   return appointment;
 }
 
@@ -136,7 +177,7 @@ export async function cancelAppointment(appointmentId: string, reason?: string):
     p_reason: reason,
   });
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
 }
 
 export async function rescheduleAppointment(appointmentId: string, newStartAt: string): Promise<void> {
@@ -145,7 +186,7 @@ export async function rescheduleAppointment(appointmentId: string, newStartAt: s
     p_new_start_at: newStartAt,
   });
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
 }
 
 export async function cancelAppointmentByAdmin(appointmentId: string, reason?: string): Promise<void> {
@@ -154,7 +195,7 @@ export async function cancelAppointmentByAdmin(appointmentId: string, reason?: s
     p_reason: reason,
   });
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
 }
 
 export async function deleteAppointment(appointmentId: string): Promise<void> {
@@ -163,7 +204,7 @@ export async function deleteAppointment(appointmentId: string): Promise<void> {
     .delete()
     .eq('id', appointmentId);
 
-  if (error) throw error;
+  if (error) throw new Error(mapApiError(error));
 }
 
 export async function fetchBusinessSettings(): Promise<BusinessSettings | null> {

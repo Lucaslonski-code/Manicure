@@ -7,6 +7,33 @@ export interface AuthResult {
   profile?: Profile;
 }
 
+function mapAuthError(message: string): string {
+  if (!message) return 'Erro desconhecido';
+  const lower = message.toLowerCase();
+  if (lower.includes('invalid login credentials') || lower.includes('invalid_credentials')) {
+    return 'E-mail ou senha inválidos';
+  }
+  if (lower.includes('email not confirmed') || lower.includes('email_not_confirmed')) {
+    return 'Confirme seu e-mail antes de entrar';
+  }
+  if (lower.includes('user already registered') || lower.includes('user_already_exists')) {
+    return 'Usuário já cadastrado';
+  }
+  if (lower.includes('signup is disabled') || lower.includes('signups_disabled')) {
+    return 'Cadastro desativado no momento';
+  }
+  if (lower.includes('token has expired') || lower.includes('expired')) {
+    return 'Link expirado. Solicite um novo.';
+  }
+  if (lower.includes('rate limit') || lower.includes('too many requests')) {
+    return 'Muitas tentativas. Aguarde um momento.';
+  }
+  if (lower.includes('network') || lower.includes('fetch')) {
+    return 'Erro de conexão. Verifique sua internet.';
+  }
+  return message;
+}
+
 export async function signUp(name: string, email: string, phone: string, password: string): Promise<AuthResult> {
   try {
     const { data, error } = await supabase.auth.signUp({
@@ -21,7 +48,7 @@ export async function signUp(name: string, email: string, phone: string, passwor
     });
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: mapAuthError(error.message) };
     }
 
     if (!data.user) {
@@ -42,7 +69,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
     });
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: mapAuthError(error.message) };
     }
 
     if (!data.user) {
@@ -60,7 +87,7 @@ export async function signOut(): Promise<AuthResult> {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: mapAuthError(error.message) };
     }
 
     return { success: true };
@@ -74,7 +101,7 @@ export async function resetPassword(email: string): Promise<AuthResult> {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: mapAuthError(error.message) };
     }
 
     return { success: true };
@@ -88,7 +115,7 @@ export async function resendConfirmation(email: string): Promise<AuthResult> {
     const { error } = await supabase.auth.resend({ type: 'signup', email });
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: mapAuthError(error.message) };
     }
 
     return { success: true };
@@ -104,7 +131,7 @@ export async function updatePassword(password: string): Promise<AuthResult> {
     });
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: mapAuthError(error.message) };
     }
 
     return { success: true };

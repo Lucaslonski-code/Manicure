@@ -11,6 +11,7 @@ export default function GlobalAgendaScreen({ navigation }: any) {
 
   const renderAppointment = ({ item }: { item: any }) => {
     const professional = professionals.find(p => p.id === item.professional_id);
+    const statusLabel = item.status === 'confirmed' ? 'Confirmado' : item.status === 'cancelled' ? 'Cancelado' : 'Concluído';
     return (
       <TouchableOpacity
         style={styles.card}
@@ -20,7 +21,7 @@ export default function GlobalAgendaScreen({ navigation }: any) {
         <Text style={styles.date}>
           {format(parseISO(item.start_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
         </Text>
-        <Text style={styles.status}>{item.status}</Text>
+        <Text style={styles.status}>{statusLabel}</Text>
       </TouchableOpacity>
     );
   };
