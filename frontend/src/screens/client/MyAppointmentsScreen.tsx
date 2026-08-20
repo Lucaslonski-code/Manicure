@@ -2,33 +2,31 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useAppointments, useProfessionals } from '@hooks';
+import { useMyAppointments } from '@hooks';
 import { colors, spacing, typography } from '@theme';
 
-export default function GlobalAgendaScreen({ navigation }: any) {
-  const { appointments } = useAppointments();
-  const { professionals } = useProfessionals();
+export default function MyAppointmentsScreen({ navigation }: any) {
+  const { appointments, loading } = useMyAppointments();
 
-  const renderAppointment = ({ item }: { item: any }) => {
-    const professional = professionals.find(p => p.id === item.professional_id);
-    return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => navigation.navigate('AppointmentDetails', { appointmentId: item.id })}
-      >
-        <Text style={styles.professional}>{professional?.display_name || 'Profissional'}</Text>
-        <Text style={styles.date}>
-          {format(parseISO(item.start_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-        </Text>
-        <Text style={styles.status}>{item.status}</Text>
-      </TouchableOpacity>
-    );
-  };
+  const renderAppointment = ({ item }: { item: any }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('AppointmentDetails', { appointmentId: item.id })}
+    >
+      <Text style={styles.professional}>Profissional</Text>
+      <Text style={styles.date}>
+        {format(parseISO(item.start_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+      </Text>
+      <Text style={styles.status}>Status: {item.status}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Agenda Global</Text>
-      {appointments.length === 0 ? (
+      <Text style={styles.title}>Meus agendamentos</Text>
+      {loading ? (
+        <Text style={styles.loading}>Carregando...</Text>
+      ) : appointments.length === 0 ? (
         <Text style={styles.empty}>Nenhum agendamento encontrado.</Text>
       ) : (
         <FlatList
@@ -50,6 +48,11 @@ const styles = StyleSheet.create({
   title: {
     ...typography.headingLarge,
     padding: spacing.lg,
+  },
+  loading: {
+    ...typography.bodyMedium,
+    textAlign: 'center',
+    marginTop: spacing.xl,
   },
   empty: {
     ...typography.bodyMedium,

@@ -1,35 +1,35 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { useProfessionals } from '@hooks';
+import { useProfessionalServices } from '@hooks';
 import { colors, spacing, typography } from '@theme';
-import type { Professional } from '../../supabase/types';
+import type { Service } from '../../supabase/types';
 
-export default function HomeScreen({ navigation }: any) {
-  const { professionals, loading } = useProfessionals();
+export default function ServiceSelectionScreen({ route, navigation }: any) {
+  const { professionalId } = route.params;
+  const { items, loading } = useProfessionalServices(professionalId);
 
-  const handleSelectProfessional = (professional: Professional) => {
-    navigation.navigate('ServiceSelection', { professionalId: professional.id });
-  };
+  const services = items.map(item => item.service);
 
-  const renderProfessional = ({ item }: { item: Professional }) => (
+  const renderService = ({ item }: { item: Service }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => handleSelectProfessional(item)}
+      onPress={() => navigation.navigate('DateSelection', { professionalId, serviceId: item.id })}
     >
-      <Text style={styles.name}>{item.display_name}</Text>
+      <Text style={styles.name}>{item.name}</Text>
+      <Text style={styles.duration}>{item.default_duration_minutes} min</Text>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Profissionais</Text>
+      <Text style={styles.title}>Serviços</Text>
       {loading ? (
         <Text style={styles.loading}>Carregando...</Text>
       ) : (
         <FlatList
-          data={professionals}
+          data={services}
           keyExtractor={(item) => item.id}
-          renderItem={renderProfessional}
+          renderItem={renderService}
           contentContainerStyle={styles.list}
         />
       )}
@@ -65,5 +65,10 @@ const styles = StyleSheet.create({
   name: {
     ...typography.bodyLarge,
     color: colors.text,
+  },
+  duration: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
 });
