@@ -6,6 +6,7 @@ import EmailVerificationStack from './stacks/EmailVerificationStack';
 import ClientStack from './stacks/ClientStack';
 import AdminStack from './stacks/AdminStack';
 import { useAuth } from '@hooks/useAuth';
+import { resolveStack } from './resolveStack';
 
 export type RootStackParamList = {
   Public: undefined;
@@ -17,15 +18,13 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
-  const { loading } = useAuth();
+  const { loading, session, isEmailVerified, profile } = useAuth();
 
-  if (loading) {
-    return null;
-  }
+  const initialStack = resolveStack(loading, session, isEmailVerified, profile);
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName={initialStack} screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Public" component={PublicStack} />
         <Stack.Screen name="EmailVerification" component={EmailVerificationStack} />
         <Stack.Screen name="Client" component={ClientStack} />

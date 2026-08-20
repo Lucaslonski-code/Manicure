@@ -3,53 +3,36 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '@hooks/useAuth';
 import Button from '@components/base/Button';
 import Input from '@components/base/Input';
-import { signUpSchema } from '@forms/schemas';
+import { newPasswordSchema } from '@forms/schemas';
 import { colors, spacing, typography } from '@theme';
 
-export default function SignUpScreen({ navigation }: any) {
-  const { signUp, loading } = useAuth();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+export default function NewPasswordScreen({ navigation }: any) {
+  const { updatePassword, loading } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
-  const handleSignUp = async () => {
+  const handleUpdatePassword = async () => {
     try {
       setError('');
-      signUpSchema.parse({ name, email, phone, password, confirmPassword });
-      await signUp(name, email, phone, password);
-      navigation.navigate('EmailConfirmation', { email });
+      newPasswordSchema.parse({ password, confirmPassword });
+      await updatePassword(password);
+      setSuccess(true);
+      setTimeout(() => {
+        navigation.replace('Login');
+      }, 2000);
     } catch (err: any) {
-      setError(err.message || 'Erro ao cadastrar');
+      setError(err.message || 'Erro ao atualizar senha');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Criar conta</Text>
-      <Input
-        label="Nome completo"
-        value={name}
-        onChangeText={setName}
-        placeholder="Seu nome"
-      />
-      <Input
-        label="E-mail"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        placeholder="seu@email.com"
-      />
-      <Input
-        label="Telefone"
-        value={phone}
-        onChangeText={setPhone}
-        placeholder="(00) 00000-0000"
-        keyboardType="phone-pad"
-      />
+      <Text style={styles.title}>Nova senha</Text>
+      <Text style={styles.text}>
+        Digite sua nova senha abaixo.
+      </Text>
       <Input
         label="Senha"
         value={password}
@@ -65,9 +48,10 @@ export default function SignUpScreen({ navigation }: any) {
         placeholder="******"
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button title="Cadastrar" onPress={handleSignUp} disabled={loading} />
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.link}>Já tenho conta</Text>
+      {success ? <Text style={styles.success}>Senha atualizada!</Text> : null}
+      <Button title="Atualizar senha" onPress={handleUpdatePassword} disabled={loading || success} />
+      <TouchableOpacity onPress={() => navigation.replace('Login')}>
+        <Text style={styles.link}>Cancelar</Text>
       </TouchableOpacity>
     </View>
   );
@@ -81,12 +65,23 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.headingLarge,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
     textAlign: 'center',
+  },
+  text: {
+    ...typography.bodyMedium,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
   },
   error: {
     ...typography.bodySmall,
     color: colors.error,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  success: {
+    ...typography.bodySmall,
+    color: colors.success,
     marginBottom: spacing.md,
     textAlign: 'center',
   },

@@ -27,12 +27,12 @@
       "permissions": [
         "INTERNET",
         "POST_NOTIFICATIONS"
-      ],
-      "package": "com.anonymous.appmanicure"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "scheme": "appmanicure",
     "plugins": [
       "expo-secure-store",
       [

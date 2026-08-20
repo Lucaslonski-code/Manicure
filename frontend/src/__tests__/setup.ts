@@ -22,3 +22,5 @@ global.console = {
   error: jest.fn(),
   warn: jest.fn(),
 };
+
+(global as any).__DEV__ = false;

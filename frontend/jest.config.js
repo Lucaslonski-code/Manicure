@@ -7,12 +7,13 @@ module.exports = {
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(@react-navigation|react-native|expo|@expo|react-native-reanimated|react-native-gesture-handler|react-native-screens|react-native-safe-area-context|react-native-svg|@supabase|expo-secure-store|expo-notifications|expo-linking|expo-constants|expo-status-bar|expo-updates)/)',
+  ],
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
   moduleNameMapper: {
     '^@app$': '<rootDir>/src',
     '^@app/(.*)$': '<rootDir>/src/$1',
-    '^@supabase$': '<rootDir>/src/supabase',
-    '^@supabase/(.*)$': '<rootDir>/src/supabase/$1',
     '^@theme$': '<rootDir>/src/theme',
     '^@theme/(.*)$': '<rootDir>/src/theme/$1',
     '^@navigation$': '<rootDir>/src/navigation',
@@ -21,6 +22,14 @@ module.exports = {
     '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
     '^@screens$': '<rootDir>/src/screens',
     '^@screens/(.*)$': '<rootDir>/src/screens/$1',
+    '^@components$': '<rootDir>/src/components',
+    '^@components/(.*)$': '<rootDir>/src/components/$1',
+    '^@forms$': '<rootDir>/src/forms',
+    '^@forms/(.*)$': '<rootDir>/src/forms/$1',
+    '^@services$': '<rootDir>/src/services',
+    '^@services/(.*)$': '<rootDir>/src/services/$1',
+    '^@types$': '<rootDir>/src/types',
+    '^@types/(.*)$': '<rootDir>/src/types/$1',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

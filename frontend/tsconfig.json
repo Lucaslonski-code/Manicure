@@ -26,7 +26,15 @@
       "@hooks": ["src/hooks"],
       "@hooks/*": ["src/hooks/*"],
       "@screens": ["src/screens"],
-      "@screens/*": ["src/screens/*"]
+      "@screens/*": ["src/screens/*"],
+      "@components": ["src/components"],
+      "@components/*": ["src/components/*"],
+      "@forms": ["src/forms"],
+      "@forms/*": ["src/forms/*"],
+      "@services": ["src/services"],
+      "@services/*": ["src/services/*"],
+      "@types": ["src/types"],
+      "@types/*": ["src/types/*"]
     }
   },
   "include": ["src/**/*", "App.tsx", "index.ts", "src/types/**/*"],

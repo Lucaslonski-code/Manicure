@@ -9,3 +9,9 @@ declare module '@testing-library/react-native' {
     unmount: () => void;
   };
 }
+
+declare global {
+  var __DEV__: boolean;
+}
+
+export {};

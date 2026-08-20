@@ -41,4 +41,12 @@ export interface AuthClient {
   onAuthStateChange(
     callback: (event: AuthChangeEvent, session: Session | null) => void | Promise<void>
   ): { data: { subscription: Subscription } };
+  setSession(currentSession: { access_token: string; refresh_token: string }): Promise<{
+    data: { session: Session | null; user: User | null };
+    error: { message: string } | null;
+  }>;
+  getUser(): Promise<{
+    data: { user: User | null };
+    error: { message: string } | null;
+  }>;
 }
