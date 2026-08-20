@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["ES2020"],
+    "lib": [
+      "ES2020"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -9,34 +11,83 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
+    "ignoreDeprecations": "6.0",
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "types": ["jest", "node"],
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-native",
     "baseUrl": ".",
     "paths": {
-      "@app": ["src"],
-      "@app/*": ["src/*"],
-      "@theme": ["src/theme"],
-      "@theme/*": ["src/theme/*"],
-      "@navigation": ["src/navigation"],
-      "@navigation/*": ["src/navigation/*"],
-      "@hooks": ["src/hooks"],
-      "@hooks/*": ["src/hooks/*"],
-      "@screens": ["src/screens"],
-      "@screens/*": ["src/screens/*"],
-      "@components": ["src/components"],
-      "@components/*": ["src/components/*"],
-      "@forms": ["src/forms"],
-      "@forms/*": ["src/forms/*"],
-      "@services": ["src/services"],
-      "@services/*": ["src/services/*"],
-      "@types": ["src/types"],
-      "@types/*": ["src/types/*"]
+      "@app": [
+        "src"
+      ],
+      "@app/*": [
+        "src/*"
+      ],
+      "@theme": [
+        "src/theme"
+      ],
+      "@theme/*": [
+        "src/theme/*"
+      ],
+      "@navigation": [
+        "src/navigation"
+      ],
+      "@navigation/*": [
+        "src/navigation/*"
+      ],
+      "@hooks": [
+        "src/hooks"
+      ],
+      "@hooks/*": [
+        "src/hooks/*"
+      ],
+      "@screens": [
+        "src/screens"
+      ],
+      "@screens/*": [
+        "src/screens/*"
+      ],
+      "@components": [
+        "src/components"
+      ],
+      "@components/*": [
+        "src/components/*"
+      ],
+      "@forms": [
+        "src/forms"
+      ],
+      "@forms/*": [
+        "src/forms/*"
+      ],
+      "@services": [
+        "src/services"
+      ],
+      "@services/*": [
+        "src/services/*"
+      ],
+      "@types": [
+        "src/types"
+      ],
+      "@types/*": [
+        "src/types/*"
+      ]
     }
   },
-  "include": ["src/**/*", "App.tsx", "index.ts", "src/types/**/*"],
-  "exclude": ["node_modules", "babel.config.js", "metro.config.js", "jest.config.js"]
+  "include": [
+    "src/**/*",
+    "App.tsx",
+    "index.ts",
+    "src/types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js"
+  ],
+  "extends": "expo/tsconfig.base"
 }

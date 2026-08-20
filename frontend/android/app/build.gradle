@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.appmanicure'
+    namespace 'com.appmanicure.mobile'
     defaultConfig {
-        applicationId 'com.anonymous.appmanicure'
+        applicationId 'com.appmanicure.mobile'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

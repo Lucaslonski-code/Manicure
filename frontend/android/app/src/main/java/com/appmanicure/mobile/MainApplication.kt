@@ -1,4 +1,4 @@
-package com.anonymous.appmanicure
+package com.appmanicure.mobile
 
 import android.app.Application
 import android.content.res.Configuration
