@@ -3,6 +3,7 @@
 -- ============================================================================
 
 -- Enable RLS on all tables
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.professionals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.professional_services ENABLE ROW LEVEL SECURITY;
@@ -52,6 +53,33 @@ AS $$
     WHERE id = auth.uid() AND role = 'admin' AND deleted_at IS NULL
   );
 $$;
+
+-- ============================================================================
+-- USERS
+-- ============================================================================
+
+-- Users can read own profile
+CREATE POLICY users_select_self ON public.users
+  FOR SELECT USING (auth.uid() = id);
+
+-- Admins can read all users
+CREATE POLICY users_select_admin ON public.users
+  FOR SELECT USING (public.is_admin());
+
+-- Users can update own profile
+CREATE POLICY users_update_self ON public.users
+  FOR UPDATE USING (auth.uid() = id);
+
+-- No one can update other users via Data API.
+-- Admin user management must be done through SECURITY DEFINER RPCs with explicit validation.
+
+-- Only internal processes can insert users (via SECURITY DEFINER trigger/function)
+CREATE POLICY users_insert_internal ON public.users
+  FOR INSERT WITH CHECK (false);
+
+-- No one can delete users via Data API
+CREATE POLICY users_delete_internal ON public.users
+  FOR DELETE USING (false);
 
 -- ============================================================================
 -- PROFESSIONALS

@@ -7,6 +7,31 @@ CREATE EXTENSION IF NOT EXISTS btree_gist;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================================
+-- USERS (DOMAIN)
+-- Representação pública do usuário autenticado (auth.users).
+-- NÃO armazena senha/hash. Integridade referencial com auth.users.
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.users (
+  id UUID PRIMARY KEY,
+  email TEXT NOT NULL,
+  name TEXT NOT NULL,
+  phone TEXT,
+  role TEXT NOT NULL DEFAULT 'client' CHECK (role IN ('client', 'admin')),
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  deleted_at TIMESTAMPTZ,
+  CONSTRAINT users_email_length CHECK (length(trim(email)) > 0),
+  CONSTRAINT users_name_length CHECK (length(trim(name)) > 0)
+);
+
+ALTER TABLE public.users ADD CONSTRAINT users_auth_user_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
+CREATE INDEX IF NOT EXISTS idx_users_is_active ON public.users(is_active);
+
+-- ============================================================================
 -- PROFESSIONALS
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS public.professionals (
