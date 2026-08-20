@@ -1,0 +1,24 @@
+import { colors, typography, spacing, radius } from '../theme';
+
+describe('Theme tokens', () => {
+  it('has valid color values', () => {
+    expect(colors.primary).toBe('#000000');
+    expect(colors.background).toBe('#FFFFFF');
+  });
+
+  it('has valid spacing values', () => {
+    expect(spacing.xs).toBeLessThan(spacing.sm);
+    expect(spacing.sm).toBeLessThan(spacing.md);
+    expect(spacing.md).toBeLessThan(spacing.lg);
+    expect(spacing.lg).toBeLessThan(spacing.xl);
+  });
+
+  it('has valid radius values', () => {
+    expect(radius.sm).toBeLessThan(radius.md);
+    expect(radius.md).toBeLessThan(radius.lg);
+  });
+
+  it('has typography styles', () => {
+    expect(typography.bodyLarge.fontSize).toBeGreaterThan(typography.bodySmall.fontSize);
+  });
+});

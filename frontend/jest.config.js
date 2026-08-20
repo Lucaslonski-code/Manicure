@@ -1,0 +1,30 @@
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/src'],
+  testMatch: ['**/__tests__/**/*.test.[jt]s?(x)'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
+  },
+  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+  moduleNameMapper: {
+    '^@app$': '<rootDir>/src',
+    '^@app/(.*)$': '<rootDir>/src/$1',
+    '^@supabase$': '<rootDir>/src/supabase',
+    '^@supabase/(.*)$': '<rootDir>/src/supabase/$1',
+    '^@theme$': '<rootDir>/src/theme',
+    '^@theme/(.*)$': '<rootDir>/src/theme/$1',
+    '^@navigation$': '<rootDir>/src/navigation',
+    '^@navigation/(.*)$': '<rootDir>/src/navigation/$1',
+    '^@hooks$': '<rootDir>/src/hooks',
+    '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
+    '^@screens$': '<rootDir>/src/screens',
+    '^@screens/(.*)$': '<rootDir>/src/screens/$1',
+  },
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/__tests__/**',
+  ],
+};
