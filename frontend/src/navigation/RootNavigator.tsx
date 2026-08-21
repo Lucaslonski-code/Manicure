@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as Linking from 'expo-linking';
 import PublicStack from './stacks/PublicStack';
 import EmailVerificationStack from './stacks/EmailVerificationStack';
 import ClientStack from './stacks/ClientStack';
@@ -15,6 +16,25 @@ export type RootStackParamList = {
   Admin: undefined;
 };
 
+const prefix = Linking.createURL('/');
+const linking = {
+  prefixes: [prefix],
+  config: {
+    screens: {
+      Client: {
+        screens: {
+          AppointmentDetails: 'appointment/:appointmentId',
+        },
+      },
+      Admin: {
+        screens: {
+          AppointmentDetails: 'appointment/:appointmentId',
+        },
+      },
+    },
+  },
+};
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
@@ -23,7 +43,7 @@ export default function RootNavigator() {
   const initialStack = resolveStack(loading, session, isEmailVerified, profile);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator initialRouteName={initialStack} screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Public" component={PublicStack} />
         <Stack.Screen name="EmailVerification" component={EmailVerificationStack} />

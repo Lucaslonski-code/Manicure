@@ -1,6 +1,20 @@
 import { supabase } from '../supabase/client';
 import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings } from '../supabase/types';
 
+async function sendPushNotification(appointmentId: string, event: 'confirmation' | 'cancellation' | 'reschedule', actorUserId: string): Promise<void> {
+  try {
+    await supabase.functions.invoke('send-push-notification', {
+      body: {
+        appointment_id: appointmentId,
+        event,
+        actor_user_id: actorUserId,
+      },
+    });
+  } catch (err) {
+    console.error('Error sending push notification:', err);
+  }
+}
+
 function mapApiError(error: any): string {
   if (!error || typeof error.message !== 'string') {
     return 'Erro inesperado';
@@ -152,6 +166,9 @@ export async function createAppointment(
   startAt: string,
   clientNote?: string
 ): Promise<Appointment> {
+  const session = await supabase.auth.getSession();
+  const actorUserId = session.data.session?.user.id;
+
   const { data, error } = await supabase.rpc('book_appointment', {
     p_professional_id: professionalId,
     p_service_id: serviceId,
@@ -168,34 +185,60 @@ export async function createAppointment(
     .single();
 
   if (fetchError) throw new Error(mapApiError(fetchError));
+  
+  if (appointment && actorUserId) {
+    sendPushNotification(appointment.id, 'confirmation', actorUserId);
+  }
+  
   return appointment;
 }
 
 export async function cancelAppointment(appointmentId: string, reason?: string): Promise<void> {
+  const session = await supabase.auth.getSession();
+  const actorUserId = session.data.session?.user.id;
+
   const { error } = await supabase.rpc('cancel_appointment_by_client', {
     p_appointment_id: appointmentId,
     p_reason: reason,
   });
 
   if (error) throw new Error(mapApiError(error));
+
+  if (actorUserId) {
+    sendPushNotification(appointmentId, 'cancellation', actorUserId);
+  }
 }
 
 export async function rescheduleAppointment(appointmentId: string, newStartAt: string): Promise<void> {
+  const session = await supabase.auth.getSession();
+  const actorUserId = session.data.session?.user.id;
+
   const { error } = await supabase.rpc('reschedule_appointment_by_admin', {
     p_appointment_id: appointmentId,
     p_new_start_at: newStartAt,
   });
 
   if (error) throw new Error(mapApiError(error));
+
+  if (actorUserId) {
+    sendPushNotification(appointmentId, 'reschedule', actorUserId);
+  }
 }
 
 export async function cancelAppointmentByAdmin(appointmentId: string, reason?: string): Promise<void> {
+  const session = await supabase.auth.getSession();
+  const actorUserId = session.data.session?.user.id;
+
   const { error } = await supabase.rpc('cancel_appointment_by_admin', {
     p_appointment_id: appointmentId,
     p_reason: reason,
   });
 
   if (error) throw new Error(mapApiError(error));
+
+  if (actorUserId) {
+    sendPushNotification(appointmentId, 'cancellation', actorUserId);
+  }
 }
 
 export async function deleteAppointment(appointmentId: string): Promise<void> {

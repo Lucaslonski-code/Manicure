@@ -3,6 +3,7 @@ import { supabase } from '../supabase/client';
 import type { Profile, AuthState } from '../supabase/types';
 import type { AuthClient, Session, AuthChangeEvent, Subscription } from '../types/auth';
 import { signUp as signUpService, signIn as signInService, signOut as signOutService, resetPassword as resetPasswordService, updatePassword as updatePasswordService, fetchProfile as fetchProfileService, resendConfirmation } from '../services/auth/authService';
+import { useNotifications } from './useNotifications';
 import * as Linking from 'expo-linking';
 
 const authClient = supabase.auth as AuthClient;
@@ -37,6 +38,7 @@ export function useAuth(): AuthState & {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const { register: registerNotification, unregister: unregisterNotification } = useNotifications();
 
   const loadProfile = useCallback(async (userId: string) => {
     const profileData = await fetchProfileService(userId);
@@ -81,6 +83,7 @@ export function useAuth(): AuthState & {
         setSession(session);
         if (session?.user) {
           await loadProfile(session.user.id);
+          await registerNotification();
         } else {
           setProfile(null);
           setLoading(false);
@@ -95,7 +98,7 @@ export function useAuth(): AuthState & {
         linkingSubscription.remove();
       }
     };
-  }, [loadProfile]);
+  }, [loadProfile, registerNotification]);
 
   const signUp = async (name: string, email: string, phone: string, password: string): Promise<void> => {
     const result = await signUpService(name, email, phone, password);
@@ -112,6 +115,7 @@ export function useAuth(): AuthState & {
   };
 
   const signOut = async (): Promise<void> => {
+    await unregisterNotification();
     const result = await signOutService();
     if (!result.success) {
       throw new Error(result.error);

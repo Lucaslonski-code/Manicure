@@ -2,13 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useAppointment, useProfessionals, useBooking } from '@hooks';
+import { useAppointment, useProfessionals, useMyProfessional, useBooking } from '@hooks';
 import { colors, spacing, typography } from '@theme';
 
 export default function AppointmentDetailsScreen({ route }: any) {
   const { appointmentId } = route.params;
   const { appointment, loading } = useAppointment(appointmentId);
   const { professionals } = useProfessionals();
+  const { professional: myProfessional } = useMyProfessional();
   const { cancelByAdmin, remove, loading: actionLoading } = useBooking();
 
   if (loading) {
@@ -28,7 +29,9 @@ export default function AppointmentDetailsScreen({ route }: any) {
   }
 
   const professional = professionals.find(p => p.id === appointment.professional_id);
-  const isOwner = true; // In real app, check if current admin owns this professional
+  const isOwner = myProfessional?.id === appointment.professional_id;
+
+  const statusLabel = appointment.status === 'confirmed' ? 'Confirmado' : appointment.status === 'cancelled' ? 'Cancelado' : 'Concluído';
 
   return (
     <View style={styles.container}>
@@ -40,6 +43,11 @@ export default function AppointmentDetailsScreen({ route }: any) {
       </View>
 
       <View style={styles.section}>
+        <Text style={styles.label}>Cliente</Text>
+        <Text style={styles.value}>{appointment.client_note ? 'Informações disponíveis' : '—'}</Text>
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.label}>Data e horário</Text>
         <Text style={styles.value}>
           {format(parseISO(appointment.start_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
@@ -48,9 +56,7 @@ export default function AppointmentDetailsScreen({ route }: any) {
 
       <View style={styles.section}>
         <Text style={styles.label}>Status</Text>
-        <Text style={styles.value}>
-          {appointment.status === 'confirmed' ? 'Confirmado' : appointment.status === 'cancelled' ? 'Cancelado' : 'Concluído'}
-        </Text>
+        <Text style={styles.value}>{statusLabel}</Text>
       </View>
 
       {appointment.client_note && (
@@ -67,26 +73,36 @@ export default function AppointmentDetailsScreen({ route }: any) {
         </View>
       )}
 
-      {isOwner && appointment.status === 'confirmed' && (
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.cancelButton]}
-            onPress={() => cancelByAdmin(appointmentId, 'Cancelado pelo admin')}
-            disabled={actionLoading}
-          >
-            <Text style={styles.actionButtonText}>
-              {actionLoading ? 'Cancelando...' : 'Cancelar'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.deleteButton]}
-            onPress={() => remove(appointmentId)}
-            disabled={actionLoading}
-          >
-            <Text style={styles.actionButtonText}>
-              {actionLoading ? 'Excluindo...' : 'Excluir'}
-            </Text>
-          </TouchableOpacity>
+      {isOwner ? (
+        appointment.status === 'confirmed' ? (
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.cancelButton]}
+              onPress={() => cancelByAdmin(appointmentId, 'Cancelado pelo admin')}
+              disabled={actionLoading}
+            >
+              <Text style={styles.actionButtonText}>
+                {actionLoading ? 'Cancelando...' : 'Cancelar'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteButton]}
+              onPress={() => remove(appointmentId)}
+              disabled={actionLoading}
+            >
+              <Text style={styles.actionButtonText}>
+                {actionLoading ? 'Excluindo...' : 'Excluir'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.readOnlyNotice}>
+            <Text style={styles.readOnlyText}>Somente leitura — agendamento {statusLabel.toLowerCase()}</Text>
+          </View>
+        )
+      ) : (
+        <View style={styles.readOnlyNotice}>
+          <Text style={styles.readOnlyText}>Somente leitura — responsável: {professional?.display_name || 'outro profissional'}</Text>
         </View>
       )}
     </View>
@@ -148,5 +164,18 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.background,
     fontWeight: '600',
+  },
+  readOnlyNotice: {
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  readOnlyText: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 });

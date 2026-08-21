@@ -16,9 +16,3 @@ declare module '@testing-library/react-native' {
 
   export function act(asyncAction: () => Promise<void> | void): Promise<void>;
 }
-
-declare global {
-  var __DEV__: boolean;
-}
-
-export {};

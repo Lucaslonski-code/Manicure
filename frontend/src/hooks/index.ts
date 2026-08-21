@@ -1,6 +1,25 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../supabase/client';
 import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchAvailability, fetchBlockedTimes, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings } from '../services/api';
 import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings } from '../supabase/types';
+import { useNotifications } from './useNotifications';
+import { useAuth } from './useAuth';
+
+export { useAuth, useNotifications };
+
+async function fetchProfessionalByUserId(userId: string): Promise<Professional | null> {
+  const { data, error } = await supabase
+    .from('professionals')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data as Professional;
+}
 
 export function useProfessionals() {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
@@ -338,6 +357,43 @@ export function useBooking() {
   }, []);
 
   return { loading, error, book, cancel, reschedule, cancelByAdmin, remove };
+}
+
+export function useMyProfessional() {
+  const [professional, setProfessional] = useState<Professional | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+      const userId = session?.user?.id;
+      if (!userId) {
+        setProfessional(null);
+        setLoading(false);
+        return;
+      }
+
+      fetchProfessionalByUserId(userId).then((data) => {
+        if (!isMounted) return;
+        setProfessional(data);
+        setLoading(false);
+      }).catch((err) => {
+        if (!isMounted) return;
+        setError(err.message);
+        setLoading(false);
+      });
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return { professional, loading, error };
 }
 
 export function useBusinessSettings() {
