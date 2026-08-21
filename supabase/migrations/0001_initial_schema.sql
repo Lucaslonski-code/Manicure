@@ -94,8 +94,8 @@ CREATE TABLE IF NOT EXISTS public.appointments (
   cancellation_reason TEXT,
   CONSTRAINT appointments_end_after_start CHECK (end_at > start_at),
   CONSTRAINT appointments_no_overlap EXCLUDE USING gist (
-    professional_id WITH =,
-    tsrange(start_at, end_at) WITH &&
+  professional_id WITH =,
+  tstzrange(start_at, end_at, '[)') WITH &&
   ) WHERE (status = 'confirmed')
 );
 
@@ -164,14 +164,13 @@ CREATE TABLE IF NOT EXISTS public.business_settings (
   timezone TEXT NOT NULL DEFAULT 'America/Sao_Paulo',
   min_cancellation_notice_minutes INTEGER,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CONSTRAINT business_settings_single_row CHECK (id = gen_random_uuid())
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Insert default business settings
+-- Insert default business settings only if table is empty
 INSERT INTO public.business_settings (id, timezone, min_cancellation_notice_minutes)
-VALUES (gen_random_uuid(), 'America/Sao_Paulo', 60)
-ON CONFLICT (id) DO NOTHING;
+SELECT gen_random_uuid(), 'America/Sao_Paulo', 60
+WHERE NOT EXISTS (SELECT 1 FROM public.business_settings);
 
 -- ============================================================================
 -- INDEXES
