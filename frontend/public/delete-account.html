@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excluir Conta - AppManicure</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 32px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #111;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .warning {
+      background-color: #fff3e0;
+      border-left: 4px solid #ff9800;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 24px;
+    }
+
+    .warning p {
+      font-size: 14px;
+      color: #e65100;
+      margin-bottom: 8px;
+    }
+
+    .warning ul {
+      font-size: 14px;
+      color: #e65100;
+      margin-left: 20px;
+    }
+
+    .warning li {
+      margin-bottom: 4px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: -8px;
+    }
+
+    input {
+      padding: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #000;
+    }
+
+    button {
+      background-color: #d32f2f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      background-color: #b71c1c;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .message.success {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+      display: block;
+    }
+
+    .message.error {
+      background-color: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+      display: block;
+    }
+
+    .footer {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #e0e0e0;
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Excluir Conta</h1>
+    <p class="subtitle">AppManicure — Solicitação de exclusão de conta</p>
+
+    <div class="warning">
+      <p><strong>Atenção:</strong> Esta ação é irreversível. Ao excluir sua conta:</p>
+      <ul>
+        <li>Seus agendamentos futuros serão cancelados</li>
+        <li>Seus dados pessoais serão anonimizados</li>
+        <li>Você não poderá mais acessar o aplicativo com esta conta</li>
+      </ul>
+    </div>
+
+    <form id="deleteForm">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" name="email" required placeholder="seu@email.com">
+
+      <label for="password">Senha</label>
+      <input type="password" id="password" name="password" required placeholder="Sua senha">
+
+      <button type="submit" id="submitButton">Excluir Conta</button>
+    </form>
+
+    <div id="message" class="message"></div>
+
+    <div class="footer">
+      <p>AppManicure — Solicitação de exclusão de conta</p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('deleteForm');
+    const messageDiv = document.getElementById('message');
+    const submitButton = document.getElementById('submitButton');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        showMessage('Preencha todos os campos', 'error');
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = 'Processando...';
+
+      try {
+        const response = await fetch(
+          'https://aheyyslmngobpavszbur.supabase.co/functions/v1/delete-account-external',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showMessage('Conta excluída com sucesso. Você será redirecionado.', 'success');
+          form.reset();
+        } else {
+          showMessage(data.error || 'Erro ao excluir conta. Verifique suas credenciais.', 'error');
+        }
+      } catch (err) {
+        showMessage('Erro de conexão. Tente novamente.', 'error');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Excluir Conta';
+      }
+    });
+
+    function showMessage(text, type) {
+      messageDiv.textContent = text;
+      messageDiv.className = `message ${type}`;
+    }
+  </script>
+</body>
+</html>

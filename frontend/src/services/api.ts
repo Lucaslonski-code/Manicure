@@ -250,6 +250,12 @@ export async function deleteAppointment(appointmentId: string): Promise<void> {
   if (error) throw new Error(mapApiError(error));
 }
 
+export async function deleteAccount(): Promise<void> {
+  const { error } = await supabase.rpc('delete_account');
+
+  if (error) throw new Error(mapApiError(error));
+}
+
 export async function fetchBusinessSettings(): Promise<BusinessSettings | null> {
   const { data, error } = await supabase
     .from('business_settings')
