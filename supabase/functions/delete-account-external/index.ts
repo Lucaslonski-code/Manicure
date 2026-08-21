@@ -6,14 +6,47 @@ interface DeleteAccountRequest {
   password: string;
 }
 
-export default withSupabase({ auth: ["publishable"] }, async (req, ctx) => {
+async function sha256(message: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+export default withSupabase({ auth: ["secret"] }, async (req, ctx) => {
   try {
     const body = (await req.json()) as DeleteAccountRequest;
-    const email = body?.email;
+    const email = body?.email?.trim().toLowerCase();
     const password = body?.password;
 
     if (!email || !password) {
       return Response.json({ error: "E-mail e senha são obrigatórios" }, { status: 400 });
+    }
+
+    const keyHash = await sha256(email);
+
+    const { error: rateLimitError } = await ctx.supabase.rpc('check_rate_limit', {
+      p_key_hash: keyHash,
+      p_action: 'delete_account_external',
+      p_max_attempts: 5,
+      p_window_minutes: 15,
+      p_block_minutes: 30,
+    });
+
+    if (rateLimitError) {
+      console.error("Rate limit check error:", rateLimitError);
+      return Response.json({ error: "Erro interno" }, { status: 500 });
+    }
+
+    const { data: rateLimitData } = await ctx.supabase
+      .from('rate_limits')
+      .select('blocked_until')
+      .eq('key_hash', keyHash)
+      .eq('action', 'delete_account_external')
+      .single();
+
+    if (rateLimitData && rateLimitData.blocked_until && new Date(rateLimitData.blocked_until) > new Date()) {
+      return Response.json({ error: "Muitas tentativas. Tente novamente mais tarde." }, { status: 429 });
     }
 
     const { data: authData, error: authError } = await ctx.supabase.auth.signInWithPassword({
@@ -34,9 +67,14 @@ export default withSupabase({ auth: ["publishable"] }, async (req, ctx) => {
       return Response.json({ error: "Erro ao excluir conta" }, { status: 500 });
     }
 
+    await ctx.supabase
+      .from('rate_limits')
+      .delete()
+      .eq('key_hash', keyHash)
+      .eq('action', 'delete_account_external');
+
     return Response.json({ success: true, message: "Conta excluída com sucesso" });
-  } catch (err) {
-    console.error("delete-account-external error:", err);
+  } catch {
     return Response.json({ error: "Erro interno" }, { status: 500 });
   }
 });

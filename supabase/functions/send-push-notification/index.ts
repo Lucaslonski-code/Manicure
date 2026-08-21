@@ -103,10 +103,14 @@ export default withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx
     const body = await req.json();
     const appointmentId = body?.appointment_id as string | undefined;
     const event = body?.event as NotificationEvent | undefined;
-    const actorUserId = body?.actor_user_id as string | undefined;
 
     if (!appointmentId || !event) {
       return Response.json({ error: "appointment_id e event são obrigatórios" }, { status: 400 });
+    }
+
+    const callerId = ctx.auth?.user?.id;
+    if (!callerId) {
+      return Response.json({ error: "Não autenticado" }, { status: 401 });
     }
 
     const { data: appointment, error: appointmentError } = await ctx.supabase
@@ -120,15 +124,6 @@ export default withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx
     }
 
     const appointmentRow = appointment as AppointmentRow;
-
-    if (!actorUserId) {
-      return Response.json({ error: "actor_user_id é obrigatório" }, { status: 400 });
-    }
-
-    const callerId = ctx.auth?.user?.id;
-    if (!callerId) {
-      return Response.json({ error: "Não autenticado" }, { status: 401 });
-    }
 
     const isClientActor = callerId === appointmentRow.client_user_id;
     const { data: professional } = await ctx.supabase
@@ -224,8 +219,7 @@ export default withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx
     }
 
     return Response.json({ success: true, sent: success.length, failed: failed.length });
-  } catch (err) {
-    console.error("send-push-notification error:", err);
+  } catch {
     return Response.json({ error: "Erro interno" }, { status: 500 });
   }
 });

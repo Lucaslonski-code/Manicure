@@ -49,4 +49,7 @@ export interface AuthClient {
     data: { user: User | null };
     error: { message: string } | null;
   }>;
+  signOut(): Promise<{
+    error: { message: string } | null;
+  }>;
 }

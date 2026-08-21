@@ -107,7 +107,14 @@ export function useNotifications() {
       if (response.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
         const url = response.notification.request.content.data?.url as string | undefined;
         if (url) {
-          Linking.openURL(url);
+          try {
+            const parsed = new URL(url);
+            if (parsed.protocol === 'appmanicure:') {
+              Linking.openURL(url);
+            }
+          } catch {
+            // Ignore malformed URLs
+          }
         }
       }
     });

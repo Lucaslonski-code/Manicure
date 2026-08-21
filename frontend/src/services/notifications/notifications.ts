@@ -36,10 +36,17 @@ export async function registerNotificationToken(token: string, platform: 'androi
 }
 
 export async function deactivateNotificationToken(token: string): Promise<void> {
+  const session = await supabase.auth.getSession();
+  const userId = session.data.session?.user.id;
+  if (!userId) {
+    throw new Error('Usuário não autenticado');
+  }
+
   const { error } = await supabase
     .from('notifications_tokens')
     .update({ is_active: false, updated_at: new Date().toISOString() })
-    .eq('token', token);
+    .eq('token', token)
+    .eq('user_id', userId);
 
   if (error) {
     throw new Error(error.message);

@@ -43,7 +43,13 @@ export function useAuth(): AuthState & {
   const loadProfile = useCallback(async (userId: string) => {
     const profileData = await fetchProfileService(userId);
     if (profileData) {
-      setProfile(profileData);
+      if (profileData.deleted_at || !profileData.is_active) {
+        await authClient.signOut();
+        setProfile(null);
+        setSession(null);
+      } else {
+        setProfile(profileData);
+      }
     }
     setLoading(false);
   }, []);
