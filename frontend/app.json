@@ -46,6 +46,12 @@
         }
       ],
       "./plugins/withCleanupPermissions"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a226cf72-77b8-49c0-b51e-2721c2676b8a"
+      }
+    },
+    "owner": "lucaslonski"
   }
 }

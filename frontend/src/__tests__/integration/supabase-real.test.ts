@@ -4,11 +4,9 @@
  * These tests require:
  * - EXPO_PUBLIC_SUPABASE_URL set to a real Supabase project
  * - EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY set (anon key)
- * - Optional: SUPABASE_SERVICE_ROLE_KEY for cleanup (best-effort without it)
  *
  * They create real auth users and test RLS, RPCs, and constraints.
- * Cleanup is best-effort; if service_role is not available, test users
- * may remain in the auth system.
+ * Cleanup is best-effort.
  *
  * Run with: npx jest src/__tests__/integration/supabase-real.test.ts
  */
@@ -75,7 +73,7 @@ describe('Supabase Real Integration Tests', () => {
         },
       });
 
-      if (error?.message?.toLowerCase().includes('rate limit')) {
+      if ((error as any)?.message?.toLowerCase().includes('rate limit')) {
         console.warn('Rate limited on signup, skipping test');
         return;
       }
@@ -101,13 +99,13 @@ describe('Supabase Real Integration Tests', () => {
 
       await delay(3000);
 
-      const { data: signUpData } = await client.auth.signUp({
+      const { data: signUpData, error: signUpError } = await client.auth.signUp({
         email,
         password,
         options: { data: { name: 'Test', phone: '11999999999' } },
       });
 
-      if (signUpData.error?.message?.toLowerCase().includes('rate limit')) {
+      if ((signUpError as any)?.message?.toLowerCase().includes('rate limit')) {
         console.warn('Rate limited, skipping email confirmation test');
         return;
       }
@@ -119,7 +117,7 @@ describe('Supabase Real Integration Tests', () => {
         password,
       });
 
-      expect(signInError?.message.toLowerCase()).toMatch(/email not confirmed|email_not_confirmed/);
+      expect((signInError as any)?.message.toLowerCase()).toMatch(/email not confirmed|email_not_confirmed/);
       expect(signInData.user).toBeNull();
 
       if (signUpData.user) {
@@ -144,27 +142,30 @@ describe('Supabase Real Integration Tests', () => {
 
       const emailA = `cla-${Date.now()}@example.com`;
       const password = 'Test1234!Aa';
-      const { data: userA } = await client.auth.signUp({
+      const { data: userA, error: userAError } = await client.auth.signUp({
         email: emailA,
         password,
         options: { data: { name: 'Client A', phone: '11999999991' } },
       });
 
-      if (userA?.error?.message?.toLowerCase().includes('rate limit')) {
+      if ((userAError as any)?.message?.toLowerCase().includes('rate limit')) {
         console.warn('Rate limited in beforeAll, skipping RLS tests');
         return;
       }
 
       expect(userA?.user).not.toBeNull();
-      clientAId = userA!.user.id;
+      if (!userA?.user) return;
+      clientAId = userA.user.id;
 
-      const { data: signInA } = await client.auth.signInWithPassword({
+      const { data: signInA, error: signInAError } = await client.auth.signInWithPassword({
         email: emailA,
         password,
       });
 
-      expect(signInA.session).not.toBeNull();
-      clientAToken = signInA.session!.access_token;
+      expect(signInAError).toBeNull();
+      expect(signInA?.session).not.toBeNull();
+      if (!signInA?.session) return;
+      clientAToken = signInA.session.access_token;
 
       const emailB = `clb-${Date.now()}@example.com`;
       const { data: userB } = await client.auth.signUp({
@@ -174,14 +175,15 @@ describe('Supabase Real Integration Tests', () => {
       });
 
       expect(userB?.user).not.toBeNull();
-      clientBId = userB!.user.id;
+      if (!userB?.user) return;
+      clientBId = userB.user.id;
 
       const { data: signInB } = await client.auth.signInWithPassword({
         email: emailB,
         password,
       });
 
-      expect(signInB.session).not.toBeNull();
+      expect(signInB?.session).not.toBeNull();
     });
 
     afterAll(async () => {
@@ -267,27 +269,30 @@ describe('Supabase Real Integration Tests', () => {
 
       await delay(3000);
 
-      const { data } = await client.auth.signUp({
+      const { data, error } = await client.auth.signUp({
         email,
         password,
         options: { data: { name: 'Test User', phone: '11999999999' } },
       });
 
-      if (data?.error?.message?.toLowerCase().includes('rate limit')) {
+      if ((error as any)?.message?.toLowerCase().includes('rate limit')) {
         console.warn('Rate limited in beforeAll, skipping mass assignment tests');
         return;
       }
 
       expect(data?.user).not.toBeNull();
-      userId = data!.user.id;
+      if (!data?.user) return;
+      userId = data.user.id;
 
-      const { data: signInData } = await client.auth.signInWithPassword({
+      const { data: signInData, error: signInError } = await client.auth.signInWithPassword({
         email,
         password,
       });
 
-      expect(signInData.session).not.toBeNull();
-      userToken = signInData.session!.access_token;
+      expect(signInError).toBeNull();
+      expect(signInData?.session).not.toBeNull();
+      if (!signInData?.session) return;
+      userToken = signInData.session.access_token;
     });
 
     afterAll(async () => {
@@ -386,28 +391,31 @@ describe('Supabase Real Integration Tests', () => {
 
       const email1 = `db1-${Date.now()}@example.com`;
       const password = 'Test1234!Aa';
-      const { data: user1 } = await client.auth.signUp({
+      const { data: user1, error: user1Error } = await client.auth.signUp({
         email: email1,
         password,
         options: { data: { name: 'User 1', phone: '11999999991' } },
       });
 
-      if (user1?.error?.message?.toLowerCase().includes('rate limit')) {
+      if ((user1Error as any)?.message?.toLowerCase().includes('rate limit')) {
         console.warn('Rate limited, skipping double booking test');
         return;
       }
 
       expect(user1?.user).not.toBeNull();
+      if (!user1?.user) return;
 
-      const { data: signIn1 } = await client.auth.signInWithPassword({
+      const { data: signIn1, error: signIn1Error } = await client.auth.signInWithPassword({
         email: email1,
         password,
       });
 
-      expect(signIn1.session).not.toBeNull();
+      expect(signIn1Error).toBeNull();
+      expect(signIn1?.session).not.toBeNull();
+      if (!signIn1?.session) return;
 
       const client1 = createTestClient();
-      client1.auth.setSession({ access_token: signIn1.session!.access_token, refresh_token: 'ignored' });
+      client1.auth.setSession({ access_token: signIn1.session.access_token, refresh_token: 'ignored' });
 
       const { data: appointment1, error: error1 } = await client1.rpc('book_appointment', {
         p_professional_id: professionalId,
@@ -427,16 +435,18 @@ describe('Supabase Real Integration Tests', () => {
       });
 
       expect(user2?.user).not.toBeNull();
+      if (!user2?.user) return;
 
       const { data: signIn2 } = await client.auth.signInWithPassword({
         email: email2,
         password,
       });
 
-      expect(signIn2.session).not.toBeNull();
+      expect(signIn2?.session).not.toBeNull();
+      if (!signIn2?.session) return;
 
       const client2 = createTestClient();
-      client2.auth.setSession({ access_token: signIn2.session!.access_token, refresh_token: 'ignored' });
+      client2.auth.setSession({ access_token: signIn2.session.access_token, refresh_token: 'ignored' });
 
       const { data: appointment2, error: error2 } = await client2.rpc('book_appointment', {
         p_professional_id: professionalId,

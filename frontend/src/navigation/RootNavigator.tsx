@@ -33,7 +33,7 @@ const linking = {
       },
     },
   },
-};
+} as any;
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

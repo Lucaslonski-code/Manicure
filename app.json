@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "680fa1bb-0452-4865-82b7-eba7fb323954"
+      }
+    },
+    "android": {
+      "package": "com.lucaslonski.aplicativo"
+    }
+  }
+}
