@@ -98,7 +98,7 @@ async function sendExpoPush(tokens: string[], title: string, body: string, data:
   return { success, failed };
 }
 
-export default withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx) => {
+export default withSupabase({ auth: ["secret"] }, async (req, ctx) => {
   try {
     const body = await req.json();
     const appointmentId = body?.appointment_id as string | undefined;
@@ -120,7 +120,7 @@ export default withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx
       .single();
 
     if (appointmentError || !appointment) {
-      return Response.json({ error: "Agendamento não encontrado" }, { status: 404 });
+      return Response.json({ error: "Operação não permitida" }, { status: 404 });
     }
 
     const appointmentRow = appointment as AppointmentRow;
@@ -215,7 +215,16 @@ export default withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx
     }
 
     if (notificationsToInsert.length > 0) {
-      await ctx.supabase.from("notifications").insert(notificationsToInsert);
+      for (const notification of notificationsToInsert) {
+        await ctx.supabase.rpc('record_notification', {
+          p_user_id: notification.user_id,
+          p_appointment_id: notification.appointment_id,
+          p_type: notification.type,
+          p_channel: notification.channel,
+          p_status: notification.status,
+          p_caller_id: callerId,
+        });
+      }
     }
 
     return Response.json({ success: true, sent: success.length, failed: failed.length });

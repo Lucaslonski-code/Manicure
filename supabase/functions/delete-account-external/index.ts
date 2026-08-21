@@ -25,7 +25,7 @@ export default withSupabase({ auth: ["secret"] }, async (req, ctx) => {
 
     const keyHash = await sha256(email);
 
-    const { error: rateLimitError } = await ctx.supabase.rpc('check_rate_limit', {
+    const { data: rateLimitAllowed, error: rateLimitError } = await ctx.supabase.rpc('check_rate_limit', {
       p_key_hash: keyHash,
       p_action: 'delete_account_external',
       p_max_attempts: 5,
@@ -38,14 +38,7 @@ export default withSupabase({ auth: ["secret"] }, async (req, ctx) => {
       return Response.json({ error: "Erro interno" }, { status: 500 });
     }
 
-    const { data: rateLimitData } = await ctx.supabase
-      .from('rate_limits')
-      .select('blocked_until')
-      .eq('key_hash', keyHash)
-      .eq('action', 'delete_account_external')
-      .single();
-
-    if (rateLimitData && rateLimitData.blocked_until && new Date(rateLimitData.blocked_until) > new Date()) {
+    if (rateLimitAllowed === false) {
       return Response.json({ error: "Muitas tentativas. Tente novamente mais tarde." }, { status: 429 });
     }
 

@@ -2,7 +2,7 @@ const { withFinalizedMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-function removeSystemAlertWindow(config) {
+function removeUnnecessaryPermissions(config) {
   return withFinalizedMod(config, [
     'android',
     (config) => {
@@ -20,6 +20,16 @@ function removeSystemAlertWindow(config) {
         ''
       );
 
+      // Remove external storage permissions (not needed for this app)
+      manifestContent = manifestContent.replace(
+        /\s*<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"[^>]*\/>/g,
+        ''
+      );
+      manifestContent = manifestContent.replace(
+        /\s*<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"[^>]*\/>/g,
+        ''
+      );
+
       // Disable backup
       manifestContent = manifestContent.replace(
         /android:allowBackup="true"/g,
@@ -33,5 +43,5 @@ function removeSystemAlertWindow(config) {
 }
 
 module.exports = function withCleanupPermissions(config) {
-  return removeSystemAlertWindow(config);
+  return removeUnnecessaryPermissions(config);
 };

@@ -10,12 +10,12 @@ export default function AccountDeletionScreen({ navigation }: any) {
 
   const handleDeleteAccount = async () => {
     Alert.alert(
-      'Excluir conta',
-      'Esta ação é irreversível. Seus agendamentos futuros serão cancelados e seus dados pessoais serão anonimizados. Deseja continuar?',
+      'Excluir sua conta de administrador',
+      'Esta ação é irreversível. Ao excluir sua conta:',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Excluir',
+          text: 'Excluir minha conta',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -36,15 +36,18 @@ export default function AccountDeletionScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Excluir conta</Text>
+      <Text style={styles.title}>Excluir minha conta</Text>
 
       <View style={styles.warning}>
         <Text style={styles.warningTitle}>Atenção</Text>
         <Text style={styles.warningText}>
-          Ao excluir sua conta, você não poderá recuperar seus dados. Esta ação é irreversível.
+          Você está excluindo sua conta de administrador.
         </Text>
         <Text style={styles.warningText}>
-          Seus agendamentos futuros serão cancelados e seus dados pessoais serão anonimizados.
+          Esta ação encerrará seu acesso administrativo e removerá seu vínculo com o profissional associado.
+        </Text>
+        <Text style={styles.warningText}>
+          Seus agendamentos futuros serão cancelados e seus dados pessoais serão anonimizados. Esta ação é irreversível.
         </Text>
       </View>
 

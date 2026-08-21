@@ -75,9 +75,9 @@ export function useAuth(): AuthState & {
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token,
         });
-        if (error) {
-          console.error('Error setting session from deep link:', error);
-        }
+      if (error) {
+        console.error('Error setting session from deep link');
+      }
       }
     };
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Linking from 'expo-linking';
 import { registerNotificationToken, deactivateNotificationToken, fetchNotificationTokens } from '../services/notifications/notifications';
@@ -44,7 +45,7 @@ export function useNotifications() {
       }
 
       setToken(pushToken);
-      await registerNotificationToken(pushToken, 'android');
+      await registerNotificationToken(pushToken, Platform.OS as 'android' | 'ios');
     } catch (err) {
       console.error('Error registering notification token:', err);
     } finally {
@@ -96,7 +97,7 @@ export function useNotifications() {
     pushTokenSubscription = Notifications.addPushTokenListener(async (token) => {
       if (!isMounted) return;
       setToken(token.data);
-      await registerNotificationToken(token.data, 'android');
+      await registerNotificationToken(token.data, Platform.OS as 'android' | 'ios');
     });
 
     receivedSubscription = Notifications.addNotificationReceivedListener(notification => {

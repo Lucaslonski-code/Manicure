@@ -24,3 +24,28 @@ global.console = {
 };
 
 (global as any).__DEV__ = false;
+
+// Load environment variables for integration tests from .env file
+try {
+  const fs = require('fs');
+  const path = require('path');
+  const envPath = path.resolve(__dirname, '../../.env');
+  if (fs.existsSync(envPath)) {
+    const content = fs.readFileSync(envPath, 'utf-8');
+    const lines = content.split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eqIndex = trimmed.indexOf('=');
+      if (eqIndex > 0) {
+        const key = trimmed.substring(0, eqIndex).trim();
+        const value = trimmed.substring(eqIndex + 1).trim();
+        if (!process.env[key]) {
+          process.env[key] = value;
+        }
+      }
+    }
+  }
+} catch {
+  // .env not present; integration tests will skip
+}
