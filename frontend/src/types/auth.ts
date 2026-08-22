@@ -52,4 +52,5 @@ export interface AuthClient {
   signOut(): Promise<{
     error: { message: string } | null;
   }>;
+  initialize(): Promise<{ error: { message: string } | null }>;
 }

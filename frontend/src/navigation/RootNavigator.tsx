@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Linking from 'expo-linking';
@@ -42,9 +42,11 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   const { loading, session, isEmailVerified, profile } = useAuth();
+  const splashHiddenRef = useRef(false);
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !splashHiddenRef.current) {
+      splashHiddenRef.current = true;
       SplashScreen.hideAsync().catch((err) => {
         console.error('Error hiding splash screen:', err);
       });

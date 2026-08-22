@@ -8,6 +8,8 @@ import * as Linking from 'expo-linking';
 
 const authClient = supabase.auth as AuthClient;
 
+const BOOTSTRAP_TIMEOUT_MS = 5000;
+
 function extractTokensFromUrl(url: string): { access_token?: string; refresh_token?: string } {
   const tokens: { access_token?: string; refresh_token?: string } = {};
   const hashIndex = url.indexOf('#');
@@ -68,25 +70,46 @@ export function useAuth(): AuthState & {
 
     const bootstrap = async () => {
       try {
-        const { data } = await authClient.getSession();
-        if (!isMounted) return;
-        setSession(data.session);
-        if (data.session?.user) {
-          await loadProfile(data.session.user.id);
-          if (isMounted) {
-            registerNotification().catch((err) => {
-              console.error('Error registering notification during bootstrap:', err);
-            });
-          }
-        } else {
-          setLoading(false);
+        const initPromise = (async () => {
+          await authClient.initialize();
+          return { type: 'initialized' as const };
+        })();
+
+        const timeoutPromise = new Promise<{ type: 'timeout' }>((resolve) => {
+          setTimeout(() => resolve({ type: 'timeout' }), BOOTSTRAP_TIMEOUT_MS);
+        });
+
+        const result = await Promise.race([initPromise, timeoutPromise]);
+
+        if (result.type === 'timeout') {
+          console.warn('Auth bootstrap timeout: proceeding without session recovery');
         }
       } catch (err) {
-        console.error('Error during auth bootstrap:', err);
-        if (isMounted) {
-          setSession(null);
-          setProfile(null);
-          setLoading(false);
+        console.error('Error during auth initialization:', err);
+      } finally {
+        if (!isMounted) return;
+
+        try {
+          const { data } = await authClient.getSession();
+          if (!isMounted) return;
+          setSession(data.session);
+          if (data.session?.user) {
+            await loadProfile(data.session.user.id);
+            if (isMounted) {
+              registerNotification().catch((err) => {
+                console.error('Error registering notification during bootstrap:', err);
+              });
+            }
+          } else {
+            setLoading(false);
+          }
+        } catch (err) {
+          console.error('Error getting session after bootstrap:', err);
+          if (isMounted) {
+            setSession(null);
+            setProfile(null);
+            setLoading(false);
+          }
         }
       }
     };
