@@ -81,36 +81,42 @@ export function useAuth(): AuthState & {
 
         const result = await Promise.race([initPromise, timeoutPromise]);
 
-        if (result.type === 'timeout') {
-          console.warn('Auth bootstrap timeout: proceeding without session recovery');
+        if (!isMounted) return;
+
+        if (result.type === 'initialized') {
+          try {
+            const { data } = await authClient.getSession();
+            if (!isMounted) return;
+            setSession(data.session);
+            if (data.session?.user) {
+              await loadProfile(data.session.user.id);
+              if (isMounted) {
+                registerNotification().catch((err) => {
+                  console.error('Error registering notification during bootstrap:', err);
+                });
+              }
+            } else {
+              setLoading(false);
+            }
+          } catch (err) {
+            console.error('Error getting session after bootstrap:', err);
+            if (isMounted) {
+              setSession(null);
+              setProfile(null);
+              setLoading(false);
+            }
+          }
+        } else {
+          setSession(null);
+          setProfile(null);
+          setLoading(false);
         }
       } catch (err) {
         console.error('Error during auth initialization:', err);
-      } finally {
         if (!isMounted) return;
-
-        try {
-          const { data } = await authClient.getSession();
-          if (!isMounted) return;
-          setSession(data.session);
-          if (data.session?.user) {
-            await loadProfile(data.session.user.id);
-            if (isMounted) {
-              registerNotification().catch((err) => {
-                console.error('Error registering notification during bootstrap:', err);
-              });
-            }
-          } else {
-            setLoading(false);
-          }
-        } catch (err) {
-          console.error('Error getting session after bootstrap:', err);
-          if (isMounted) {
-            setSession(null);
-            setProfile(null);
-            setLoading(false);
-          }
-        }
+        setSession(null);
+        setProfile(null);
+        setLoading(false);
       }
     };
 
