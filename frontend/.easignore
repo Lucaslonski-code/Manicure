@@ -1,0 +1,18 @@
+# Expo Prebuild artifacts - do not upload native directories to EAS
+/android
+/ios
+
+# Keep project config and source
+!app.json
+!eas.json
+!package.json
+!package-lock.json
+!metro.config.js
+!tsconfig.json
+!babel.config.js
+!plugins/
+!src/
+!assets/
+!public/
+!.gitignore
+!.easignore

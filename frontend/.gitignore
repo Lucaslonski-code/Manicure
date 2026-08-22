@@ -16,3 +16,7 @@ web-build/
 coverage/
 .DS_Store
 *.pem
+
+# Expo Prebuild artifacts
+/android
+/ios
