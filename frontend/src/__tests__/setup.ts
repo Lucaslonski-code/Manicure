@@ -16,6 +16,18 @@ jest.mock('expo-notifications', () => ({
   removeNotificationSubscription: jest.fn(),
 }));
 
+// Mock expo-linking
+jest.mock('expo-linking', () => ({
+  createURL: (path: string) => `appmanicure://${path}`,
+  addEventListener: () => ({ remove: jest.fn() }),
+}));
+
+// Mock expo-splash-screen
+jest.mock('expo-splash-screen', () => ({
+  preventAutoHideAsync: jest.fn(),
+  hideAsync: jest.fn(),
+}));
+
 // Silence console errors in tests
 global.console = {
   ...console,

@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Linking from 'expo-linking';
+import * as SplashScreen from 'expo-splash-screen';
+import SplashScreenComponent from '@screens/public/SplashScreen';
 import PublicStack from './stacks/PublicStack';
 import EmailVerificationStack from './stacks/EmailVerificationStack';
 import ClientStack from './stacks/ClientStack';
 import AdminStack from './stacks/AdminStack';
 import { useAuth } from '@hooks/useAuth';
-import { resolveStack } from './resolveStack';
+
+SplashScreen.preventAutoHideAsync();
 
 export type RootStackParamList = {
   Public: undefined;
@@ -40,15 +43,62 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function RootNavigator() {
   const { loading, session, isEmailVerified, profile } = useAuth();
 
-  const initialStack = resolveStack(loading, session, isEmailVerified, profile);
+  useEffect(() => {
+    if (!loading) {
+      SplashScreen.hideAsync().catch((err) => {
+        console.error('Error hiding splash screen:', err);
+      });
+    }
+  }, [loading]);
+
+  if (loading) {
+    return <SplashScreenComponent />;
+  }
+
+  if (!session) {
+    return (
+      <NavigationContainer linking={linking}>
+        <Stack.Navigator initialRouteName="Public" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Public" component={PublicStack} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
+
+  if (!isEmailVerified) {
+    return (
+      <NavigationContainer linking={linking}>
+        <Stack.Navigator initialRouteName="EmailVerification" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="EmailVerification" component={EmailVerificationStack} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
+
+  if (profile?.role === 'admin') {
+    return (
+      <NavigationContainer linking={linking}>
+        <Stack.Navigator initialRouteName="Admin" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Admin" component={AdminStack} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
+
+  if (profile?.role === 'client') {
+    return (
+      <NavigationContainer linking={linking}>
+        <Stack.Navigator initialRouteName="Client" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Client" component={ClientStack} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
 
   return (
     <NavigationContainer linking={linking}>
-      <Stack.Navigator initialRouteName={initialStack} screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="Public" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Public" component={PublicStack} />
-        <Stack.Screen name="EmailVerification" component={EmailVerificationStack} />
-        <Stack.Screen name="Client" component={ClientStack} />
-        <Stack.Screen name="Admin" component={AdminStack} />
       </Stack.Navigator>
     </NavigationContainer>
   );

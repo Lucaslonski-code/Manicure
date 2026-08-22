@@ -41,43 +41,72 @@ export function useAuth(): AuthState & {
   const { register: registerNotification, unregister: unregisterNotification } = useNotifications();
 
   const loadProfile = useCallback(async (userId: string) => {
-    const profileData = await fetchProfileService(userId);
-    if (profileData) {
-      if (profileData.deleted_at || !profileData.is_active) {
-        await authClient.signOut();
-        setProfile(null);
-        setSession(null);
-      } else {
-        setProfile(profileData);
+    try {
+      const profileData = await fetchProfileService(userId);
+      if (profileData) {
+        if (profileData.deleted_at || !profileData.is_active) {
+          await authClient.signOut();
+          setProfile(null);
+          setSession(null);
+        } else {
+          setProfile(profileData);
+        }
       }
+    } catch (err) {
+      console.error('Error loading profile:', err);
+      await authClient.signOut();
+      setProfile(null);
+      setSession(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
     let isMounted = true;
     let linkingSubscription: { remove: () => void } | null = null;
 
-    authClient.getSession().then(({ data: { session } }) => {
-      if (!isMounted) return;
-      setSession(session);
-      if (session?.user) {
-        loadProfile(session.user.id);
-      } else {
-        setLoading(false);
+    const bootstrap = async () => {
+      try {
+        const { data } = await authClient.getSession();
+        if (!isMounted) return;
+        setSession(data.session);
+        if (data.session?.user) {
+          await loadProfile(data.session.user.id);
+          if (isMounted) {
+            registerNotification().catch((err) => {
+              console.error('Error registering notification during bootstrap:', err);
+            });
+          }
+        } else {
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Error during auth bootstrap:', err);
+        if (isMounted) {
+          setSession(null);
+          setProfile(null);
+          setLoading(false);
+        }
       }
-    });
+    };
+
+    bootstrap();
 
     const handleUrl = async (event: { url: string }) => {
       const tokens = extractTokensFromUrl(event.url);
       if (tokens.access_token && tokens.refresh_token) {
-        const { error } = await authClient.setSession({
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-        });
-      if (error) {
-        console.error('Error setting session from deep link');
-      }
+        try {
+          const { error } = await authClient.setSession({
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+          });
+          if (error) {
+            console.error('Error setting session from deep link:', error);
+          }
+        } catch (err) {
+          console.error('Error setting session from deep link:', err);
+        }
       }
     };
 
@@ -89,7 +118,11 @@ export function useAuth(): AuthState & {
         setSession(session);
         if (session?.user) {
           await loadProfile(session.user.id);
-          await registerNotification();
+          if (isMounted) {
+            registerNotification().catch((err) => {
+              console.error('Error registering notification after auth change:', err);
+            });
+          }
         } else {
           setProfile(null);
           setLoading(false);

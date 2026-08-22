@@ -4,7 +4,7 @@ import { colors, typography } from '@theme';
 
 export default function SplashScreen() {
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="splash-screen">
       <Text style={styles.title}>AppManicure</Text>
     </View>
   );
