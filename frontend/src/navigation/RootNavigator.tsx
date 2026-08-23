@@ -1,16 +1,14 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Linking from 'expo-linking';
-import * as SplashScreen from 'expo-splash-screen';
-import SplashScreenComponent from '@screens/public/SplashScreen';
 import PublicStack from './stacks/PublicStack';
 import EmailVerificationStack from './stacks/EmailVerificationStack';
 import ClientStack from './stacks/ClientStack';
 import AdminStack from './stacks/AdminStack';
 import { useAuth } from '@hooks/useAuth';
-
-SplashScreen.preventAutoHideAsync();
+import { colors, typography } from '@theme';
 
 export type RootStackParamList = {
   Public: undefined;
@@ -40,21 +38,32 @@ const linking = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+function LoadingFallback() {
+  return (
+    <View style={styles.loadingContainer}>
+      <Text style={styles.loadingText}>Carregando...</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+  },
+});
+
 export default function RootNavigator() {
   const { loading, session, isEmailVerified, profile } = useAuth();
-  const splashHiddenRef = useRef(false);
-
-  useEffect(() => {
-    if (!loading && !splashHiddenRef.current) {
-      splashHiddenRef.current = true;
-      SplashScreen.hideAsync().catch((err) => {
-        console.error('Error hiding splash screen:', err);
-      });
-    }
-  }, [loading]);
 
   if (loading) {
-    return <SplashScreenComponent />;
+    return <LoadingFallback />;
   }
 
   if (!session) {

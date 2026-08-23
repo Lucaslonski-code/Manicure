@@ -1,3 +1,14 @@
+jest.mock('react-native', () => ({
+  View: 'View',
+  Text: 'Text',
+  TextInput: 'TextInput',
+  TouchableOpacity: 'TouchableOpacity',
+  StyleSheet: {
+    create: (styles: any) => styles,
+  },
+  Platform: { OS: 'android', select: (obj: any) => obj?.android || obj?.default },
+}));
+
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(() => Promise.resolve()),
   hideAsync: jest.fn(() => Promise.resolve()),
@@ -39,12 +50,13 @@ describe('RootNavigator splash lifecycle', () => {
     mockAuthState.profile = null;
   });
 
-  it('should engage native splash via module-level preventAutoHideAsync call', () => {
+  it('should not control native splash lifecycle (moved to App Root)', () => {
     const source = require('fs').readFileSync(
       require('path').join(__dirname, '../../navigation/RootNavigator.tsx'),
       'utf-8'
     );
-    expect(source).toContain('SplashScreen.preventAutoHideAsync()');
+    expect(source).not.toContain('SplashScreen.preventAutoHideAsync()');
+    expect(source).not.toContain('SplashScreen.hideAsync()');
   });
 
   it('should expose splash hide path when loading becomes false and session is null', () => {
