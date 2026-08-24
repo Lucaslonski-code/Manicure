@@ -29,30 +29,36 @@ export default function NewPasswordScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Nova senha</Text>
-      <Text style={styles.text}>
-        Digite sua nova senha abaixo.
-      </Text>
-      <PasswordInput
-        label="Senha"
-        value={password}
-        onChangeText={setPassword}
-        placeholder="******"
-        showRequirements
-      />
-      <PasswordInput
-        label="Confirmar senha"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        placeholder="******"
-        confirmPassword={password}
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      {success ? <Text style={styles.success}>Senha atualizada!</Text> : null}
-      <Button title="Atualizar senha" onPress={handleUpdatePassword} disabled={loading || success} />
-      <TouchableOpacity onPress={() => navigation.replace('Login')}>
-        <Text style={styles.link}>Cancelar</Text>
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <Text style={styles.brand}>AppManicure</Text>
+        <Text style={styles.title}>Nova senha</Text>
+        <Text style={styles.text}>
+          Digite sua nova senha abaixo.
+        </Text>
+      </View>
+
+      <View style={styles.form}>
+        <PasswordInput
+          label="Senha"
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Crie uma senha"
+          showRequirements
+        />
+        <PasswordInput
+          label="Confirmar senha"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Repita a senha"
+          confirmPassword={password}
+        />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {success ? <Text style={styles.success}>Senha atualizada!</Text> : null}
+        <Button title="Atualizar senha" onPress={handleUpdatePassword} disabled={loading || success} />
+        <TouchableOpacity onPress={() => navigation.replace('Login')}>
+          <Text style={styles.link}>Cancelar</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -60,18 +66,32 @@ export default function NewPasswordScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
     justifyContent: 'center',
+  },
+  header: {
     paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+    alignItems: 'center',
+  },
+  brand: {
+    ...typography.display,
+    color: colors.primary,
+    marginBottom: spacing.md,
   },
   title: {
-    ...typography.headingLarge,
-    marginBottom: spacing.md,
+    ...typography.headingMedium,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
     textAlign: 'center',
   },
   text: {
     ...typography.bodyMedium,
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: spacing.xl,
+  },
+  form: {
+    paddingHorizontal: spacing.lg,
   },
   error: {
     ...typography.bodySmall,

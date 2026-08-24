@@ -28,30 +28,37 @@ export default function LoginScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Entrar</Text>
-      <Input
-        label="E-mail"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        placeholder="seu@email.com"
-      />
-      <PasswordInput
-        label="Senha"
-        value={password}
-        onChangeText={setPassword}
-        placeholder="******"
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      {success ? <Text style={styles.success}>{success}</Text> : null}
-      <Button title="Entrar" onPress={handleLogin} disabled={loading} />
-      <TouchableOpacity onPress={() => navigation.navigate('PasswordRecovery')}>
-        <Text style={styles.link}>Esqueci minha senha</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-        <Text style={styles.link}>Criar conta</Text>
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <Text style={styles.brand}>AppManicure</Text>
+        <Text style={styles.title}>Olá, seja bem-vindo</Text>
+        <Text style={styles.subtitle}>Entre na sua conta para continuar</Text>
+      </View>
+
+      <View style={styles.form}>
+        <Input
+          label="E-mail"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          placeholder="seu@email.com"
+        />
+        <PasswordInput
+          label="Senha"
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Sua senha"
+        />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {success ? <Text style={styles.success}>{success}</Text> : null}
+        <Button title="Entrar" onPress={handleLogin} disabled={loading} />
+        <TouchableOpacity onPress={() => navigation.navigate('PasswordRecovery')}>
+          <Text style={styles.link}>Esqueci minha senha</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+          <Text style={styles.link}>Criar conta</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -59,13 +66,29 @@ export default function LoginScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
     justifyContent: 'center',
+  },
+  header: {
     paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  brand: {
+    ...typography.display,
+    color: colors.primary,
+    marginBottom: spacing.md,
   },
   title: {
-    ...typography.headingLarge,
-    marginBottom: spacing.xl,
-    textAlign: 'center',
+    ...typography.headingMedium,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+  },
+  form: {
+    paddingHorizontal: spacing.lg,
   },
   error: {
     ...typography.bodySmall,

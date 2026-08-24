@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { supabase } from '../../supabase/client';
-import { colors, spacing, typography } from '@theme';
+import { colors, spacing, typography, radius } from '@theme';
+import Button from '@components/base/Button';
+import LoadingState from '@components/base/LoadingState';
+import EmptyState from '@components/base/EmptyState';
+import ErrorState from '@components/base/ErrorState';
 
 export default function TimeSlotsScreen({ route, navigation }: any) {
   const { professionalId, serviceId, date } = route.params;
   const [slots, setSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   useEffect(() => {
@@ -16,6 +22,7 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
 
   const loadSlots = async () => {
     setLoading(true);
+    setError(null);
     try {
       const { data, error } = await supabase.rpc('get_available_slots', {
         p_professional_id: professionalId,
@@ -31,8 +38,8 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
       });
 
       setSlots(availableTimes);
-    } catch (err) {
-      console.error('Error loading slots:', err);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao carregar horários');
     } finally {
       setLoading(false);
     }
@@ -44,24 +51,43 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
     }
   };
 
-  const renderSlot = ({ item }: { item: string }) => (
-    <TouchableOpacity
-      style={[styles.slot, selectedTime === item && styles.selected]}
-      onPress={() => setSelectedTime(item)}
-    >
-      <Text style={[styles.slotText, selectedTime === item && styles.selectedText]}>
-        {item}
-      </Text>
-    </TouchableOpacity>
-  );
+  const renderSlot = ({ item }: { item: string }) => {
+    const selected = selectedTime === item;
+    return (
+      <TouchableOpacity
+        style={[styles.slot, selected && styles.selected]}
+        onPress={() => setSelectedTime(item)}
+        accessibilityLabel={`Horário ${item}`}
+        accessibilityRole="button"
+        accessibilityState={{ selected }}
+      >
+        <Text style={[styles.slotText, selected && styles.selectedText]}>
+          {item}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Horários disponíveis</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Horários disponíveis</Text>
+        <Text style={styles.subtitle}>
+          {format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+        </Text>
+      </View>
+
       {loading ? (
-        <Text style={styles.loading}>Carregando...</Text>
+        <LoadingState message="Buscando horários disponíveis..." />
+      ) : error ? (
+        <ErrorState message={error} onRetry={loadSlots} />
       ) : slots.length === 0 ? (
-        <Text style={styles.empty}>Nenhum horário disponível para esta data.</Text>
+        <EmptyState
+          title="Sem horários"
+          description="Não há horários disponíveis para esta data."
+          actionLabel="Escolher outra data"
+          onAction={() => navigation.goBack()}
+        />
       ) : (
         <FlatList
           data={slots}
@@ -71,10 +97,11 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
           contentContainerStyle={styles.list}
         />
       )}
-      {selectedTime && (
-        <TouchableOpacity style={styles.button} onPress={handleContinue}>
-          <Text style={styles.buttonText}>Continuar</Text>
-        </TouchableOpacity>
+
+      {selectedTime && !loading && !error && (
+        <View style={styles.footer}>
+          <Button title="Continuar" onPress={handleContinue} />
+        </View>
       )}
     </View>
   );
@@ -85,33 +112,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+  },
   title: {
     ...typography.headingLarge,
-    padding: spacing.lg,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
-  loading: {
+  subtitle: {
     ...typography.bodyMedium,
-    textAlign: 'center',
-    marginTop: spacing.xl,
-  },
-  empty: {
-    ...typography.bodyMedium,
-    textAlign: 'center',
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
+    color: colors.textSecondary,
   },
   list: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   slot: {
     flex: 1,
     aspectRatio: 1.5,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     margin: spacing.xs,
+    backgroundColor: colors.surface,
   },
   selected: {
     backgroundColor: colors.primary,
@@ -119,22 +147,14 @@ const styles = StyleSheet.create({
   },
   slotText: {
     ...typography.bodyMedium,
-    color: colors.text,
+    color: colors.textPrimary,
   },
   selectedText: {
-    color: colors.background,
+    color: colors.surface,
     fontWeight: '600',
   },
-  button: {
-    backgroundColor: colors.primary,
-    margin: spacing.lg,
-    padding: spacing.md,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    ...typography.bodyLarge,
-    color: colors.background,
-    fontWeight: '600',
+  footer: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
 });

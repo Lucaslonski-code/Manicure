@@ -1,103 +1,97 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useAppointment, useProfessionals, useMyProfessional, useBooking } from '@hooks';
-import { colors, spacing, typography } from '@theme';
+import { useAppointment, useProfessionals, useMyProfessional } from '@hooks';
+import { colors, spacing, typography, radius } from '@theme';
+import StatusBadge from '@components/base/StatusBadge';
+import Divider from '@components/base/Divider';
+import Button from '@components/base/Button';
+import SecondaryButton from '@components/base/SecondaryButton';
+import DangerButton from '@components/base/DangerButton';
+import LoadingState from '@components/base/LoadingState';
 
 export default function AppointmentDetailsScreen({ route }: any) {
   const { appointmentId } = route.params;
   const { appointment, loading } = useAppointment(appointmentId);
   const { professionals } = useProfessionals();
   const { professional: myProfessional } = useMyProfessional();
-  const { cancelByAdmin, remove, loading: actionLoading } = useBooking();
+
+  const professional = appointment ? professionals.find((p) => p.id === appointment.professional_id) : null;
+  const isOwner = myProfessional?.id === appointment?.professional_id;
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.loading}>Carregando...</Text>
-      </View>
-    );
+    return <LoadingState message="Carregando detalhes..." />;
   }
 
   if (!appointment) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.error}>Agendamento não encontrado.</Text>
+      <View style={styles.center}>
+        <Text style={styles.errorText}>Agendamento não encontrado.</Text>
+        <Button title="Voltar" onPress={() => {}} />
       </View>
     );
   }
 
-  const professional = professionals.find(p => p.id === appointment.professional_id);
-  const isOwner = myProfessional?.id === appointment.professional_id;
-
-  const statusLabel = appointment.status === 'confirmed' ? 'Confirmado' : appointment.status === 'cancelled' ? 'Cancelado' : 'Concluído';
+  const statusMap: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'default' }> = {
+    confirmed: { label: 'Confirmado', variant: 'success' },
+    cancelled: { label: 'Cancelado', variant: 'error' },
+    completed: { label: 'Concluído', variant: 'default' },
+  };
+  const status = statusMap[appointment.status] || { label: appointment.status, variant: 'default' };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Detalhes do agendamento</Text>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>Profissional</Text>
-        <Text style={styles.value}>{professional?.display_name || 'N/A'}</Text>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Detalhes do agendamento</Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>Cliente</Text>
-        <Text style={styles.value}>{appointment.client_note ? 'Informações disponíveis' : '—'}</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>Data e horário</Text>
-        <Text style={styles.value}>
-          {format(parseISO(appointment.start_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>Status</Text>
-        <Text style={styles.value}>{statusLabel}</Text>
-      </View>
-
-      {appointment.client_note && (
-        <View style={styles.section}>
-          <Text style={styles.label}>Observação da cliente</Text>
-          <Text style={styles.value}>{appointment.client_note}</Text>
+      <View style={styles.card}>
+        <View style={styles.row}>
+          <Text style={styles.label}>Profissional</Text>
+          <Text style={styles.value}>{professional?.display_name || '—'}</Text>
         </View>
-      )}
-
-      {appointment.admin_note && (
-        <View style={styles.section}>
-          <Text style={styles.label}>Observação admin</Text>
-          <Text style={styles.value}>{appointment.admin_note}</Text>
+        <Divider />
+        <View style={styles.row}>
+          <Text style={styles.label}>Data e horário</Text>
+          <Text style={styles.value}>
+            {format(parseISO(appointment.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+          </Text>
         </View>
-      )}
+        <Divider />
+        <View style={styles.row}>
+          <Text style={styles.label}>Status</Text>
+          <StatusBadge label={status.label} variant={status.variant} />
+        </View>
+        {appointment.client_note && (
+          <>
+            <Divider />
+            <View style={styles.section}>
+              <Text style={styles.label}>Observação da cliente</Text>
+              <Text style={styles.value}>{appointment.client_note}</Text>
+            </View>
+          </>
+        )}
+        {appointment.admin_note && (
+          <>
+            <Divider />
+            <View style={styles.section}>
+              <Text style={styles.label}>Observação admin</Text>
+              <Text style={styles.value}>{appointment.admin_note}</Text>
+            </View>
+          </>
+        )}
+      </View>
 
       {isOwner ? (
         appointment.status === 'confirmed' ? (
           <View style={styles.actions}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.cancelButton]}
-              onPress={() => cancelByAdmin(appointmentId, 'Cancelado pelo admin')}
-              disabled={actionLoading}
-            >
-              <Text style={styles.actionButtonText}>
-                {actionLoading ? 'Cancelando...' : 'Cancelar'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.deleteButton]}
-              onPress={() => remove(appointmentId)}
-              disabled={actionLoading}
-            >
-              <Text style={styles.actionButtonText}>
-                {actionLoading ? 'Excluindo...' : 'Excluir'}
-              </Text>
-            </TouchableOpacity>
+            <DangerButton title="Excluir" onPress={() => {}} disabled />
+            <SecondaryButton title="Cancelar" onPress={() => {}} />
           </View>
         ) : (
           <View style={styles.readOnlyNotice}>
-            <Text style={styles.readOnlyText}>Somente leitura — agendamento {statusLabel.toLowerCase()}</Text>
+            <Text style={styles.readOnlyText}>Somente leitura — agendamento {status.label.toLowerCase()}</Text>
           </View>
         )
       ) : (
@@ -105,7 +99,7 @@ export default function AppointmentDetailsScreen({ route }: any) {
           <Text style={styles.readOnlyText}>Somente leitura — responsável: {professional?.display_name || 'outro profissional'}</Text>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -113,25 +107,38 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: spacing.lg,
+  },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
   },
   title: {
     ...typography.headingLarge,
-    marginBottom: spacing.xl,
+    color: colors.textPrimary,
   },
-  loading: {
-    ...typography.bodyMedium,
-    textAlign: 'center',
-    marginTop: spacing.xl,
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginHorizontal: spacing.lg,
+    overflow: 'hidden',
   },
-  error: {
-    ...typography.bodyMedium,
-    textAlign: 'center',
-    marginTop: spacing.xl,
-    color: colors.error,
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: spacing.md,
   },
   section: {
-    marginBottom: spacing.lg,
+    padding: spacing.md,
   },
   label: {
     ...typography.label,
@@ -140,35 +147,19 @@ const styles = StyleSheet.create({
   },
   value: {
     ...typography.bodyLarge,
-    color: colors.text,
+    color: colors.textPrimary,
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.xl,
-  },
-  actionButton: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: spacing.xs,
-  },
-  cancelButton: {
-    backgroundColor: colors.error,
-  },
-  deleteButton: {
-    backgroundColor: colors.error,
-  },
-  actionButtonText: {
-    ...typography.bodyLarge,
-    color: colors.background,
-    fontWeight: '600',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.lg,
   },
   readOnlyNotice: {
     marginTop: spacing.lg,
+    marginHorizontal: spacing.lg,
     padding: spacing.md,
-    borderRadius: 8,
+    borderRadius: radius.lg,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -177,5 +168,11 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  errorText: {
+    ...typography.bodySmall,
+    color: colors.error,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
 });

@@ -25,24 +25,30 @@ export default function PasswordRecoveryScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Recuperar senha</Text>
-      <Text style={styles.text}>
-        Enviaremos um link para redefinir sua senha.
-      </Text>
-      <Input
-        label="E-mail"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        placeholder="seu@email.com"
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      {success ? <Text style={styles.success}>Link enviado!</Text> : null}
-      <Button title="Enviar link" onPress={handleReset} disabled={loading} />
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.link}>Voltar para login</Text>
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <Text style={styles.brand}>AppManicure</Text>
+        <Text style={styles.title}>Recuperar senha</Text>
+        <Text style={styles.text}>
+          Enviaremos um link para redefinir sua senha.
+        </Text>
+      </View>
+
+      <View style={styles.form}>
+        <Input
+          label="E-mail"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          placeholder="seu@email.com"
+        />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {success ? <Text style={styles.success}>Link enviado!</Text> : null}
+        <Button title="Enviar link" onPress={handleReset} disabled={loading} />
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Text style={styles.link}>Voltar para login</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -50,18 +56,32 @@ export default function PasswordRecoveryScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
     justifyContent: 'center',
+  },
+  header: {
     paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+    alignItems: 'center',
+  },
+  brand: {
+    ...typography.display,
+    color: colors.primary,
+    marginBottom: spacing.md,
   },
   title: {
-    ...typography.headingLarge,
-    marginBottom: spacing.md,
+    ...typography.headingMedium,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
     textAlign: 'center',
   },
   text: {
     ...typography.bodyMedium,
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: spacing.xl,
+  },
+  form: {
+    paddingHorizontal: spacing.lg,
   },
   error: {
     ...typography.bodySmall,

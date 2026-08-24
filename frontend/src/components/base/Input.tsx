@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   },
   label: {
     ...typography.label,
-    color: colors.text,
+    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   input: {
@@ -37,9 +37,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    ...typography.bodyMedium,
-    color: colors.text,
-    backgroundColor: colors.background,
+    ...typography.input,
+    color: colors.textPrimary,
+    backgroundColor: colors.surface,
   },
   inputError: {
     borderColor: colors.error,

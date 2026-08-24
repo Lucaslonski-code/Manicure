@@ -31,48 +31,55 @@ export default function SignUpScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Criar conta</Text>
-      <Input
-        label="Nome completo"
-        value={name}
-        onChangeText={setName}
-        placeholder="Seu nome"
-      />
-      <Input
-        label="E-mail"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        placeholder="seu@email.com"
-      />
-      <Input
-        label="Telefone"
-        value={phone}
-        onChangeText={setPhone}
-        placeholder="(00) 00000-0000"
-        keyboardType="phone-pad"
-      />
-      <PasswordInput
-        label="Senha"
-        value={password}
-        onChangeText={setPassword}
-        placeholder="******"
-        showRequirements
-      />
-      <PasswordInput
-        label="Confirmar senha"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        placeholder="******"
-        confirmPassword={password}
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      {success ? <Text style={styles.success}>{success}</Text> : null}
-      <Button title="Cadastrar" onPress={handleSignUp} disabled={loading || !!success} />
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.link}>Já tenho conta</Text>
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <Text style={styles.brand}>AppManicure</Text>
+        <Text style={styles.title}>Criar conta</Text>
+        <Text style={styles.subtitle}>Preencha os dados para começar</Text>
+      </View>
+
+      <View style={styles.form}>
+        <Input
+          label="Nome completo"
+          value={name}
+          onChangeText={setName}
+          placeholder="Seu nome"
+        />
+        <Input
+          label="E-mail"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          placeholder="seu@email.com"
+        />
+        <Input
+          label="Telefone"
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="(00) 00000-0000"
+          keyboardType="phone-pad"
+        />
+        <PasswordInput
+          label="Senha"
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Crie uma senha"
+          showRequirements
+        />
+        <PasswordInput
+          label="Confirmar senha"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Repita a senha"
+          confirmPassword={password}
+        />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {success ? <Text style={styles.success}>{success}</Text> : null}
+        <Button title="Cadastrar" onPress={handleSignUp} disabled={loading || !!success} />
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Text style={styles.link}>Já tenho conta</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -80,13 +87,29 @@ export default function SignUpScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
     justifyContent: 'center',
+  },
+  header: {
     paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  brand: {
+    ...typography.display,
+    color: colors.primary,
+    marginBottom: spacing.md,
   },
   title: {
-    ...typography.headingLarge,
-    marginBottom: spacing.xl,
-    textAlign: 'center',
+    ...typography.headingMedium,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+  },
+  form: {
+    paddingHorizontal: spacing.lg,
   },
   error: {
     ...typography.bodySmall,

@@ -3,10 +3,13 @@ import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useBlockedTimes } from '@hooks';
-import { colors, spacing, typography } from '@theme';
+import { colors, spacing, typography, radius } from '@theme';
+import Button from '@components/base/Button';
+import LoadingState from '@components/base/LoadingState';
+import EmptyState from '@components/base/EmptyState';
 
 export default function BlockedTimesScreen() {
-  const { blockedTimes, loading } = useBlockedTimes(null);
+  const { blockedTimes, loading, error, refetch } = useBlockedTimes(null);
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
@@ -20,13 +23,28 @@ export default function BlockedTimesScreen() {
     </View>
   );
 
+  if (loading) {
+    return <LoadingState message="Carregando bloqueios..." />;
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>{error}</Text>
+        <Button title="Tentar novamente" onPress={refetch} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bloqueios</Text>
-      {loading ? (
-        <Text style={styles.loading}>Carregando...</Text>
-      ) : blockedTimes.length === 0 ? (
-        <Text style={styles.empty}>Nenhum bloqueio cadastrado.</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Bloqueios</Text>
+        <Text style={styles.subtitle}>Horários indisponíveis</Text>
+      </View>
+
+      {blockedTimes.length === 0 ? (
+        <EmptyState title="Sem bloqueios" description="Nenhum bloqueio cadastrado." />
       ) : (
         <FlatList
           data={blockedTimes}
@@ -44,40 +62,53 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+  },
   title: {
     ...typography.headingLarge,
-    padding: spacing.lg,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
-  loading: {
+  subtitle: {
     ...typography.bodyMedium,
-    textAlign: 'center',
-    marginTop: spacing.xl,
-  },
-  empty: {
-    ...typography.bodyMedium,
-    textAlign: 'center',
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
+    color: colors.textSecondary,
   },
   list: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   card: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   reason: {
     ...typography.bodyLarge,
-    color: colors.text,
+    color: colors.textPrimary,
     fontWeight: '600',
+    marginBottom: spacing.xs,
   },
   time: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  errorText: {
+    ...typography.bodySmall,
+    color: colors.error,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
 });

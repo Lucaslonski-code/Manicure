@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   warningTitle: {
     ...typography.bodyLarge,
     fontWeight: '600',
-    color: colors.text,
+    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   warningText: {

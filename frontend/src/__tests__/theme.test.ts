@@ -2,8 +2,8 @@ import { colors, typography, spacing, radius } from '../theme';
 
 describe('Theme tokens', () => {
   it('has valid color values', () => {
-    expect(colors.primary).toBe('#000000');
-    expect(colors.background).toBe('#FFFFFF');
+    expect(colors.primary).toBe('#25221F');
+    expect(colors.background).toBe('#F5F0EA');
   });
 
   it('has valid spacing values', () => {

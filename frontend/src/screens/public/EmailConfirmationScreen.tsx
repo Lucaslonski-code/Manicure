@@ -22,17 +22,23 @@ export default function EmailConfirmationScreen({ route, navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Verifique seu e-mail</Text>
-      <Text style={styles.text}>
-        Enviamos um link de confirmação para{'\n'}
-        {email ? <Text style={styles.email}>{email}</Text> : ' seu e-mail.'}
-      </Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      {sent ? <Text style={styles.success}>E-mail reenviado!</Text> : null}
-      <Button title="Reenviar e-mail" onPress={handleResend} disabled={loading} />
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.link}>Voltar para login</Text>
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <Text style={styles.brand}>AppManicure</Text>
+        <Text style={styles.title}>Verifique seu e-mail</Text>
+        <Text style={styles.text}>
+          Enviamos um link de confirmação para{'\n'}
+          {email ? <Text style={styles.email}>{email}</Text> : ' seu e-mail.'}
+        </Text>
+      </View>
+
+      <View style={styles.form}>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {sent ? <Text style={styles.success}>E-mail reenviado!</Text> : null}
+        <Button title="Reenviar e-mail" onPress={handleResend} disabled={loading} />
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Text style={styles.link}>Voltar para login</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -40,21 +46,37 @@ export default function EmailConfirmationScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
     justifyContent: 'center',
+  },
+  header: {
     paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+    alignItems: 'center',
+  },
+  brand: {
+    ...typography.display,
+    color: colors.primary,
+    marginBottom: spacing.md,
   },
   title: {
-    ...typography.headingLarge,
-    marginBottom: spacing.md,
+    ...typography.headingMedium,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
     textAlign: 'center',
   },
   text: {
     ...typography.bodyMedium,
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: spacing.xl,
   },
   email: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
     fontWeight: '600',
+  },
+  form: {
+    paddingHorizontal: spacing.lg,
   },
   error: {
     ...typography.bodySmall,

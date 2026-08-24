@@ -1,42 +1,36 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useAuth } from '@hooks';
 import { deleteAccount } from '../../services/api';
-import { colors, spacing, typography } from '@theme';
+import { colors, spacing, typography, radius } from '@theme';
+import DangerButton from '@components/base/DangerButton';
+import ConfirmationDialog from '@components/base/ConfirmationDialog';
 
 export default function AccountDeletionScreen({ navigation }: any) {
   const { signOut } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
 
   const handleDeleteAccount = async () => {
-    Alert.alert(
-      'Excluir conta',
-      'Esta ação é irreversível. Seus agendamentos futuros serão cancelados e seus dados pessoais serão anonimizados. Deseja continuar?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await deleteAccount();
-              await signOut();
-              navigation.replace('Public');
-            } catch (err: any) {
-              Alert.alert('Erro', err.message || 'Não foi possível excluir a conta. Tente novamente.');
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
+    try {
+      setLoading(true);
+      await deleteAccount();
+      await signOut();
+      navigation.replace('Public');
+    } catch (err: any) {
+      Alert.alert('Erro', err.message || 'Não foi possível excluir a conta. Tente novamente.');
+    } finally {
+      setLoading(false);
+      setShowDialog(false);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Excluir conta</Text>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Excluir conta</Text>
+        <Text style={styles.subtitle}>Esta ação é irreversível</Text>
+      </View>
 
       <View style={styles.warning}>
         <Text style={styles.warningTitle}>Atenção</Text>
@@ -48,16 +42,24 @@ export default function AccountDeletionScreen({ navigation }: any) {
         </Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={handleDeleteAccount}
-        disabled={loading}
-      >
-        <Text style={styles.deleteButtonText}>
-          {loading ? 'Excluindo...' : 'Excluir minha conta'}
-        </Text>
-      </TouchableOpacity>
-    </View>
+      <View style={styles.actions}>
+        <DangerButton
+          title="Excluir minha conta"
+          onPress={() => setShowDialog(true)}
+          disabled={loading}
+        />
+      </View>
+
+      <ConfirmationDialog
+        visible={showDialog}
+        title="Excluir conta"
+        message="Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setShowDialog(false)}
+        destructive
+      />
+    </ScrollView>
   );
 }
 
@@ -65,24 +67,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    padding: spacing.lg,
+  },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
   },
   title: {
     ...typography.headingLarge,
-    marginBottom: spacing.xl,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
   },
   warning: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: radius.lg,
     padding: spacing.md,
+    marginHorizontal: spacing.lg,
     marginBottom: spacing.xl,
   },
   warningTitle: {
     ...typography.bodyLarge,
+    color: colors.textPrimary,
     fontWeight: '600',
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   warningText: {
@@ -90,15 +102,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
-  deleteButton: {
-    backgroundColor: colors.error,
-    padding: spacing.md,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    ...typography.bodyLarge,
-    color: colors.background,
-    fontWeight: '600',
+  actions: {
+    paddingHorizontal: spacing.lg,
   },
 });

@@ -1,12 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { useAvailability } from '@hooks';
-import { colors, spacing, typography } from '@theme';
+import { colors, spacing, typography, radius } from '@theme';
+import Button from '@components/base/Button';
+import LoadingState from '@components/base/LoadingState';
+import EmptyState from '@components/base/EmptyState';
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
 export default function AvailabilityScreen() {
-  const { availability, loading } = useAvailability(null);
+  const { availability, loading, error, refetch } = useAvailability(null);
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
@@ -17,13 +20,28 @@ export default function AvailabilityScreen() {
     </View>
   );
 
+  if (loading) {
+    return <LoadingState message="Carregando disponibilidade..." />;
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>{error}</Text>
+        <Button title="Tentar novamente" onPress={refetch} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Disponibilidade</Text>
-      {loading ? (
-        <Text style={styles.loading}>Carregando...</Text>
-      ) : availability.length === 0 ? (
-        <Text style={styles.empty}>Nenhuma disponibilidade cadastrada.</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Disponibilidade</Text>
+        <Text style={styles.subtitle}>Jornada semanal</Text>
+      </View>
+
+      {availability.length === 0 ? (
+        <EmptyState title="Sem disponibilidade" description="Nenhuma disponibilidade cadastrada." />
       ) : (
         <FlatList
           data={availability}
@@ -41,40 +59,54 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+  },
   title: {
     ...typography.headingLarge,
-    padding: spacing.lg,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
-  loading: {
+  subtitle: {
     ...typography.bodyMedium,
-    textAlign: 'center',
-    marginTop: spacing.xl,
-  },
-  empty: {
-    ...typography.bodyMedium,
-    textAlign: 'center',
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
+    color: colors.textSecondary,
   },
   list: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   card: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   weekday: {
     ...typography.bodyLarge,
-    color: colors.text,
+    color: colors.textPrimary,
     fontWeight: '600',
   },
   time: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
-    marginTop: spacing.xs,
+  },
+  errorText: {
+    ...typography.bodySmall,
+    color: colors.error,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
 });

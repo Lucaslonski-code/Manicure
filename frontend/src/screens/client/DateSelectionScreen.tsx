@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { format, addDays, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAvailability, useBlockedTimes } from '@hooks';
-import { colors, spacing, typography } from '@theme';
+import { colors, spacing, typography, radius } from '@theme';
+import Button from '@components/base/Button';
 
 export default function DateSelectionScreen({ route, navigation }: any) {
   const { professionalId, serviceId } = route.params;
@@ -33,9 +34,16 @@ export default function DateSelectionScreen({ route, navigation }: any) {
 
     return (
       <TouchableOpacity
-        style={[styles.dateCard, !available && styles.disabled, selected && styles.selected]}
+        style={[
+          styles.dateCard,
+          !available && styles.disabled,
+          selected && styles.selected,
+        ]}
         onPress={() => available && setSelectedDate(format(item, 'yyyy-MM-dd'))}
         disabled={!available}
+        accessibilityLabel={`${format(item, 'EEEE', { locale: ptBR })} ${format(item, 'd')} de ${format(item, 'MMMM', { locale: ptBR })}`}
+        accessibilityRole="button"
+        accessibilityState={{ selected, disabled: !available }}
       >
         <Text style={[styles.day, !available && styles.disabledText, selected && styles.selectedText]}>
           {format(item, 'EEE', { locale: ptBR })}
@@ -58,7 +66,10 @@ export default function DateSelectionScreen({ route, navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Selecione a data</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Selecione a data</Text>
+        <Text style={styles.subtitle}>Escolha o melhor dia para o atendimento</Text>
+      </View>
       <FlatList
         data={dates}
         keyExtractor={(item) => format(item, 'yyyy-MM-dd')}
@@ -67,9 +78,9 @@ export default function DateSelectionScreen({ route, navigation }: any) {
         contentContainerStyle={styles.list}
       />
       {selectedDate && (
-        <TouchableOpacity style={styles.button} onPress={handleContinue}>
-          <Text style={styles.buttonText}>Continuar</Text>
-        </TouchableOpacity>
+        <View style={styles.footer}>
+          <Button title="Continuar" onPress={handleContinue} />
+        </View>
       )}
     </View>
   );
@@ -80,22 +91,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+  },
   title: {
     ...typography.headingLarge,
-    padding: spacing.lg,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
   },
   list: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   dateCard: {
     flex: 1,
     aspectRatio: 1,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     margin: spacing.xs,
+    backgroundColor: colors.surface,
   },
   disabled: {
     opacity: 0.3,
@@ -105,17 +128,17 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   day: {
-    ...typography.bodySmall,
+    ...typography.caption,
     color: colors.textSecondary,
     textTransform: 'uppercase',
   },
   number: {
     ...typography.headingMedium,
-    color: colors.text,
+    color: colors.textPrimary,
     marginVertical: spacing.xs,
   },
   month: {
-    ...typography.bodySmall,
+    ...typography.caption,
     color: colors.textSecondary,
     textTransform: 'uppercase',
   },
@@ -123,18 +146,10 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   selectedText: {
-    color: colors.background,
+    color: colors.surface,
   },
-  button: {
-    backgroundColor: colors.primary,
-    margin: spacing.lg,
-    padding: spacing.md,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    ...typography.bodyLarge,
-    color: colors.background,
-    fontWeight: '600',
+  footer: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
 });
