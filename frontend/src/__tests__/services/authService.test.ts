@@ -44,6 +44,7 @@ describe('authService', () => {
         email: 'maria@example.com',
         password: 'senha123',
         options: {
+          emailRedirectTo: 'appmanicure://auth/confirm',
           data: { name: 'Maria Silva', phone: '11999999999' },
         },
       });
@@ -99,7 +100,9 @@ describe('authService', () => {
 
       const result = await resetPassword('maria@example.com');
       expect(result.success).toBe(true);
-      expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith('maria@example.com');
+      expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith('maria@example.com', {
+        redirectTo: 'appmanicure://auth/confirm',
+      });
     });
   });
 

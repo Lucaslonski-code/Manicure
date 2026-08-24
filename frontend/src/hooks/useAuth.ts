@@ -8,6 +8,11 @@ import * as Linking from 'expo-linking';
 
 const authClient = supabase.auth as AuthClient;
 
+// O timeout de bootstrap existe para impedir que o app fique permanentemente
+// em loading se initialize() nunca resolver (ex.: problema de rede ou
+// inicialização do Supabase). Após o timeout, o fluxo público (Login) é
+// liberado. getSession() não é chamado após timeout/erro porque isso
+// reintroduziria uma promise potencialmente bloqueante no caminho crítico.
 const BOOTSTRAP_TIMEOUT_MS = 5000;
 
 function extractTokensFromUrl(url: string): { access_token?: string; refresh_token?: string } {
@@ -46,6 +51,9 @@ export function useAuth(): AuthState & {
     try {
       const profileData = await fetchProfileService(userId);
       if (profileData) {
+        // Perfis marcados como deletados ou inativos são considerados
+        // encerrados: a sessão é invalidada e o usuário retorna ao estado
+        // público (Login). Isso impede que contas desativadas acessem o app.
         if (profileData.deleted_at || !profileData.is_active) {
           await authClient.signOut();
           setProfile(null);
@@ -60,6 +68,8 @@ export function useAuth(): AuthState & {
       setProfile(null);
       setSession(null);
     } finally {
+      // loading termina aqui porque o perfil é necessário para resolver
+      // a pilha de navegação (admin/client).
       setLoading(false);
     }
   }, []);
@@ -68,8 +78,34 @@ export function useAuth(): AuthState & {
     let isMounted = true;
     let linkingSubscription: { remove: () => void } | null = null;
 
+    const processDeepLink = async (url: string | null) => {
+      if (!url || !isMounted) return;
+      const tokens = extractTokensFromUrl(url);
+      if (tokens.access_token && tokens.refresh_token) {
+        try {
+          // Deep links de confirmação/redefinição de senha do Supabase Auth
+          // trazem tokens na hash/query. setSession os valida e completa
+          // a autenticação sem necessidade de novo login.
+          const { error } = await authClient.setSession({
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+          });
+          if (error) {
+            console.error('Error setting session from deep link:', error);
+          }
+        } catch (err) {
+          console.error('Error setting session from deep link:', err);
+        }
+      }
+    };
+
     const bootstrap = async () => {
       try {
+        // Processa deep link caso o app tenha sido aberto a partir de um
+        // link de confirmação/redefinição enquanto estava fechado.
+        const initialUrl = await Linking.getInitialURL();
+        await processDeepLink(initialUrl);
+
         const initPromise = (async () => {
           await authClient.initialize();
           return { type: 'initialized' as const };
@@ -123,20 +159,7 @@ export function useAuth(): AuthState & {
     bootstrap();
 
     const handleUrl = async (event: { url: string }) => {
-      const tokens = extractTokensFromUrl(event.url);
-      if (tokens.access_token && tokens.refresh_token) {
-        try {
-          const { error } = await authClient.setSession({
-            access_token: tokens.access_token,
-            refresh_token: tokens.refresh_token,
-          });
-          if (error) {
-            console.error('Error setting session from deep link:', error);
-          }
-        } catch (err) {
-          console.error('Error setting session from deep link:', err);
-        }
-      }
+      await processDeepLink(event.url);
     };
 
     linkingSubscription = Linking.addEventListener('url', handleUrl);

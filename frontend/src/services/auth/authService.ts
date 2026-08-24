@@ -7,7 +7,14 @@ export interface AuthResult {
   profile?: Profile;
 }
 
-function mapAuthError(message: string): string {
+const AUTH_REDIRECT = 'appmanicure://auth/confirm';
+
+// emailRedirectTo/redirectTo garantem que, após confirmar o e-mail ou
+// redefinir a senha, o usuário retorne ao aplicativo mobile via deep link
+// (não para localhost ou URLs de desenvolvimento).
+// O scheme deve coincidir com o configurado em app.json.
+
+function getAuthError(message: string): string {
   if (!message) return 'Erro desconhecido';
   const lower = message.toLowerCase();
   if (lower.includes('invalid login credentials') || lower.includes('invalid_credentials')) {
@@ -40,6 +47,7 @@ export async function signUp(name: string, email: string, phone: string, passwor
       email,
       password,
       options: {
+        emailRedirectTo: AUTH_REDIRECT,
         data: {
           name,
           phone,
@@ -48,7 +56,7 @@ export async function signUp(name: string, email: string, phone: string, passwor
     });
 
     if (error) {
-      return { success: false, error: mapAuthError(error.message) };
+      return { success: false, error: getAuthError(error.message) };
     }
 
     if (!data.user) {
@@ -69,7 +77,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
     });
 
     if (error) {
-      return { success: false, error: mapAuthError(error.message) };
+      return { success: false, error: getAuthError(error.message) };
     }
 
     if (!data.user) {
@@ -87,7 +95,7 @@ export async function signOut(): Promise<AuthResult> {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      return { success: false, error: mapAuthError(error.message) };
+      return { success: false, error: getAuthError(error.message) };
     }
 
     return { success: true };
@@ -98,10 +106,12 @@ export async function signOut(): Promise<AuthResult> {
 
 export async function resetPassword(email: string): Promise<AuthResult> {
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: AUTH_REDIRECT,
+    });
 
     if (error) {
-      return { success: false, error: mapAuthError(error.message) };
+      return { success: false, error: getAuthError(error.message) };
     }
 
     return { success: true };
@@ -115,7 +125,7 @@ export async function resendConfirmation(email: string): Promise<AuthResult> {
     const { error } = await supabase.auth.resend({ type: 'signup', email });
 
     if (error) {
-      return { success: false, error: mapAuthError(error.message) };
+      return { success: false, error: getAuthError(error.message) };
     }
 
     return { success: true };
@@ -131,7 +141,7 @@ export async function updatePassword(password: string): Promise<AuthResult> {
     });
 
     if (error) {
-      return { success: false, error: mapAuthError(error.message) };
+      return { success: false, error: getAuthError(error.message) };
     }
 
     return { success: true };

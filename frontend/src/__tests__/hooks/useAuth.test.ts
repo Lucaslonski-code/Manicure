@@ -23,6 +23,7 @@ jest.mock('expo-linking', () => ({
   removeEventListener: jest.fn(),
   openURL: jest.fn(() => Promise.resolve()),
   createURL: jest.fn((path: string) => `appmanicure://${path}`),
+  getInitialURL: jest.fn(() => Promise.resolve(null)),
 }));
 
 jest.mock('../../supabase/client', () => ({

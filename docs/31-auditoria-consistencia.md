@@ -94,7 +94,7 @@ Auditoria formal realizada após o fechamento arquitetural oficial adotando **Su
 | A7 | Integração de API | Conforme | Contratos mapeados para Supabase PostgREST, RPCs e Edge Functions (`docs/10-api-especificacao.md`). |
 | A8 | Notificações Push | Conforme | Database Webhooks + Supabase Edge Function (`send-push-notification`) + Expo Push API (`docs/14-notificacoes.md`). |
 | A9 | Exclusão de Conta Google Play | Conforme | Edge Function (`delete-account-external`) + Triggers de anonimização no PostgreSQL (`docs/15-privacidade-exclusao-conta.md`). |
-| A10 | Gestão de Ambientes e Secrets | Conforme | `EXPO_PUBLIC_SUPABASE_ANON_KEY` no client; `SUPABASE_SERVICE_ROLE_KEY` estritamente server-side nas Edge Functions (`docs/22-deploy-operacao-ambientes.md`). |
+| A10 | Gestão de Ambientes e Secrets | Conforme | `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` no client; `SUPABASE_SERVICE_ROLE_KEY` estritamente server-side nas Edge Functions (`docs/22-deploy-operacao-ambientes.md`). |
 | A11 | Target Android API 36 e EAS | Conforme | EAS Build configurado para gerar AAB com targetSdkVersion 36 (`docs/18-android-build-assinatura-testes.md`). |
 
 ### Conclusão Final

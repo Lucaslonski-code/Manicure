@@ -9,23 +9,21 @@ momento da implementação — `REQUER VALIDAÇÃO OFICIAL`.
 ## 12.1 Estrutura de pastas (conceitual)
 
 ```
-app/
+src/
   navigation/        → definição de pilhas e proteção de rotas
   screens/
-    public/          → Splash, Login, Cadastro, Confirmação de e-mail, Recuperação de senha
+    public/          → Login, Cadastro, Confirmação de e-mail, Recuperação de senha, Nova senha
     client/          → Home, Profissionais, Serviços, Calendário, Horários, Resumo, Confirmação,
                         Meus Agendamentos, Detalhes, Histórico, Perfil, Exclusão de Conta
     admin/           → Dashboard, Agenda Global, Detalhes do Agendamento, Disponibilidade,
                         Bloqueios, Serviços, Perfil, Exclusão de Conta
   components/        → componentes reutilizáveis (ver design system, 13-ux-ui-design-system.md)
-  hooks/             → hooks de estado/efeitos reutilizáveis (ex.: sessão, disponibilidade)
+  hooks/             → hooks de estado/efeitos reutilizáveis (ex.: useAuth, useNotifications)
   services/
-    api/             → cliente HTTP e definição de contratos (espelha 10-api-especificacao.md)
     auth/            → integração com provedor de autenticação
     notifications/   → registro de push, tratamento de recebimento
-    storage/         → armazenamento seguro local (sessão, preferências)
-  state/             → estado global (sessão, usuário atual, role)
   forms/             → definição e validação de formulários
+  supabase/          → cliente Supabase + storage adapter
   utils/             → formatação de data/hora, máscaras de telefone, etc.
 ```
 
@@ -52,7 +50,7 @@ A tecnologia concreta de gerenciamento de estado (ex.: biblioteca de estado glob
 
 ## 12.4 Cliente Supabase e Gerenciamento de Sessão
 
-- O aplicativo utiliza o SDK oficial `@supabase/supabase-js` instanciado como singleton em `src/services/supabase.ts`.
+- O aplicativo utiliza o SDK oficial `@supabase/supabase-js` instanciado como singleton em `src/supabase/client.ts`.
 - O armazenamento seguro de tokens de sessão (JWT e refresh token) é integrado ao SDK via adaptador customizado usando `expo-secure-store`:
   ```typescript
   import { createClient } from '@supabase/supabase-js';
@@ -66,19 +64,20 @@ A tecnologia concreta de gerenciamento de estado (ex.: biblioteca de estado glob
 
   export const supabase = createClient(
     process.env.EXPO_PUBLIC_SUPABASE_URL!,
-    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       auth: {
         storage: ExpoSecureStoreAdapter,
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: false,
+        skipAutoInitialize: true,
       },
     }
   );
   ```
 - O ciclo de vida da autenticação é monitorado globalmente via `supabase.auth.onAuthStateChange((event, session) => ...)`.
-- As variáveis públicas `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY` são as únicas credenciais presentes no bundle do app. A chave `service_role` **nunca** é incluída no frontend.
+- As variáveis públicas `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` são as únicas credenciais presentes no bundle do app. A chave `service_role` **nunca** é incluída no frontend.
 
 ## 12.5 Armazenamento local
 

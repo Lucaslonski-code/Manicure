@@ -242,7 +242,7 @@ teste fechado → solicitação de produção → revisão → publicação → 
 Contas críticas (Google Play Console, Supabase, domínio) devem pertencer à
 proprietária do negócio, não apenas ao desenvolvedor, evitando dependência exclusiva de uma pessoa física.
 Nenhuma credencial real é registrada em qualquer documento ou em controle de versão.
-Chaves públicas seguras (`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`) residem no cliente, enquanto chaves privilegiadas (`service_role`) ficam restritas a Edge Functions e infraestrutura interna.
+Chaves públicas seguras (`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) residem no cliente, enquanto chaves privilegiadas (`service_role`) ficam restritas a Edge Functions e infraestrutura interna.
 
 Backup automatizado do banco gerenciado pelo Supabase, com verificação periódica de restaurabilidade. Auditoria de eventos sensíveis
 (autenticação, criação/alteração/cancelamento/exclusão de agendamento, mudanças administrativas, tentativas

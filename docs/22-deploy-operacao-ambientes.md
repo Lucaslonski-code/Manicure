@@ -83,8 +83,8 @@ Princípio: a infraestrutura deve ser autônoma e pertencer à organização do 
 ### Separação e Classificação de Variáveis / Secrets:
 
 1. **Cliente Mobile (Públicas, injetadas no bundle via Expo):**
-   - `EXPO_PUBLIC_SUPABASE_URL`: Endpoint da API do projeto Supabase.
-   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`: Chave anônima pública (todas as requisições protegidas por RLS).
+    - `EXPO_PUBLIC_SUPABASE_URL`: Endpoint da API do projeto Supabase.
+    - `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: Chave anônima pública (todas as requisições protegidas por RLS).
 2. **Ambiente de Servidor / Edge Functions (Privadas e Críticas):**
    - `SUPABASE_SERVICE_ROLE_KEY`: Chave mestre com privilégios administrativos. **NUNCA entra no bundle do app**, configurada unicamente nos secrets do Supabase (`supabase secrets set`).
    - `EXPO_ACCESS_TOKEN`: Token para autenticação segura com a Expo Push API.

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '@hooks/useAuth';
 import Button from '@components/base/Button';
-import Input from '@components/base/Input';
+import PasswordInput from '@components/base/PasswordInput';
 import { newPasswordSchema } from '@forms/schemas';
 import { colors, spacing, typography } from '@theme';
 
@@ -33,19 +33,19 @@ export default function NewPasswordScreen({ navigation }: any) {
       <Text style={styles.text}>
         Digite sua nova senha abaixo.
       </Text>
-      <Input
+      <PasswordInput
         label="Senha"
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
         placeholder="******"
+        showRequirements
       />
-      <Input
+      <PasswordInput
         label="Confirmar senha"
         value={confirmPassword}
         onChangeText={setConfirmPassword}
-        secureTextEntry
         placeholder="******"
+        confirmPassword={password}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {success ? <Text style={styles.success}>Senha atualizada!</Text> : null}
