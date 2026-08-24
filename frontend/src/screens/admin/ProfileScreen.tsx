@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { useAuth } from '@hooks';
 import { useNotifications } from '@hooks';

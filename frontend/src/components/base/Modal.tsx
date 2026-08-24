@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { colors, spacing, typography, radius } from '@theme';
 
 interface ModalProps {
   visible: boolean;
