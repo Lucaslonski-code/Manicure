@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import { ThemeProvider } from '@theme/ThemeProvider';
-import RootNavigator from '@navigation/RootNavigator';
+import AppRoot from '@navigation/AppRoot';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -14,7 +14,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <SafeAreaProvider>
-        <RootNavigator />
+        <AppRoot />
       </SafeAreaProvider>
     </ThemeProvider>
   );

@@ -12,6 +12,7 @@ module.exports = {
   ],
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
   moduleNameMapper: {
+    '^.+\\.(png|jpe?g|webp|gif|svg)$': '<rootDir>/src/__tests__/__mocks__/assetStub.js',
     '^@app$': '<rootDir>/src',
     '^@app/(.*)$': '<rootDir>/src/$1',
     '^@theme$': '<rootDir>/src/theme',

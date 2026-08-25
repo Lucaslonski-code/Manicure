@@ -10,6 +10,7 @@ import ClientStack from './stacks/ClientStack';
 import AdminStack from './stacks/AdminStack';
 import { useAuth } from '@hooks/useAuth';
 import { colors, typography } from '@theme';
+import type { Profile } from '../supabase/types';
 
 export type RootStackParamList = {
   Public: undefined;
@@ -18,6 +19,8 @@ export type RootStackParamList = {
   Client: undefined;
   Admin: undefined;
 };
+
+export type RootDecision = 'Public' | 'EmailVerification' | 'Recovery' | 'Client' | 'Admin';
 
 // O prefixo de deep link deve coincidir com o scheme em app.json.
 const prefix = Linking.createURL('/');
@@ -65,8 +68,92 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function RootNavigator() {
+// Decide o fluxo de destino com base no estado REAL de autenticação.
+// O bootstrap (useAuth) já rodou em paralelo; esta função apenas mapeia
+// o estado para a pilha correta. Não dispara nenhuma Promise/rede.
+export function resolveRootState(s: {
+  loading: boolean;
+  session: { user: { id: string } } | null;
+  isEmailVerified: boolean;
+  profile: Profile | null;
+  recoveryMode: boolean;
+}): RootDecision {
+  if (!s.session) {
+    return 'Public';
+  }
+  if (!s.isEmailVerified) {
+    return 'EmailVerification';
+  }
+  if (s.recoveryMode) {
+    return 'Recovery';
+  }
+  if (s.profile?.role === 'admin') {
+    return 'Admin';
+  }
+  if (s.profile?.role === 'client') {
+    return 'Client';
+  }
+  return 'Public';
+}
+
+type AuthSnapshot = {
+  loading: boolean;
+  session: { user: { id: string } } | null;
+  isEmailVerified: boolean;
+  profile: Profile | null;
+  recoveryMode: boolean;
+};
+
+export type RootNavigatorProps = {
+  // Quando fornecido, o RootNavigator consome o estado já resolvido pelo
+  // AppRoot (bootstrap único, sem re-disparar getSession/initialize).
+  authState?: AuthSnapshot;
+};
+
+export default function RootNavigator({ authState }: RootNavigatorProps) {
+  if (authState) {
+    return <RootNavigatorContent authState={authState} />;
+  }
+  return <RootNavigatorInternal />;
+}
+
+function RootNavigatorInternal() {
   const { loading, session, isEmailVerified, profile, recoveryMode } = useAuth();
+  return (
+    <RootNavigatorContent
+      authState={{ loading, session, isEmailVerified, profile, recoveryMode }}
+    />
+  );
+}
+
+function RootContainer({ name, component }: { name: RootDecision; component: React.ComponentType<any> }) {
+  return (
+    <NavigationContainer linking={linking}>
+      <Stack.Navigator initialRouteName={name} screenOptions={{ headerShown: false }}>
+        <Stack.Screen name={name} component={component} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+function renderRoot(decision: RootDecision) {
+  switch (decision) {
+    case 'EmailVerification':
+      return <RootContainer name="EmailVerification" component={EmailVerificationStack} />;
+    case 'Recovery':
+      return <RootContainer name="Recovery" component={RecoveryStack} />;
+    case 'Admin':
+      return <RootContainer name="Admin" component={AdminStack} />;
+    case 'Client':
+      return <RootContainer name="Client" component={ClientStack} />;
+    case 'Public':
+    default:
+      return <RootContainer name="Public" component={PublicStack} />;
+  }
+}
+
+function RootNavigatorContent({ authState }: { authState: AuthSnapshot }) {
+  const { loading, session, isEmailVerified, profile, recoveryMode } = authState;
 
   // Estado 1: bootstrap de auth em andamento.
   // Não deve ser confundido com splash nativo — o splash já foi liberado.
@@ -74,74 +161,6 @@ export default function RootNavigator() {
     return <LoadingFallback />;
   }
 
-  // Estado 2: sem sessão → fluxo público (Login).
-  // Esta é a primeira tela interativa para usuários não autenticados.
-  if (!session) {
-    return (
-      <NavigationContainer linking={linking}>
-        <Stack.Navigator initialRouteName="Public" screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Public" component={PublicStack} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    );
-  }
-
-  // Estado 3: autenticado mas e-mail não confirmado.
-  // O usuário não pode acessar fluxos funcionais até confirmar.
-  if (!isEmailVerified) {
-    return (
-      <NavigationContainer linking={linking}>
-        <Stack.Navigator initialRouteName="EmailVerification" screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="EmailVerification" component={EmailVerificationStack} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    );
-  }
-
-  // Estado 3b: recuperação de senha via deep link.
-  // O usuário precisa definir uma nova senha antes de acessar o app.
-  if (recoveryMode) {
-    return (
-      <NavigationContainer linking={linking}>
-        <Stack.Navigator initialRouteName="Recovery" screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Recovery" component={RecoveryStack} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    );
-  }
-
-  // Estado 4: admin → AdminStack.
-  // A regra de autorização (escrita restrita ao profissional responsável)
-  // é enforcing no backend via RLS. O frontend apenas oculta ações
-  // não permitidas para UX.
-  if (profile?.role === 'admin') {
-    return (
-      <NavigationContainer linking={linking}>
-        <Stack.Navigator initialRouteName="Admin" screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Admin" component={AdminStack} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    );
-  }
-
-  // Estado 5: client → ClientStack.
-  if (profile?.role === 'client') {
-    return (
-      <NavigationContainer linking={linking}>
-        <Stack.Navigator initialRouteName="Client" screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Client" component={ClientStack} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    );
-  }
-
-  // Fallback: se o profile não tem role reconhecida, retorna ao público.
-  // Isso evida telas vazias ou crashes por role desconhecida.
-  return (
-    <NavigationContainer linking={linking}>
-      <Stack.Navigator initialRouteName="Public" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Public" component={PublicStack} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+  const decision = resolveRootState({ loading, session, isEmailVerified, profile, recoveryMode });
+  return renderRoot(decision);
 }
