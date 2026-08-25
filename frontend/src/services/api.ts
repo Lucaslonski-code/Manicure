@@ -100,22 +100,31 @@ export async function fetchProfessionalServices(professionalId: string): Promise
   return data || [];
 }
 
-export async function fetchAvailability(professionalId: string): Promise<Availability[]> {
-  const { data, error } = await supabase
+export async function fetchAvailability(professionalId?: string | null): Promise<Availability[]> {
+  const query = supabase
     .from('availability')
-    .select('*')
-    .eq('professional_id', professionalId)
-    .order('weekday');
+    .select('*');
+
+  if (professionalId) {
+    query.eq('professional_id', professionalId);
+  }
+
+  const { data, error } = await query.order('weekday');
 
   if (error) throw new Error(mapApiError(error));
   return data || [];
 }
 
-export async function fetchBlockedTimes(professionalId: string): Promise<BlockedTime[]> {
-  const { data, error } = await supabase
+export async function fetchBlockedTimes(professionalId?: string | null): Promise<BlockedTime[]> {
+  const query = supabase
     .from('blocked_times')
-    .select('*')
-    .eq('professional_id', professionalId)
+    .select('*');
+
+  if (professionalId) {
+    query.eq('professional_id', professionalId);
+  }
+
+  const { data, error } = await query
     .gte('start_at', new Date().toISOString())
     .order('start_at');
 

@@ -41,10 +41,12 @@ export function useAuth(): AuthState & {
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
   resend: (email: string) => Promise<void>;
+  recoveryMode: boolean;
 } {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recoveryMode, setRecoveryMode] = useState(false);
   const { register: registerNotification, unregister: unregisterNotification } = useNotifications();
 
   const loadProfile = useCallback(async (userId: string) => {
@@ -83,9 +85,10 @@ export function useAuth(): AuthState & {
       const tokens = extractTokensFromUrl(url);
       if (tokens.access_token && tokens.refresh_token) {
         try {
-          // Deep links de confirmação/redefinição de senha do Supabase Auth
-          // trazem tokens na hash/query. setSession os valida e completa
-          // a autenticação sem necessidade de novo login.
+          const lowerUrl = url.toLowerCase();
+          if (lowerUrl.includes('recovery') || lowerUrl.includes('new_password') || lowerUrl.includes('reset')) {
+            setRecoveryMode(true);
+          }
           const { error } = await authClient.setSession({
             access_token: tokens.access_token,
             refresh_token: tokens.refresh_token,
@@ -196,6 +199,7 @@ export function useAuth(): AuthState & {
     if (!result.success) {
       throw new Error(result.error);
     }
+    setRecoveryMode(false);
   };
 
   const signIn = async (email: string, password: string): Promise<void> => {
@@ -203,6 +207,7 @@ export function useAuth(): AuthState & {
     if (!result.success) {
       throw new Error(result.error);
     }
+    setRecoveryMode(false);
   };
 
   const signOut = async (): Promise<void> => {
@@ -238,5 +243,5 @@ export function useAuth(): AuthState & {
 
   const typedSession = session ? { user: session.user } : null;
 
-  return { session: typedSession, profile, loading, isEmailVerified, signUp, signIn, signOut, resetPassword, updatePassword, resend };
+  return { session: typedSession, profile, loading, isEmailVerified, recoveryMode, signUp, signIn, signOut, resetPassword, updatePassword, resend };
 }

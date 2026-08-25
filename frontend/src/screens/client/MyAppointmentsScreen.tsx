@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMyAppointments, useProfessionals } from '@hooks';
+import type { Appointment } from '../../supabase/types';
 import { colors, spacing, typography, radius } from '@theme';
 import SectionHeader from '@components/base/SectionHeader';
 import StatusBadge from '@components/base/StatusBadge';
@@ -15,17 +16,29 @@ export default function MyAppointmentsScreen({ navigation }: any) {
   const { professionals } = useProfessionals();
 
   const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+
+  const today = appointments.filter((a) => {
+    const d = new Date(a.start_at);
+    return d >= todayStart && d < todayEnd;
+  });
 
   const upcoming = appointments.filter((a) => {
     const d = new Date(a.start_at);
-    return d > now && a.status !== 'cancelled';
+    return d >= todayEnd && a.status !== 'cancelled';
+  });
+
+  const history = appointments.filter((a) => {
+    const d = new Date(a.start_at);
+    return d < todayStart || a.status === 'cancelled';
   });
 
   const getProfessionalName = (professionalId: string) => {
     return professionals.find((p) => p.id === professionalId)?.display_name || 'Profissional';
   };
 
-  const renderAppointment = ({ item }: { item: any }) => {
+  const renderAppointment = ({ item }: { item: Appointment }) => {
     const statusMap: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'default' }> = {
       confirmed: { label: 'Confirmado', variant: 'success' },
       cancelled: { label: 'Cancelado', variant: 'error' },
@@ -46,6 +59,16 @@ export default function MyAppointmentsScreen({ navigation }: any) {
           {format(parseISO(item.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
         </Text>
       </TouchableOpacity>
+    );
+  };
+
+  const renderSection = (title: string, items: Appointment[]) => {
+    if (items.length === 0) return null;
+    return (
+      <View style={styles.section}>
+        <SectionHeader title={title} />
+        {items.map((item) => renderAppointment({ item }))}
+      </View>
     );
   };
 
@@ -73,22 +96,20 @@ export default function MyAppointmentsScreen({ navigation }: any) {
           title="Nenhum agendamento"
           description="Você ainda não tem agendamentos."
           actionLabel="Agendar horário"
-          onAction={() => navigation.navigate('ServiceSelection', { professionalId: '' })}
+          onAction={() => navigation.navigate('Home')}
         />
       ) : (
         <FlatList
-          data={appointments}
-          keyExtractor={(item) => item.id}
-          renderItem={renderAppointment}
-          contentContainerStyle={styles.list}
+          data={[]}
+          renderItem={() => null}
           ListHeaderComponent={
-            upcoming.length > 0 ? (
-              <View style={styles.section}>
-                <SectionHeader title="Próximos" />
-                {upcoming.map((item) => renderAppointment({ item }))}
-              </View>
-            ) : null
+            <>
+              {renderSection('Hoje', today)}
+              {renderSection('Próximos', upcoming)}
+              {renderSection('Histórico', history)}
+            </>
           }
+          contentContainerStyle={styles.list}
         />
       )}
     </View>

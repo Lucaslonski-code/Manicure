@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Linking from 'expo-linking';
 import PublicStack from './stacks/PublicStack';
 import EmailVerificationStack from './stacks/EmailVerificationStack';
+import RecoveryStack from './stacks/RecoveryStack';
 import ClientStack from './stacks/ClientStack';
 import AdminStack from './stacks/AdminStack';
 import { useAuth } from '@hooks/useAuth';
@@ -13,6 +14,7 @@ import { colors, typography } from '@theme';
 export type RootStackParamList = {
   Public: undefined;
   EmailVerification: undefined;
+  Recovery: undefined;
   Client: undefined;
   Admin: undefined;
 };
@@ -64,7 +66,7 @@ const styles = StyleSheet.create({
 });
 
 export default function RootNavigator() {
-  const { loading, session, isEmailVerified, profile } = useAuth();
+  const { loading, session, isEmailVerified, profile, recoveryMode } = useAuth();
 
   // Estado 1: bootstrap de auth em andamento.
   // Não deve ser confundido com splash nativo — o splash já foi liberado.
@@ -91,6 +93,18 @@ export default function RootNavigator() {
       <NavigationContainer linking={linking}>
         <Stack.Navigator initialRouteName="EmailVerification" screenOptions={{ headerShown: false }}>
           <Stack.Screen name="EmailVerification" component={EmailVerificationStack} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
+
+  // Estado 3b: recuperação de senha via deep link.
+  // O usuário precisa definir uma nova senha antes de acessar o app.
+  if (recoveryMode) {
+    return (
+      <NavigationContainer linking={linking}>
+        <Stack.Navigator initialRouteName="Recovery" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Recovery" component={RecoveryStack} />
         </Stack.Navigator>
       </NavigationContainer>
     );

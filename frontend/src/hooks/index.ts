@@ -40,7 +40,13 @@ export function useProfessionals() {
   }, []);
 
   useEffect(() => {
-    load();
+    let isMounted = true;
+    load().then(() => {
+      if (!isMounted) setProfessionals([]);
+    });
+    return () => {
+      isMounted = false;
+    };
   }, [load]);
 
   return { professionals, loading, error, refetch: load };
@@ -98,7 +104,13 @@ export function useServices() {
   }, []);
 
   useEffect(() => {
-    load();
+    let isMounted = true;
+    load().then(() => {
+      if (!isMounted) setServices([]);
+    });
+    return () => {
+      isMounted = false;
+    };
   }, [load]);
 
   return { services, loading, error, refetch: load };
@@ -137,18 +149,12 @@ export function useProfessionalServices(professionalId: string | null) {
   return { items, loading, error };
 }
 
-export function useAvailability(professionalId: string | null) {
+export function useAvailability(professionalId?: string | null) {
   const [availability, setAvailability] = useState<Availability[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!professionalId) {
-      setAvailability([]);
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
@@ -168,18 +174,12 @@ export function useAvailability(professionalId: string | null) {
   return { availability, loading, error, refetch: load };
 }
 
-export function useBlockedTimes(professionalId: string | null) {
+export function useBlockedTimes(professionalId?: string | null) {
   const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!professionalId) {
-      setBlockedTimes([]);
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
@@ -218,7 +218,13 @@ export function useAppointments() {
   }, []);
 
   useEffect(() => {
-    load();
+    let isMounted = true;
+    load().then(() => {
+      if (!isMounted) setAppointments([]);
+    });
+    return () => {
+      isMounted = false;
+    };
   }, [load]);
 
   return { appointments, loading, error, refetch: load };
@@ -243,7 +249,13 @@ export function useMyAppointments() {
   }, []);
 
   useEffect(() => {
-    load();
+    let isMounted = true;
+    load().then(() => {
+      if (!isMounted) setAppointments([]);
+    });
+    return () => {
+      isMounted = false;
+    };
   }, [load]);
 
   return { appointments, loading, error, refetch: load };

@@ -1,24 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useAppointment, useProfessionals, useMyProfessional } from '@hooks';
+import { useAppointment, useProfessionals, useMyProfessional, useBooking } from '@hooks';
 import { colors, spacing, typography, radius } from '@theme';
 import StatusBadge from '@components/base/StatusBadge';
 import Divider from '@components/base/Divider';
 import Button from '@components/base/Button';
-import SecondaryButton from '@components/base/SecondaryButton';
 import DangerButton from '@components/base/DangerButton';
 import LoadingState from '@components/base/LoadingState';
+import ConfirmationDialog from '@components/base/ConfirmationDialog';
 
-export default function AppointmentDetailsScreen({ route }: any) {
+export default function AppointmentDetailsScreen({ route, navigation }: any) {
   const { appointmentId } = route.params;
   const { appointment, loading } = useAppointment(appointmentId);
   const { professionals } = useProfessionals();
   const { professional: myProfessional } = useMyProfessional();
+  const { cancelByAdmin, loading: cancelLoading } = useBooking();
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const professional = appointment ? professionals.find((p) => p.id === appointment.professional_id) : null;
   const isOwner = myProfessional?.id === appointment?.professional_id;
+
+  const handleCancel = async () => {
+    try {
+      await cancelByAdmin(appointmentId);
+      setShowCancelDialog(false);
+      navigation.goBack();
+    } catch {
+      setShowCancelDialog(false);
+    }
+  };
 
   if (loading) {
     return <LoadingState message="Carregando detalhes..." />;
@@ -28,7 +40,7 @@ export default function AppointmentDetailsScreen({ route }: any) {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>Agendamento não encontrado.</Text>
-        <Button title="Voltar" onPress={() => {}} />
+        <Button title="Voltar" onPress={() => navigation.goBack()} />
       </View>
     );
   }
@@ -86,8 +98,11 @@ export default function AppointmentDetailsScreen({ route }: any) {
       {isOwner ? (
         appointment.status === 'confirmed' ? (
           <View style={styles.actions}>
-            <DangerButton title="Excluir" onPress={() => {}} disabled />
-            <SecondaryButton title="Cancelar" onPress={() => {}} />
+            <DangerButton
+              title="Cancelar agendamento"
+              onPress={() => setShowCancelDialog(true)}
+              disabled={cancelLoading}
+            />
           </View>
         ) : (
           <View style={styles.readOnlyNotice}>
@@ -99,6 +114,16 @@ export default function AppointmentDetailsScreen({ route }: any) {
           <Text style={styles.readOnlyText}>Somente leitura — responsável: {professional?.display_name || 'outro profissional'}</Text>
         </View>
       )}
+
+      <ConfirmationDialog
+        visible={showCancelDialog}
+        title="Cancelar agendamento"
+        message="Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita."
+        confirmLabel="Cancelar agendamento"
+        onConfirm={handleCancel}
+        onCancel={() => setShowCancelDialog(false)}
+        destructive
+      />
     </ScrollView>
   );
 }

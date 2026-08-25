@@ -531,8 +531,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Admin deve poder modificar outros profissionais (esperado 200/204)', function () {",
-                  "    pm.expect([200, 204]).toInclude(pm.response.code);",
+                  "pm.test('Admin NÃO deve modificar profissional de outro admin (esperado 403)', function () {",
+                  "    pm.expect(pm.response.code).toBe(403);",
                   "});"
                 ]
               }
@@ -691,8 +691,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Account deletion deve validar Ownership (esperado 200 ou 403)', function () {",
-                  "    pm.expect([200, 403]).toInclude(pm.response.code);",
+                  "pm.test('Third-party account deletion deve ser rejeitada (esperado 403)', function () {",
+                  "    pm.expect(pm.response.code).toBe(403);",
                   "});"
                 ]
               }

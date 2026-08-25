@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '@hooks/useAuth';
 import Button from '@components/base/Button';
@@ -12,6 +12,15 @@ export default function NewPasswordScreen({ navigation }: any) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleUpdatePassword = async () => {
     try {
@@ -19,7 +28,7 @@ export default function NewPasswordScreen({ navigation }: any) {
       newPasswordSchema.parse({ password, confirmPassword });
       await updatePassword(password);
       setSuccess(true);
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         navigation.replace('Login');
       }, 2000);
     } catch (err: any) {
