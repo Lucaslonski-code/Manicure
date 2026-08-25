@@ -6,6 +6,7 @@ import { colors, spacing, typography, iconSizes } from '@theme';
 import HomeScreen from '@screens/client/HomeScreen';
 import MyAppointmentsScreen from '@screens/client/MyAppointmentsScreen';
 import ProfileScreen from '@screens/client/ProfileScreen';
+import NotificationsScreen from '@screens/client/NotificationsScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -25,7 +26,7 @@ export default function ClientTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ focused }) => {
-          const iconName = route.name === 'Home' ? '🏠' : route.name === 'MyAppointments' ? '📅' : '👤';
+          const iconName = route.name === 'Home' ? '🏠' : route.name === 'MyAppointments' ? '📅' : route.name === 'Notifications' ? '🔔' : '👤';
           return <TabBarIcon name={iconName} focused={focused} />;
         },
         tabBarLabel: ({ focused, children }) => (
@@ -58,6 +59,11 @@ export default function ClientTabs() {
         name="MyAppointments"
         component={MyAppointmentsScreen}
         options={{ tabBarLabel: 'Agenda' }}
+      />
+      <Tab.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ tabBarLabel: 'Notificações' }}
       />
       <Tab.Screen
         name="Profile"

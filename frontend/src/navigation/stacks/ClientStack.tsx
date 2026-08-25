@@ -8,9 +8,11 @@ import TimeSlotsScreen from '@screens/client/TimeSlotsScreen';
 import BookingSummaryScreen from '@screens/client/BookingSummaryScreen';
 import BookingConfirmationScreen from '@screens/client/BookingConfirmationScreen';
 import AppointmentDetailsScreen from '@screens/client/AppointmentDetailsScreen';
+import NotificationsScreen from '@screens/client/NotificationsScreen';
 
 export type ClientStackParamList = {
   ClientTabs: undefined;
+  Notifications: undefined;
   AccountDeletion: undefined;
   ServiceSelection: { professionalId: string };
   DateSelection: { professionalId: string; serviceId: string };
@@ -26,6 +28,7 @@ export default function ClientStack() {
   return (
     <Stack.Navigator initialRouteName="ClientTabs" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ClientTabs" component={ClientTabs} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="AccountDeletion" component={AccountDeletionScreen} />
       <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
       <Stack.Screen name="DateSelection" component={DateSelectionScreen} />

@@ -115,6 +115,20 @@ export default function DashboardScreen({ navigation }: any) {
           />
         )}
       </View>
+
+      <View style={styles.section}>
+        <SectionHeader title="Gerenciar" />
+        <View style={styles.actionsGrid}>
+          <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AdminProfessionals')}>
+            <Text style={styles.actionIcon}>👥</Text>
+            <Text style={styles.actionLabel}>Profissionais</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AdminServices')}>
+            <Text style={styles.actionIcon}>💅</Text>
+            <Text style={styles.actionLabel}>Serviços</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -165,6 +179,28 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  actionCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  actionIcon: {
+    fontSize: 32,
+    marginBottom: spacing.sm,
+  },
+  actionLabel: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+    textAlign: 'center',
   },
   card: {
     backgroundColor: colors.surface,

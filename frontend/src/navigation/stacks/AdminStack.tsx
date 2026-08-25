@@ -7,6 +7,8 @@ import AccountDeletionScreen from '@screens/admin/AccountDeletionScreen';
 import AvailabilityScreen from '@screens/admin/AvailabilityScreen';
 import BlockedTimesScreen from '@screens/admin/BlockedTimesScreen';
 import AppointmentDetailsScreen from '@screens/admin/AppointmentDetailsScreen';
+import AdminProfessionalsScreen from '@screens/admin/AdminProfessionalsScreen';
+import AdminServicesScreen from '@screens/admin/AdminServicesScreen';
 
 export type AdminStackParamList = {
   Dashboard: undefined;
@@ -16,6 +18,8 @@ export type AdminStackParamList = {
   Availability: undefined;
   BlockedTimes: undefined;
   AppointmentDetails: { appointmentId: string };
+  AdminProfessionals: undefined;
+  AdminServices: undefined;
 };
 
 const Stack = createNativeStackNavigator<AdminStackParamList>();
@@ -30,6 +34,8 @@ export default function AdminStack() {
       <Stack.Screen name="Availability" component={AvailabilityScreen} />
       <Stack.Screen name="BlockedTimes" component={BlockedTimesScreen} />
       <Stack.Screen name="AppointmentDetails" component={AppointmentDetailsScreen} />
+      <Stack.Screen name="AdminProfessionals" component={AdminProfessionalsScreen} />
+      <Stack.Screen name="AdminServices" component={AdminServicesScreen} />
     </Stack.Navigator>
   );
 }

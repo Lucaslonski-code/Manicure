@@ -1,5 +1,5 @@
 import { supabase } from '../supabase/client';
-import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings } from '../supabase/types';
+import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings, Notification } from '../supabase/types';
 
 async function sendPushNotification(appointmentId: string, event: 'confirmation' | 'cancellation' | 'reschedule'): Promise<void> {
   try {
@@ -255,4 +255,22 @@ export async function fetchBusinessSettings(): Promise<BusinessSettings | null> 
 
   if (error) return null;
   return data;
+}
+
+export async function fetchNotifications(): Promise<Notification[]> {
+  const session = await supabase.auth.getSession();
+  const userId = session.data.session?.user.id;
+  if (!userId) return [];
+
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data as Notification[];
 }

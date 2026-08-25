@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase/client';
-import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchAvailability, fetchBlockedTimes, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings } from '../services/api';
-import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings } from '../supabase/types';
+import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchAvailability, fetchBlockedTimes, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications } from '../services/api';
+import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings, Notification } from '../supabase/types';
 import { useNotifications } from './useNotifications';
 import { useAuth } from './useAuth';
 
@@ -433,4 +433,35 @@ export function useBusinessSettings() {
   }, []);
 
   return { settings, loading, error };
+}
+
+export function useNotificationsHistory() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchNotifications();
+      setNotifications(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    load().then(() => {
+      if (!isMounted) setNotifications([]);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [load]);
+
+  return { notifications, loading, error, refetch: load };
 }
