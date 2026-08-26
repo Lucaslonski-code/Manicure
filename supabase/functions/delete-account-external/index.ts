@@ -53,6 +53,10 @@ export default withSupabase({ auth: ["secret"] }, async (req, ctx) => {
 
     const userId = authData.user.id;
 
+    if (ctx.auth?.user && ctx.auth.user.id !== userId) {
+      return Response.json({ error: "Não autorizado" }, { status: 403 });
+    }
+
     const { error: deleteError } = await ctx.supabase.auth.admin.deleteUser(userId);
 
     if (deleteError) {

@@ -22,7 +22,9 @@
     { "key": "professional_a_id", "value": "" },
     { "key": "professional_b_id", "value": "" },
     { "key": "service_id", "value": "" },
-    { "key": "appointment_id", "value": "" }
+    { "key": "appointment_id", "value": "" },
+    { "key": "client_a_id", "value": "" },
+    { "key": "client_b_id", "value": "" }
   ],
   "item": [
     {
@@ -106,6 +108,9 @@
                   "    const json = pm.response.json();",
                   "    pm.collectionVariables.set('access_token', json.access_token);",
                   "    pm.collectionVariables.set('refresh_token', json.refresh_token);",
+                  "    if (json.user && !pm.collectionVariables.get('client_a_id')) {",
+                  "        pm.collectionVariables.set('client_a_id', json.user.id);",
+                  "    }",
                   "}"
                 ]
               }
@@ -252,12 +257,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"professional_id\": \"{{professional_a_id}}\",\n  \"service_id\": \"{{service_id}}\",\n  \"scheduled_at\": \"{{$timestamp}}\",\n  \"status\": \"scheduled\"\n}"
+              "raw": "{\n  \"p_professional_id\": \"{{professional_a_id}}\",\n  \"p_service_id\": \"{{service_id}}\",\n  \"p_start_at\": \"{{$timestamp}}\",\n  \"p_client_note\": \"\"\n}"
             },
             "url": {
-              "raw": "{{supabase_url}}/rest/v1/appointments",
+              "raw": "{{supabase_url}}/rest/v1/rpc/book_appointment",
               "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "appointments"]
+              "path": ["rest", "v1", "rpc", "book_appointment"]
             }
           },
           "event": [
@@ -266,7 +271,10 @@
               "script": {
                 "exec": [
                   "if (pm.response.code === 201) {",
-                  "    pm.collectionVariables.set('appointment_id', pm.response.json().id);",
+                  "    const json = pm.response.json();",
+                  "    if (json && json.id) {",
+                  "        pm.collectionVariables.set('appointment_id', json.id);",
+                  "    }",
                   "}"
                 ]
               }
@@ -282,12 +290,12 @@
               { "key": "Authorization", "value": "Bearer {{access_token}}" }
             ],
             "url": {
-              "raw": "{{supabase_url}}/rest/v1/appointments?select=*&client_id=eq.{{client_a_email}}",
+              "raw": "{{supabase_url}}/rest/v1/appointments?select=*&client_user_id=eq.{{client_a_id}}",
               "host": ["{{supabase_url}}"],
               "path": ["rest", "v1", "appointments"],
               "query": [
                 { "key": "select", "value": "*" },
-                { "key": "client_id", "value": "eq.{{client_a_email}}" }
+                { "key": "client_user_id", "value": "eq.{{client_a_id}}" }
               ]
             }
           }
@@ -678,7 +686,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{}"
+              "raw": "{\n  \"email\": \"{{client_b_email}}\",\n  \"password\": \"{{client_b_password}}\"\n}"
             },
             "url": {
               "raw": "{{supabase_url}}/functions/v1/delete-account-external",
@@ -715,7 +723,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Manicure\",\n  \"duration_minutes\": 60,\n  \"price\": 50.00\n}"
+              "raw": "{\n  \"name\": \"Manicure\",\n  \"default_duration_minutes\": 60\n}"
             },
             "url": {
               "raw": "{{supabase_url}}/rest/v1/services",
