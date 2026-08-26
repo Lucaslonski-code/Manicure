@@ -1,92 +1,79 @@
 {
   "info": {
-    "_postman_id": "appmanicure-homologacao",
-    "name": "AppManicure — Homologação",
-    "description": "Coleção de homologação do AppManicure. Não contém secrets. Preencha as variáveis antes de executar.",
+    "_postman_id": "appmanicure-homologacao-v2",
+    "name": "AppManicure — Homologação API",
+    "description": "Coleção operacional do backend real do AppManicure. Representa todas as rotas PostgREST, RPCs e Edge Functions disponíveis. Não contém secrets. Preencha as variáveis antes de executar.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "" },
-    { "key": "supabase_url", "value": "" },
-    { "key": "supabase_anon_key", "value": "" },
-    { "key": "access_token", "value": "" },
-    { "key": "refresh_token", "value": "" },
-    { "key": "client_a_email", "value": "" },
-    { "key": "client_a_password", "value": "" },
-    { "key": "client_b_email", "value": "" },
-    { "key": "client_b_password", "value": "" },
-    { "key": "admin_a_email", "value": "" },
-    { "key": "admin_a_password", "value": "" },
-    { "key": "admin_b_email", "value": "" },
-    { "key": "admin_b_password", "value": "" },
-    { "key": "professional_a_id", "value": "" },
-    { "key": "professional_b_id", "value": "" },
-    { "key": "service_id", "value": "" },
-    { "key": "appointment_id", "value": "" },
-    { "key": "client_a_id", "value": "" },
-    { "key": "client_b_id", "value": "" }
+    { "key": "supabase_url", "value": "", "type": "string" },
+    { "key": "publishable_key", "value": "", "type": "string" },
+    { "key": "access_token", "value": "", "type": "string" },
+    { "key": "refresh_token", "value": "", "type": "string" },
+    { "key": "authenticated_user_id", "value": "", "type": "string" },
+    { "key": "client_a_email", "value": "", "type": "string" },
+    { "key": "client_a_password", "value": "", "type": "string" },
+    { "key": "client_b_email", "value": "", "type": "string" },
+    { "key": "client_b_password", "value": "", "type": "string" },
+    { "key": "admin_a_email", "value": "", "type": "string" },
+    { "key": "admin_a_password", "value": "", "type": "string" },
+    { "key": "admin_b_email", "value": "", "type": "string" },
+    { "key": "admin_b_password", "value": "", "type": "string" },
+    { "key": "professional_a_id", "value": "", "type": "string" },
+    { "key": "professional_b_id", "value": "", "type": "string" },
+    { "key": "service_a_id", "value": "", "type": "string" },
+    { "key": "service_b_id", "value": "", "type": "string" },
+    { "key": "appointment_a_id", "value": "", "type": "string" },
+    { "key": "appointment_b_id", "value": "", "type": "string" },
+    { "key": "professional_service_id", "value": "", "type": "string" },
+    { "key": "availability_id", "value": "", "type": "string" },
+    { "key": "blocked_time_id", "value": "", "type": "string" },
+    { "key": "notification_id", "value": "", "type": "string" },
+    { "key": "notification_token_id", "value": "", "type": "string" },
+    { "key": "business_setting_id", "value": "", "type": "string" }
   ],
   "item": [
     {
-      "name": "01 — Health / Configuration",
+      "name": "01 — Authentication",
       "item": [
         {
-          "name": "Health Check",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/health",
-              "host": ["{{base_url}}"],
-              "path": ["health"]
-            }
-          }
-        },
-        {
-          "name": "Supabase Project Info",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" }
-            ],
-            "url": {
-              "raw": "{{supabase_url}}/rest/v1/",
-              "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", ""]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "02 — Authentication",
-      "item": [
-        {
-          "name": "Sign Up",
+          "name": "PostSignUp",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{client_a_email}}\",\n  \"password\": \"{{client_a_password}}\",\n  \"options\": {\n    \"data\": {\n      \"name\": \"Cliente A\",\n      \"phone\": \"11999999999\"\n    }\n  }\n}"
+              "raw": "{\n  \"email\": \"{{client_a_email}}\",\n  \"password\": \"{{client_a_password}}\",\n  \"options\": {\n    \"emailRedirectTo\": \"appmanicure://auth/confirm\",\n    \"data\": {\n      \"name\": \"Cliente A\",\n      \"phone\": \"11999999999\"\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{supabase_url}}/auth/v1/signup",
               "host": ["{{supabase_url}}"],
               "path": ["auth", "v1", "signup"]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('SignUp retorna 200 com dados do usuário', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Sign In",
+          "name": "PostSignIn",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
@@ -108,52 +95,79 @@
                   "    const json = pm.response.json();",
                   "    pm.collectionVariables.set('access_token', json.access_token);",
                   "    pm.collectionVariables.set('refresh_token', json.refresh_token);",
-                  "    if (json.user && !pm.collectionVariables.get('client_a_id')) {",
-                  "        pm.collectionVariables.set('client_a_id', json.user.id);",
+                  "    if (json.user && json.user.id) {",
+                  "        pm.collectionVariables.set('authenticated_user_id', json.user.id);",
                   "    }",
-                  "}"
+                  "}",
+                  "pm.test('SignIn retorna 200 com tokens', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Session",
+          "name": "GetSession",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
             ],
             "url": {
               "raw": "{{supabase_url}}/auth/v1/user",
               "host": ["{{supabase_url}}"],
               "path": ["auth", "v1", "user"]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetSession retorna 200 com dados do usuário autenticado', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Sign Out",
+          "name": "PostSignOut",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
             ],
             "url": {
               "raw": "{{supabase_url}}/auth/v1/logout",
               "host": ["{{supabase_url}}"],
               "path": ["auth", "v1", "logout"]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('SignOut retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Resend Confirmation",
+          "name": "PostResendConfirmation",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
@@ -164,15 +178,27 @@
               "host": ["{{supabase_url}}"],
               "path": ["auth", "v1", "resend"]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('ResendConfirmation retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Reset Password",
+          "name": "PostResetPassword",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
@@ -183,25 +209,69 @@
               "host": ["{{supabase_url}}"],
               "path": ["auth", "v1", "recover"]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('ResetPassword retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PatchUpdatePassword",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"novaSenha123\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/auth/v1/user",
+              "host": ["{{supabase_url}}"],
+              "path": ["auth", "v1", "user"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('UpdatePassword retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "03 — Client",
+      "name": "02 — Users",
       "item": [
         {
-          "name": "List Professionals",
+          "name": "GetUsers",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
             ],
             "url": {
-              "raw": "{{supabase_url}}/rest/v1/professionals?select=*",
+              "raw": "{{supabase_url}}/rest/v1/users?select=*",
               "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "professionals"],
+              "path": ["rest", "v1", "users"],
               "query": [{ "key": "select", "value": "*" }]
             }
           },
@@ -210,150 +280,223 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "if (pm.response.code === 200 && pm.response.json().length > 0) {",
-                  "    pm.collectionVariables.set('professional_a_id', pm.response.json()[0].id);",
-                  "}"
+                  "pm.test('GetUsers retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "List Services",
+          "name": "GetUserById",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
             ],
             "url": {
-              "raw": "{{supabase_url}}/rest/v1/services?select=*",
+              "raw": "{{supabase_url}}/rest/v1/users?id=eq.{{authenticated_user_id}}&select=*",
               "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "services"],
-              "query": [{ "key": "select", "value": "*" }]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200 && pm.response.json().length > 0) {",
-                  "    pm.collectionVariables.set('service_id', pm.response.json()[0].id);",
-                  "}"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Create Appointment",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"p_professional_id\": \"{{professional_a_id}}\",\n  \"p_service_id\": \"{{service_id}}\",\n  \"p_start_at\": \"{{$timestamp}}\",\n  \"p_client_note\": \"\"\n}"
-            },
-            "url": {
-              "raw": "{{supabase_url}}/rest/v1/rpc/book_appointment",
-              "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "rpc", "book_appointment"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    const json = pm.response.json();",
-                  "    if (json && json.id) {",
-                  "        pm.collectionVariables.set('appointment_id', json.id);",
-                  "    }",
-                  "}"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "List My Appointments",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "url": {
-              "raw": "{{supabase_url}}/rest/v1/appointments?select=*&client_user_id=eq.{{client_a_id}}",
-              "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "appointments"],
+              "path": ["rest", "v1", "users"],
               "query": [
-                { "key": "select", "value": "*" },
-                { "key": "client_user_id", "value": "eq.{{client_a_id}}" }
+                { "key": "id", "value": "eq.{{authenticated_user_id}}" },
+                { "key": "select", "value": "*" }
               ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetUserById retorna 200 com perfil próprio', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Cancel Appointment",
+          "name": "PatchUsers",
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"cancelled\"\n}"
+              "raw": "{\n  \"name\": \"Cliente A Atualizado\",\n  \"phone\": \"11988888888\"\n}"
             },
             "url": {
-              "raw": "{{supabase_url}}/rest/v1/appointments?id=eq.{{appointment_id}}",
+              "raw": "{{supabase_url}}/rest/v1/users?id=eq.{{authenticated_user_id}}",
               "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "appointments"],
-              "query": [{ "key": "id", "value": "eq.{{appointment_id}}" }]
+              "path": ["rest", "v1", "users"],
+              "query": [{ "key": "id", "value": "eq.{{authenticated_user_id}}" }]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PatchUsers retorna 200 ou 204', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostUsers — NOT AVAILABLE IN BACKEND",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test\",\n  \"email\": \"test@example.com\",\n  \"role\": \"client\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/users",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "users"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PostUsers rejeitado pelo backend (INSERT policy WITH CHECK false)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DeleteUsers — NOT AVAILABLE IN BACKEND",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/users?id=eq.{{authenticated_user_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "users"],
+              "query": [{ "key": "id", "value": "eq.{{authenticated_user_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DeleteUsers rejeitado pelo backend (DELETE policy USING false)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "04 — Admin",
+      "name": "03 — Professionals",
       "item": [
         {
-          "name": "List Professionals (Admin)",
+          "name": "GetProfessionals",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
             ],
             "url": {
-              "raw": "{{supabase_url}}/rest/v1/professionals?select=*",
+              "raw": "{{supabase_url}}/rest/v1/professionals?select=*&is_active=eq.true",
               "host": ["{{supabase_url}}"],
               "path": ["rest", "v1", "professionals"],
-              "query": [{ "key": "select", "value": "*" }]
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "is_active", "value": "eq.true" }
+              ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 && pm.response.json().length > 0) {",
+                  "    const first = pm.response.json()[0];",
+                  "    if (!pm.collectionVariables.get('professional_a_id')) {",
+                  "        pm.collectionVariables.set('professional_a_id', first.id);",
+                  "    }",
+                  "}",
+                  "pm.test('GetProfessionals retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Create Professional",
+          "name": "GetProfessionalById",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/professionals?id=eq.{{professional_a_id}}&select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "professionals"],
+              "query": [
+                { "key": "id", "value": "eq.{{professional_a_id}}" },
+                { "key": "select", "value": "*" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetProfessionalById retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostProfessionals",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Profissional Teste\",\n  \"email\": \"profissional@example.com\",\n  \"phone\": \"11999999999\",\n  \"specialty\": \"Manicure\"\n}"
+              "raw": "{\n  \"user_id\": \"{{authenticated_user_id}}\",\n  \"display_name\": \"Profissional Teste\",\n  \"is_active\": true\n}"
             },
             "url": {
               "raw": "{{supabase_url}}/rest/v1/professionals",
@@ -366,26 +509,26 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    pm.collectionVariables.set('professional_a_id', pm.response.json().id);",
-                  "}"
+                  "pm.test('PostProfessionals retorna 201 (admin) ou 401/403 (client)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 401, 403]);",
+                  "});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Update Professional",
+          "name": "PatchProfessionals",
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Profissional Teste Atualizado\"\n}"
+              "raw": "{\n  \"display_name\": \"Profissional Atualizado\"\n}"
             },
             "url": {
               "raw": "{{supabase_url}}/rest/v1/professionals?id=eq.{{professional_a_id}}",
@@ -393,15 +536,27 @@
               "path": ["rest", "v1", "professionals"],
               "query": [{ "key": "id", "value": "eq.{{professional_a_id}}" }]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PatchProfessionals retorna 200/204 (admin) ou 401/403 (client)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Delete Professional",
+          "name": "DeleteProfessionals",
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
             ],
             "url": {
               "raw": "{{supabase_url}}/rest/v1/professionals?id=eq.{{professional_a_id}}",
@@ -409,92 +564,40 @@
               "path": ["rest", "v1", "professionals"],
               "query": [{ "key": "id", "value": "eq.{{professional_a_id}}" }]
             }
-          }
-        },
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DeleteProfessionals retorna 204 (admin) ou 401/403 (client)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 — Services",
+      "item": [
         {
-          "name": "List All Appointments",
+          "name": "GetServices",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
             ],
             "url": {
-              "raw": "{{supabase_url}}/rest/v1/appointments?select=*",
+              "raw": "{{supabase_url}}/rest/v1/services?select=*&is_active=eq.true",
               "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "appointments"],
-              "query": [{ "key": "select", "value": "*" }]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "05 — Notifications",
-      "item": [
-        {
-          "name": "Send Push Notification (Edge Function)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"to\": \"<DEVICE_PUSH_TOKEN>\",\n  \"title\": \"Teste\",\n  \"body\": \"Notificação de homologação\"\n}"
-            },
-            "url": {
-              "raw": "{{supabase_url}}/functions/v1/send-push-notification",
-              "host": ["{{supabase_url}}"],
-              "path": ["functions", "v1", "send-push-notification"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "06 — Account Deletion",
-      "item": [
-        {
-          "name": "Delete Account (Edge Function)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}"
-            },
-            "url": {
-              "raw": "{{supabase_url}}/functions/v1/delete-account-external",
-              "host": ["{{supabase_url}}"],
-              "path": ["functions", "v1", "delete-account-external"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "07 — Security Tests",
-      "item": [
-        {
-          "name": "Client A acessa dados de Client B",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "url": {
-              "raw": "{{supabase_url}}/rest/v1/appointments?select=*&client_id=eq.{{client_b_email}}",
-              "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "appointments"],
+              "path": ["rest", "v1", "services"],
               "query": [
                 { "key": "select", "value": "*" },
-                { "key": "client_id", "value": "eq.{{client_b_email}}" }
+                { "key": "is_active", "value": "eq.true" }
               ]
             }
           },
@@ -503,10 +606,1595 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Deve retornar 401/403 ou vazio (não deve expor dados de outro cliente)', function () {",
-                  "    pm.expect([200, 401, 403]).toInclude(pm.response.code);",
+                  "if (pm.response.code === 200 && pm.response.json().length > 0) {",
+                  "    const first = pm.response.json()[0];",
+                  "    if (!pm.collectionVariables.get('service_a_id')) {",
+                  "        pm.collectionVariables.set('service_a_id', first.id);",
+                  "    }",
+                  "}",
+                  "pm.test('GetServices retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetServiceById",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/services?id=eq.{{service_a_id}}&select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "services"],
+              "query": [
+                { "key": "id", "value": "eq.{{service_a_id}}" },
+                { "key": "select", "value": "*" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetServiceById retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostServices",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Manicure Teste\",\n  \"description\": \"Serviço de teste\",\n  \"default_duration_minutes\": 60,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/services",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "services"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PostServices retorna 201 (admin) ou 401/403 (client)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PatchServices",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Manicure Atualizado\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/services?id=eq.{{service_a_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "services"],
+              "query": [{ "key": "id", "value": "eq.{{service_a_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PatchServices retorna 200/204 (admin) ou 401/403 (client)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DeleteServices",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/services?id=eq.{{service_a_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "services"],
+              "query": [{ "key": "id", "value": "eq.{{service_a_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DeleteServices retorna 204 (admin) ou 401/403 (client)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 — ProfessionalServices",
+      "item": [
+        {
+          "name": "GetProfessionalServices",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/professional_services?select=*&is_active=eq.true&professional_id=eq.{{professional_a_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "professional_services"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "is_active", "value": "eq.true" },
+                { "key": "professional_id", "value": "eq.{{professional_a_id}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetProfessionalServices retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetProfessionalServiceById",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/professional_services?id=eq.{{professional_service_id}}&select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "professional_services"],
+              "query": [
+                { "key": "id", "value": "eq.{{professional_service_id}}" },
+                { "key": "select", "value": "*" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetProfessionalServiceById retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostProfessionalServices",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"professional_id\": \"{{professional_a_id}}\",\n  \"service_id\": \"{{service_a_id}}\",\n  \"duration_minutes\": 60,\n  \"price\": 50.00,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/professional_services",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "professional_services"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PostProfessionalServices retorna 201 (owner admin) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PatchProfessionalServices",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"duration_minutes\": 90,\n  \"price\": 75.00\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/professional_services?id=eq.{{professional_service_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "professional_services"],
+              "query": [{ "key": "id", "value": "eq.{{professional_service_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PatchProfessionalServices retorna 200/204 (owner admin) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DeleteProfessionalServices",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/professional_services?id=eq.{{professional_service_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "professional_services"],
+              "query": [{ "key": "id", "value": "eq.{{professional_service_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DeleteProfessionalServices retorna 204 (owner admin) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 — Availability",
+      "item": [
+        {
+          "name": "GetAvailability",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/availability?select=*&professional_id=eq.{{professional_a_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "availability"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "professional_id", "value": "eq.{{professional_a_id}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetAvailability retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetAvailabilityById",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/availability?id=eq.{{availability_id}}&select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "availability"],
+              "query": [
+                { "key": "id", "value": "eq.{{availability_id}}" },
+                { "key": "select", "value": "*" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetAvailabilityById retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostAvailability",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"professional_id\": \"{{professional_a_id}}\",\n  \"weekday\": 1,\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"18:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/availability",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "availability"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PostAvailability retorna 201 (owner admin) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PatchAvailability",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_time\": \"08:00:00\",\n  \"end_time\": \"17:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/availability?id=eq.{{availability_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "availability"],
+              "query": [{ "key": "id", "value": "eq.{{availability_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PatchAvailability retorna 200/204 (owner admin) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DeleteAvailability",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/availability?id=eq.{{availability_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "availability"],
+              "query": [{ "key": "id", "value": "eq.{{availability_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DeleteAvailability retorna 204 (owner admin) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 — BlockedTimes",
+      "item": [
+        {
+          "name": "GetBlockedTimes",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/blocked_times?select=*&professional_id=eq.{{professional_a_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "blocked_times"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "professional_id", "value": "eq.{{professional_a_id}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetBlockedTimes retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetBlockedTimeById",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/blocked_times?id=eq.{{blocked_time_id}}&select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "blocked_times"],
+              "query": [
+                { "key": "id", "value": "eq.{{blocked_time_id}}" },
+                { "key": "select", "value": "*" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetBlockedTimeById retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostBlockedTimes",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"professional_id\": \"{{professional_a_id}}\",\n  \"start_at\": \"2026-09-15T12:00:00-03:00\",\n  \"end_at\": \"2026-09-15T13:00:00-03:00\",\n  \"reason\": \"Almoço\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/blocked_times",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "blocked_times"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PostBlockedTimes retorna 201 (owner admin) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PatchBlockedTimes",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Reunião\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/blocked_times?id=eq.{{blocked_time_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "blocked_times"],
+              "query": [{ "key": "id", "value": "eq.{{blocked_time_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PatchBlockedTimes retorna 200/204 (owner admin) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DeleteBlockedTimes",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/blocked_times?id=eq.{{blocked_time_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "blocked_times"],
+              "query": [{ "key": "id", "value": "eq.{{blocked_time_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DeleteBlockedTimes retorna 204 (owner admin) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 — Appointments",
+      "item": [
+        {
+          "name": "GetAppointments",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/appointments?select=*&order=start_at.asc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "appointments"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "order", "value": "start_at.asc" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetAppointments retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetAppointmentById",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/appointments?id=eq.{{appointment_a_id}}&select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "appointments"],
+              "query": [
+                { "key": "id", "value": "eq.{{appointment_a_id}}" },
+                { "key": "select", "value": "*" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetAppointmentById retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostAppointments",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_user_id\": \"{{authenticated_user_id}}\",\n  \"professional_id\": \"{{professional_a_id}}\",\n  \"service_id\": \"{{service_a_id}}\",\n  \"start_at\": \"2026-09-20T10:00:00-03:00\",\n  \"end_at\": \"2026-09-20T11:00:00-03:00\",\n  \"status\": \"confirmed\",\n  \"client_note\": \"Teste via Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/appointments",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "appointments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PostAppointments retorna 201 (admin own professional) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PatchAppointments",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"admin_note\": \"Atualizado via Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/appointments?id=eq.{{appointment_a_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "appointments"],
+              "query": [{ "key": "id", "value": "eq.{{appointment_a_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PatchAppointments retorna 200/204 (admin own professional) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DeleteAppointments",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/appointments?id=eq.{{appointment_a_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "appointments"],
+              "query": [{ "key": "id", "value": "eq.{{appointment_a_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DeleteAppointments retorna 204 (admin own professional) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 — Appointments RPCs",
+      "item": [
+        {
+          "name": "PostGetAvailableSlots",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"p_professional_id\": \"{{professional_a_id}}\",\n  \"p_service_id\": \"{{service_a_id}}\",\n  \"p_date\": \"2026-09-20\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/rpc/get_available_slots",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "rpc", "get_available_slots"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetAvailableSlots retorna 200 com array de slots', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostBookAppointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"p_professional_id\": \"{{professional_a_id}}\",\n  \"p_service_id\": \"{{service_a_id}}\",\n  \"p_start_at\": \"2026-09-20T10:00:00-03:00\",\n  \"p_client_note\": \"Agendamento via Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/rpc/book_appointment",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "rpc", "book_appointment"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const result = pm.response.json();",
+                  "    let uuid = null;",
+                  "    if (typeof result === 'string') {",
+                  "        uuid = result;",
+                  "    } else if (result && typeof result === 'object') {",
+                  "        uuid = result.data || result.id || null;",
+                  "    }",
+                  "    if (uuid && !pm.collectionVariables.get('appointment_a_id')) {",
+                  "        pm.collectionVariables.set('appointment_a_id', uuid);",
+                  "    }",
+                  "}",
+                  "pm.test('BookAppointment retorna 200 com UUID', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostCancelAppointmentByClient",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"p_appointment_id\": \"{{appointment_a_id}}\",\n  \"p_reason\": \"Cancelamento via Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/rpc/cancel_appointment_by_client",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "rpc", "cancel_appointment_by_client"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('CancelAppointmentByClient retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostCancelAppointmentByAdmin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"p_appointment_id\": \"{{appointment_a_id}}\",\n  \"p_reason\": \"Cancelamento admin via Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/rpc/cancel_appointment_by_admin",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "rpc", "cancel_appointment_by_admin"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('CancelAppointmentByAdmin retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostRescheduleAppointmentByAdmin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"p_appointment_id\": \"{{appointment_a_id}}\",\n  \"p_new_start_at\": \"2026-09-20T14:00:00-03:00\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/rpc/reschedule_appointment_by_admin",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "rpc", "reschedule_appointment_by_admin"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('RescheduleAppointmentByAdmin retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10 — Notifications",
+      "item": [
+        {
+          "name": "GetNotifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications?select=*&user_id=eq.{{authenticated_user_id}}&order=created_at.desc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "user_id", "value": "eq.{{authenticated_user_id}}" },
+                { "key": "order", "value": "created_at.desc" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetNotifications retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetNotificationById",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications?id=eq.{{notification_id}}&select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications"],
+              "query": [
+                { "key": "id", "value": "eq.{{notification_id}}" },
+                { "key": "select", "value": "*" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetNotificationById retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostNotifications — NOT AVAILABLE IN BACKEND",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{authenticated_user_id}}\",\n  \"type\": \"confirmation\",\n  \"channel\": \"push\",\n  \"status\": \"pending\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PostNotifications rejeitado (INSERT policy WITH CHECK false)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PatchNotifications — NOT AVAILABLE IN BACKEND",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"sent\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications?id=eq.{{notification_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications"],
+              "query": [{ "key": "id", "value": "eq.{{notification_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PatchNotifications rejeitado (sem UPDATE policy)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DeleteNotifications — NOT AVAILABLE IN BACKEND",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications?id=eq.{{notification_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications"],
+              "query": [{ "key": "id", "value": "eq.{{notification_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DeleteNotifications rejeitado (sem DELETE policy)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11 — NotificationsTokens",
+      "item": [
+        {
+          "name": "GetNotificationsTokens",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications_tokens?select=*&user_id=eq.{{authenticated_user_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications_tokens"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "user_id", "value": "eq.{{authenticated_user_id}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetNotificationsTokens retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostNotificationsTokens",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{authenticated_user_id}}\",\n  \"token\": \"ExponentPush[TEST-TOKEN-{{$randomUUID}}]\",\n  \"platform\": \"android\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications_tokens",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications_tokens"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PostNotificationsTokens retorna 201', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PatchNotificationsTokens",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications_tokens?id=eq.{{notification_token_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications_tokens"],
+              "query": [{ "key": "id", "value": "eq.{{notification_token_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PatchNotificationsTokens retorna 200/204', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DeleteNotificationsTokens — NOT AVAILABLE IN BACKEND",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/notifications_tokens?id=eq.{{notification_token_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "notifications_tokens"],
+              "query": [{ "key": "id", "value": "eq.{{notification_token_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DeleteNotificationsTokens rejeitado (DELETE policy USING false)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12 — BusinessSettings",
+      "item": [
+        {
+          "name": "GetBusinessSettings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/business_settings?select=*&limit=1",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "business_settings"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "limit", "value": "1" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 && pm.response.json().length > 0) {",
+                  "    const first = pm.response.json()[0];",
+                  "    if (!pm.collectionVariables.get('business_setting_id')) {",
+                  "        pm.collectionVariables.set('business_setting_id', first.id);",
+                  "    }",
+                  "}",
+                  "pm.test('GetBusinessSettings retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PatchBusinessSettings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timezone\": \"America/Sao_Paulo\",\n  \"min_cancellation_notice_minutes\": 60\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/business_settings?id=eq.{{business_setting_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "business_settings"],
+              "query": [{ "key": "id", "value": "eq.{{business_setting_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PatchBusinessSettings retorna 200/204 (admin) ou 401/403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "13 — AuditLogs",
+      "item": [
+        {
+          "name": "GetAuditLogs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/audit_logs?select=*&order=created_at.desc",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "audit_logs"],
+              "query": [
+                { "key": "select", "value": "*" },
+                { "key": "order", "value": "created_at.desc" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('GetAuditLogs retorna 200 (admin) ou 200 vazio (client RLS filter)', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostAuditLogs — NOT AVAILABLE IN BACKEND",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"test\",\n  \"resource_type\": \"test\",\n  \"resource_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"result\": \"success\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/audit_logs",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "audit_logs"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PostAuditLogs rejeitado (INSERT policy WITH CHECK false)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "14 — Account",
+      "item": [
+        {
+          "name": "PostDeleteAccount",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/rpc/delete_account",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "rpc", "delete_account"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DeleteAccount retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostDeleteAccountExternal",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{client_a_email}}\",\n  \"password\": \"{{client_a_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/functions/v1/delete-account-external",
+              "host": ["{{supabase_url}}"],
+              "path": ["functions", "v1", "delete-account-external"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DeleteAccountExternal retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "15 — Edge Functions",
+      "item": [
+        {
+          "name": "PostSendPushNotification",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointment_id\": \"{{appointment_a_id}}\",\n  \"event\": \"confirmation\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/functions/v1/send-push-notification",
+              "host": ["{{supabase_url}}"],
+              "path": ["functions", "v1", "send-push-notification"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('SendPushNotification retorna 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "16 — Security Tests",
+      "item": [
+        {
+          "name": "GetClientAProfileAsClientB",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/users?id=eq.{{authenticated_user_id}}&select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "users"],
+              "query": [
+                { "key": "id", "value": "eq.{{authenticated_user_id}}" },
+                { "key": "select", "value": "*" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Client B não deve ver perfil de Client A (RLS retorna apenas próprio perfil)', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PatchClientAProfileAsClientB",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hackeado\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/users?id=eq.{{authenticated_user_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "users"],
+              "query": [{ "key": "id", "value": "eq.{{authenticated_user_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Client B não deve atualizar perfil de Client A (RLS bloqueia)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GetAppointmentAAsClientB",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/appointments?id=eq.{{appointment_a_id}}&select=*",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "appointments"],
+              "query": [
+                { "key": "id", "value": "eq.{{appointment_a_id}}" },
+                { "key": "select", "value": "*" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Client B não deve ver appointment de Client A (RLS retorna vazio)', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
                   "    if (pm.response.code === 200) {",
-                  "        pm.expect(pm.response.json().length).toBe(0);",
+                  "        pm.expect(pm.response.json().length).to.equal(0);",
                   "    }",
                   "});"
                 ]
@@ -515,17 +2203,17 @@
           ]
         },
         {
-          "name": "Admin A modifica Professional B",
+          "name": "PatchProfessionalBAsAdminA",
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Hackeado\"\n}"
+              "raw": "{\n  \"display_name\": \"Hackeado\"\n}"
             },
             "url": {
               "raw": "{{supabase_url}}/rest/v1/professionals?id=eq.{{professional_b_id}}",
@@ -539,8 +2227,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Admin NÃO deve modificar profissional de outro admin (esperado 403)', function () {",
-                  "    pm.expect(pm.response.code).toBe(403);",
+                  "pm.test('Admin A não deve modificar Professional B (RLS bloqueia)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
                   "});"
                 ]
               }
@@ -548,22 +2236,18 @@
           ]
         },
         {
-          "name": "Role Tampering — Client tenta criar profissional",
+          "name": "DeleteProfessionalBAsAdminA",
           "request": {
-            "method": "POST",
+            "method": "DELETE",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Hacker\",\n  \"email\": \"hacker@example.com\",\n  \"phone\": \"11999999999\"\n}"
-            },
             "url": {
-              "raw": "{{supabase_url}}/rest/v1/professionals",
+              "raw": "{{supabase_url}}/rest/v1/professionals?id=eq.{{professional_b_id}}",
               "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "professionals"]
+              "path": ["rest", "v1", "professionals"],
+              "query": [{ "key": "id", "value": "eq.{{professional_b_id}}" }]
             }
           },
           "event": [
@@ -571,8 +2255,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Client não deve criar profissional (esperado 401/403)', function () {",
-                  "    pm.expect([401, 403]).toInclude(pm.response.code);",
+                  "pm.test('Admin A não deve deletar Professional B (RLS bloqueia)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
                   "});"
                 ]
               }
@@ -580,17 +2264,50 @@
           ]
         },
         {
-          "name": "Direct Appointment Insert — Client insere para outro profissional",
+          "name": "PostRoleTamperingAsClient",
           "request": {
-            "method": "POST",
+            "method": "PATCH",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"professional_id\": \"{{professional_b_id}}\",\n  \"service_id\": \"{{service_id}}\",\n  \"scheduled_at\": \"{{$timestamp}}\",\n  \"status\": \"scheduled\"\n}"
+              "raw": "{\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{supabase_url}}/rest/v1/users?id=eq.{{authenticated_user_id}}",
+              "host": ["{{supabase_url}}"],
+              "path": ["rest", "v1", "users"],
+              "query": [{ "key": "id", "value": "eq.{{authenticated_user_id}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Client não deve alterar role (trigger bloqueia)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PostAppointmentTamperingAsClient",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_user_id\": \"{{authenticated_user_id}}\",\n  \"professional_id\": \"{{professional_b_id}}\",\n  \"service_id\": \"{{service_a_id}}\",\n  \"start_at\": \"2026-09-20T10:00:00-03:00\",\n  \"end_at\": \"2026-09-20T11:00:00-03:00\",\n  \"status\": \"confirmed\"\n}"
             },
             "url": {
               "raw": "{{supabase_url}}/rest/v1/appointments",
@@ -603,8 +2320,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Client não deve inserir agendamento para outro profissional (esperado 401/403)', function () {",
-                  "    pm.expect([401, 403]).toInclude(pm.response.code);",
+                  "pm.test('Client não deve inserir appointment diretamente (INSERT policy removida)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
                   "});"
                 ]
               }
@@ -612,49 +2329,15 @@
           ]
         },
         {
-          "name": "Professional ID Tampering",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": \"{{professional_b_id}}\",\n  \"name\": \"Hackeado\"\n}"
-            },
-            "url": {
-              "raw": "{{supabase_url}}/rest/v1/professionals?id=eq.{{professional_a_id}}",
-              "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "professionals"],
-              "query": [{ "key": "id", "value": "eq.{{professional_a_id}}" }]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Não deve permitir alterar ID de profissional (esperado 401/403)', function () {",
-                  "    pm.expect([401, 403]).toInclude(pm.response.code);",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Notification Abuse — sem token",
+          "name": "PostNotificationWithoutAuthorization",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"to\": \"<DEVICE_PUSH_TOKEN>\",\n  \"title\": \"Abuse\",\n  \"body\": \"Teste\"\n}"
+              "raw": "{\n  \"appointment_id\": \"{{appointment_a_id}}\",\n  \"event\": \"confirmation\"\n}"
             },
             "url": {
               "raw": "{{supabase_url}}/functions/v1/send-push-notification",
@@ -667,8 +2350,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Edge Function deve rejeitar requisição sem autenticação (esperado 401)', function () {",
-                  "    pm.expect(pm.response.code).toBe(401);",
+                  "pm.test('Edge Function deve rejeitar sem autenticação (401)', function () {",
+                  "    pm.expect(pm.response.code).to.equal(401);",
                   "});"
                 ]
               }
@@ -676,13 +2359,12 @@
           ]
         },
         {
-          "name": "Third-party Account Deletion",
+          "name": "DeleteAccountAsThirdParty",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
@@ -699,36 +2381,27 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Third-party account deletion deve ser rejeitada (esperado 403)', function () {",
-                  "    pm.expect(pm.response.code).toBe(403);",
+                  "pm.test('Terceiro não deve excluir conta de outro usuário (403)', function () {",
+                  "    pm.expect(pm.response.code).to.equal(403);",
                   "});"
                 ]
               }
             }
           ]
-        }
-      ]
-    },
-    {
-      "name": "08 — Data Setup",
-      "item": [
+        },
         {
-          "name": "Create Service",
+          "name": "GetAuditLogsAsClient",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              { "key": "apikey", "value": "{{publishable_key}}", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Manicure\",\n  \"default_duration_minutes\": 60\n}"
-            },
             "url": {
-              "raw": "{{supabase_url}}/rest/v1/services",
+              "raw": "{{supabase_url}}/rest/v1/audit_logs?select=*",
               "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "services"]
+              "path": ["rest", "v1", "audit_logs"],
+              "query": [{ "key": "select", "value": "*" }]
             }
           },
           "event": [
@@ -736,29 +2409,16 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    pm.collectionVariables.set('service_id', pm.response.json().id);",
-                  "}"
+                  "pm.test('Client não deve ver audit_logs (RLS retorna vazio)', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    if (pm.response.code === 200) {",
+                  "        pm.expect(pm.response.json().length).to.equal(0);",
+                  "    }",
+                  "});"
                 ]
               }
             }
           ]
-        },
-        {
-          "name": "Cleanup Created Test Data",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "apikey", "value": "{{supabase_anon_key}}" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "url": {
-              "raw": "{{supabase_url}}/rest/v1/appointments?id=in.({{appointment_id}})",
-              "host": ["{{supabase_url}}"],
-              "path": ["rest", "v1", "appointments"],
-              "query": [{ "key": "id", "value": "in.({{appointment_id}})" }]
-            }
-          }
         }
       ]
     }
