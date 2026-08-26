@@ -5,6 +5,7 @@ import { colors } from '@theme';
 const INTRO_IMAGE = require('../../assets/TelaInicial.png');
 
 const FADE_DURATION_MS = 300;
+const ANIMATION_TIMEOUT_MS = 1500;
 
 export type InitialScreenProps = {
   dismiss?: boolean;
@@ -14,6 +15,7 @@ export type InitialScreenProps = {
 export default function InitialScreen({ dismiss = false, onFinish }: InitialScreenProps) {
   const opacity = useRef(new Animated.Value(1)).current;
   const finishedRef = useRef(false);
+  const animationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!dismiss) {
@@ -22,18 +24,36 @@ export default function InitialScreen({ dismiss = false, onFinish }: InitialScre
     if (finishedRef.current) {
       return;
     }
+
     const animation = Animated.timing(opacity, {
       toValue: 0,
       duration: FADE_DURATION_MS,
       useNativeDriver: true,
     });
-    animation.start(({ finished }) => {
-      if (finished && !finishedRef.current) {
+
+    const animationFinished = (result: { finished: boolean }) => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
+      }
+      if ((result.finished || !finishedRef.current) && !finishedRef.current) {
         finishedRef.current = true;
         onFinish?.();
       }
-    });
+    };
+
+    animation.start(animationFinished);
+
+    animationTimeoutRef.current = setTimeout(() => {
+      animation.stop();
+      animationFinished({ finished: false });
+    }, ANIMATION_TIMEOUT_MS);
+
     return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
+      }
       animation.stop();
     };
   }, [dismiss, opacity, onFinish]);

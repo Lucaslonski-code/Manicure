@@ -36,12 +36,18 @@ describe('isIntroComplete (intro dismissal rule)', () => {
   const { isIntroComplete } = require('@navigation/introConfig');
 
   it('remains false before the timer elapses', () => {
-    expect(isIntroComplete(false, true)).toBe(false);
-    expect(isIntroComplete(true, false)).toBe(false);
-    expect(isIntroComplete(false, false)).toBe(false);
+    expect(isIntroComplete(false, true, false)).toBe(false);
+    expect(isIntroComplete(true, false, false)).toBe(false);
+    expect(isIntroComplete(false, false, false)).toBe(false);
   });
 
-  it('becomes true only when the timer elapsed AND auth resolved', () => {
-    expect(isIntroComplete(true, true)).toBe(true);
+  it('becomes true when the timer elapsed AND auth resolved', () => {
+    expect(isIntroComplete(true, true, false)).toBe(true);
+  });
+
+  it('becomes true when max time exceeded regardless of other flags', () => {
+    expect(isIntroComplete(false, false, true)).toBe(true);
+    expect(isIntroComplete(false, true, true)).toBe(true);
+    expect(isIntroComplete(true, false, true)).toBe(true);
   });
 });
