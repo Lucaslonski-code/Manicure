@@ -124,11 +124,24 @@ export function useAuth(): AuthState & {
 
         if (result.type === 'initialized') {
           try {
-            const { data } = await authClient.getSession();
+            // getSession pode travar no Preview standalone (expo-secure-store nativo)
+            const sessionPromise = authClient.getSession();
+            const sessionTimeoutPromise = new Promise<{ data: { session: null } }>((resolve) => {
+              setTimeout(() => resolve({ data: { session: null } }), BOOTSTRAP_TIMEOUT_MS);
+            });
+            const { data } = await Promise.race([sessionPromise, sessionTimeoutPromise]);
+
             if (!isMounted) return;
             setSession(data.session);
+
             if (data.session?.user) {
-              await loadProfile(data.session.user.id);
+              // loadProfile pode travar em rede no Preview standalone
+              const profilePromise = loadProfile(data.session.user.id);
+              const profileTimeoutPromise = new Promise<void>((resolve) => {
+                setTimeout(() => resolve(), BOOTSTRAP_TIMEOUT_MS);
+              });
+              await Promise.race([profilePromise, profileTimeoutPromise]);
+
               if (isMounted) {
                 registerNotification().catch((err) => {
                   console.error('Error registering notification during bootstrap:', err);

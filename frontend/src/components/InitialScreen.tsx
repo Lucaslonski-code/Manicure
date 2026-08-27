@@ -25,36 +25,51 @@ export default function InitialScreen({ dismiss = false, onFinish }: InitialScre
       return;
     }
 
-    const animation = Animated.timing(opacity, {
-      toValue: 0,
-      duration: FADE_DURATION_MS,
-      useNativeDriver: true,
-    });
+    // Tenta com native driver primeiro; se falhar, cai para JS driver
+    const startAnimation = (useNative: boolean) => {
+      const animation = Animated.timing(opacity, {
+        toValue: 0,
+        duration: FADE_DURATION_MS,
+        useNativeDriver: useNative,
+      });
 
-    const animationFinished = (result: { finished: boolean }) => {
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-        animationTimeoutRef.current = null;
-      }
-      if ((result.finished || !finishedRef.current) && !finishedRef.current) {
-        finishedRef.current = true;
-        onFinish?.();
-      }
+      const animationFinished = (result: { finished: boolean }) => {
+        if (animationTimeoutRef.current) {
+          clearTimeout(animationTimeoutRef.current);
+          animationTimeoutRef.current = null;
+        }
+        if ((result.finished || !finishedRef.current) && !finishedRef.current) {
+          finishedRef.current = true;
+          onFinish?.();
+        }
+      };
+
+      animation.start(animationFinished);
+
+      animationTimeoutRef.current = setTimeout(() => {
+        animation.stop();
+        animationFinished({ finished: false });
+      }, ANIMATION_TIMEOUT_MS);
     };
 
-    animation.start(animationFinished);
-
-    animationTimeoutRef.current = setTimeout(() => {
-      animation.stop();
-      animationFinished({ finished: false });
-    }, ANIMATION_TIMEOUT_MS);
+    // Tenta native driver; se der erro, cai para JS driver
+    try {
+      startAnimation(true);
+    } catch {
+      startAnimation(false);
+    }
 
     return () => {
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
         animationTimeoutRef.current = null;
       }
-      animation.stop();
+      // Animated.stop() não lança erro se já parou
+      try {
+        Animated.timing(opacity, { toValue: 0, duration: 0, useNativeDriver: false }).stop();
+      } catch {
+        // ignore
+      }
     };
   }, [dismiss, opacity, onFinish]);
 
