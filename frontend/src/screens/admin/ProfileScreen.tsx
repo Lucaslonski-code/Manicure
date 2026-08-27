@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DangerButton from '@components/base/DangerButton';
 import Divider from '@components/base/Divider';
 import Avatar from '@components/base/Avatar';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function AdminProfileScreen({ _navigation }: any) {
   const { profile, signOut } = useAuth();
@@ -56,10 +57,15 @@ export default function AdminProfileScreen({ _navigation }: any) {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Avatar name={profile?.name} size={88} borderColor={colors.goldLight} />
-        <Text style={styles.name}>{profile?.name || '—'}</Text>
-        <Text style={styles.email}>{profile?.email || '—'}</Text>
+      <ScreenHeader title="Perfil" subtitle="Área administrativa" />
+      <View style={styles.section}>
+        <View style={styles.avatarRow}>
+          <Avatar name={profile?.name} size={88} borderColor={colors.goldLight} />
+          <View style={styles.identityText}>
+            <Text style={styles.name}>{profile?.name || '—'}</Text>
+            <Text style={styles.email}>{profile?.email || '—'}</Text>
+          </View>
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -125,11 +131,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  avatarRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.lg,
+    gap: spacing.md,
+  },
+  identityText: {
+    flex: 1,
   },
   name: {
     ...typography.headingMedium,

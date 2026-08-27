@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { colors, spacing, typography, radius } from '@theme';
-import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
 
 interface ScreenHeaderProps {
   title: string;

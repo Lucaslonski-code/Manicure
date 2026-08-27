@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointments, useProfessionals } from '@hooks';
@@ -123,7 +123,7 @@ export default function DashboardScreen({ navigation }: any) {
           <FlatList
             data={todayAppointments}
             keyExtractor={(item) => item.id}
-            renderItem={renderAppointment}
+            renderItem={({ item }: { item: any }) => renderAppointment({ item })}
             scrollEnabled={false}
           />
         )}
