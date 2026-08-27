@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
 import Button from './Button';
+import AppIcon from '@components/icons/AppIcon';
 
 interface EmptyStateProps {
   title: string;
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: 'sparkles' | 'calendar' | 'bell' | 'user' | 'search' | 'time' | 'mail' | 'document-text';
 }
 
 export default function EmptyState({
@@ -22,7 +22,7 @@ export default function EmptyState({
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <Ionicons name={icon} size={iconSizes.lg} color={colors.gold} />
+        <AppIcon name={icon} size={iconSizes.lg} color="gold" />
       </View>
       <Text style={styles.title}>{title}</Text>
       {description ? <Text style={styles.description}>{description}</Text> : null}

@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointments, useProfessionals } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import SectionHeader from '@components/base/SectionHeader';
 import StatusBadge from '@components/base/StatusBadge';
 import Button from '@components/base/Button';
@@ -80,28 +80,28 @@ export default function DashboardScreen({ navigation }: any) {
       <View style={styles.statsGrid}>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <View style={styles.statIconContainer}>
-            <Ionicons name="calendar-outline" size={iconSizes.md} color={colors.gold} />
+            <AppIcon name="calendar" size={iconSizes.md} color="gold" />
           </View>
           <Text style={styles.statValue}>{todayAppointments.length}</Text>
           <Text style={styles.statLabel}>Hoje</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <View style={styles.statIconContainer}>
-            <Ionicons name="checkmark-circle-outline" size={iconSizes.md} color={colors.success} />
+            <AppIcon name="check" size={iconSizes.md} color="success" />
           </View>
           <Text style={styles.statValue}>{confirmed}</Text>
           <Text style={styles.statLabel}>Confirmados</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <View style={styles.statIconContainer}>
-            <Ionicons name="close-circle-outline" size={iconSizes.md} color={colors.error} />
+            <AppIcon name="error" size={iconSizes.md} color="error" />
           </View>
           <Text style={styles.statValue}>{cancelled}</Text>
           <Text style={styles.statLabel}>Cancelados</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <View style={styles.statIconContainer}>
-            <Ionicons name="time-outline" size={iconSizes.md} color={colors.warning} />
+            <AppIcon name="time" size={iconSizes.md} color="warning" />
           </View>
           <Text style={styles.statValue}>{upcoming}</Text>
           <Text style={styles.statLabel}>Próximos</Text>
@@ -134,13 +134,13 @@ export default function DashboardScreen({ navigation }: any) {
         <View style={styles.actionsGrid}>
           <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AdminProfessionals')}>
             <View style={styles.actionIconContainer}>
-              <Ionicons name="people-outline" size={iconSizes.md} color={colors.gold} />
+              <AppIcon name="people" size={iconSizes.md} color="gold" />
             </View>
             <Text style={styles.actionLabel}>Profissionais</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AdminServices')}>
             <View style={styles.actionIconContainer}>
-              <Ionicons name="sparkles-outline" size={iconSizes.md} color={colors.gold} />
+              <AppIcon name="sparkles" size={iconSizes.md} color="gold" />
             </View>
             <Text style={styles.actionLabel}>Serviços</Text>
           </TouchableOpacity>

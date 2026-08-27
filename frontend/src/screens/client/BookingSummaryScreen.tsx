@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { useProfessionalServices, useProfessional } from '@hooks';
 import { useBooking } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
 import LoadingState from '@components/base/LoadingState';
 import ScreenHeader from '@components/base/ScreenHeader';
@@ -41,7 +41,7 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
       <View style={styles.summaryCard}>
         <View style={styles.section}>
           <View style={styles.labelRow}>
-            <Ionicons name="person-outline" size={iconSizes.sm} color={colors.gold} />
+          <AppIcon name="user" size={iconSizes.sm} color="gold" />
             <Text style={styles.label}>Profissional</Text>
           </View>
           <Text style={styles.value}>{professional?.display_name || '—'}</Text>
@@ -51,7 +51,7 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
 
         <View style={styles.section}>
           <View style={styles.labelRow}>
-            <Ionicons name="sparkles-outline" size={iconSizes.sm} color={colors.gold} />
+            <AppIcon name="sparkles" size={iconSizes.sm} color="gold" />
             <Text style={styles.label}>Serviço</Text>
           </View>
           <Text style={styles.value}>{service?.service.name || '—'}</Text>
@@ -65,7 +65,7 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
 
         <View style={styles.section}>
           <View style={styles.labelRow}>
-            <Ionicons name="calendar-outline" size={iconSizes.sm} color={colors.gold} />
+            <AppIcon name="calendar" size={iconSizes.sm} color="gold" />
             <Text style={styles.label}>Data</Text>
           </View>
           <Text style={styles.value}>
@@ -77,7 +77,7 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
 
         <View style={styles.section}>
           <View style={styles.labelRow}>
-            <Ionicons name="time-outline" size={iconSizes.sm} color={colors.gold} />
+            <AppIcon name="time" size={iconSizes.sm} color="gold" />
             <Text style={styles.label}>Horário</Text>
           </View>
           <Text style={styles.value}>{time}</Text>
@@ -86,7 +86,7 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
 
       <View style={styles.noteSection}>
         <View style={styles.labelRow}>
-          <Ionicons name="document-text-outline" size={iconSizes.sm} color={colors.gold} />
+          <AppIcon name="document-text" size={iconSizes.sm} color="gold" />
           <Text style={styles.noteLabel}>Observação (opcional)</Text>
         </View>
         <TextInput

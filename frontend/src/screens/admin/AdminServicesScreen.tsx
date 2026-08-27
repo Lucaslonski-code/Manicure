@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { useServices } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
 import ErrorState from '@components/base/ErrorState';
@@ -36,7 +36,7 @@ export default function AdminServicesScreen() {
           renderItem={({ item }) => (
             <View style={styles.card}>
               <View style={styles.cardIconContainer}>
-                <Ionicons name="sparkles-outline" size={iconSizes.md} color={colors.gold} />
+                <AppIcon name="sparkles" size={iconSizes.md} color="gold" />
               </View>
               <View style={styles.cardContent}>
                 <Text style={styles.name}>{item.name}</Text>

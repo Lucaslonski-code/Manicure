@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from '
 import { useAuth } from '@hooks/useAuth';
 import { useProfessionals, useMyAppointments, useServices } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import Avatar from '@components/base/Avatar';
 import Button from '@components/base/Button';
 import SectionHeader from '@components/base/SectionHeader';
@@ -42,7 +42,7 @@ export default function HomeScreen({ navigation }: any) {
         <Text style={styles.name}>{item.display_name}</Text>
         <Text style={styles.specialty}>Especialista</Text>
       </View>
-      <Ionicons name="chevron-forward" size={iconSizes.sm} color={colors.textSecondary} />
+      <AppIcon name="chevron-right" size={iconSizes.sm} color="secondary" />
     </TouchableOpacity>
   );
 
@@ -55,7 +55,7 @@ export default function HomeScreen({ navigation }: any) {
       }}
     >
       <View style={styles.serviceIconContainer}>
-        <Ionicons name="sparkles-outline" size={iconSizes.md} color={colors.gold} />
+        <AppIcon name="sparkles" size={iconSizes.md} color="gold" />
       </View>
       <Text style={styles.serviceName}>{item.name}</Text>
       <Text style={styles.serviceDuration}>{item.default_duration_minutes} min</Text>
@@ -88,7 +88,7 @@ export default function HomeScreen({ navigation }: any) {
           >
             <View style={styles.appointmentLeft}>
               <View style={styles.appointmentIconContainer}>
-                <Ionicons name="calendar-outline" size={iconSizes.lg} color={colors.gold} />
+                <AppIcon name="calendar" size={iconSizes.lg} color="gold" />
               </View>
               <View style={styles.appointmentInfo}>
                 <Text style={styles.appointmentProfessional}>
@@ -153,13 +153,13 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.shortcutsGrid}>
           <TouchableOpacity style={styles.shortcut} onPress={() => navigation.navigate('MyAppointments')}>
             <View style={styles.shortcutIconContainer}>
-              <Ionicons name="calendar-outline" size={iconSizes.lg} color={colors.gold} />
+              <AppIcon name="calendar" size={iconSizes.lg} color="gold" />
             </View>
             <Text style={styles.shortcutLabel}>Meus agendamentos</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.shortcut} onPress={() => navigation.navigate('Profile')}>
             <View style={styles.shortcutIconContainer}>
-              <Ionicons name="person-outline" size={iconSizes.lg} color={colors.gold} />
+              <AppIcon name="user" size={iconSizes.lg} color="gold" />
             </View>
             <Text style={styles.shortcutLabel}>Perfil</Text>
           </TouchableOpacity>

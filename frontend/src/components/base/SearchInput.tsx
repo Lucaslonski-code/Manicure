@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, ViewStyle } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius, typography, elevation } from '@theme';
+import { colors, spacing, radius, typography, elevation, iconSizes } from '@theme';
+import AppIcon from '@components/icons/AppIcon';
 
 interface SearchInputProps {
   value: string;
@@ -43,12 +43,12 @@ export default function SearchInput({
     <View style={[styles.container, containerStyle]}>
       <View style={[styles.row, focused && styles.rowFocused]}>
         <View style={styles.iconContainer}>
-          <Ionicons
-            name={focused ? 'search' : 'search-outline'}
-            size={18}
-            color={focused ? colors.gold : colors.textSecondary}
-          />
-        </View>
+        <AppIcon
+          name="search"
+          size={iconSizes.sm}
+          color={focused ? 'gold' : 'secondary'}
+        />
+      </View>
         <TextInput
           style={styles.input}
           value={value}

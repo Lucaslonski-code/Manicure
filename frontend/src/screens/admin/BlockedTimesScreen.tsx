@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useBlockedTimes } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
@@ -16,7 +16,7 @@ export default function BlockedTimesScreen() {
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
       <View style={styles.cardIconContainer}>
-        <Ionicons name="lock-closed-outline" size={iconSizes.md} color={colors.error} />
+        <AppIcon name="lock" size={iconSizes.md} color="error" />
       </View>
       <View style={styles.cardContent}>
         <Text style={styles.reason}>{item.reason || 'Bloqueio'}</Text>

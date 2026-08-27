@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointments, useProfessionals } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import StatusBadge from '@components/base/StatusBadge';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
@@ -33,7 +33,7 @@ export default function GlobalAgendaScreen({ navigation }: any) {
         onPress={() => navigation.navigate('AppointmentDetails', { appointmentId: item.id })}
       >
         <View style={styles.cardIconContainer}>
-          <Ionicons name="calendar-outline" size={iconSizes.md} color={colors.gold} />
+          <AppIcon name="calendar" size={iconSizes.md} color="gold" />
         </View>
         <View style={styles.cardContent}>
           <Text style={styles.professional}>{getProfessionalName(item.professional_id)}</Text>

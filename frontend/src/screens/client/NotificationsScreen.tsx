@@ -4,29 +4,29 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNotificationsHistory } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon, { type IconName } from '@components/icons/AppIcon';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
 import ErrorState from '@components/base/ErrorState';
 import ScreenHeader from '@components/base/ScreenHeader';
 
-const typeLabels: Record<string, { label: string; color: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  confirmation: { label: 'Confirmação', color: colors.success, icon: 'checkmark-circle-outline' },
-  reschedule: { label: 'Reagendamento', color: colors.warning, icon: 'calendar-outline' },
-  cancellation: { label: 'Cancelamento', color: colors.error, icon: 'close-circle-outline' },
-  reminder: { label: 'Lembrete', color: colors.textSecondary, icon: 'time-outline' },
+const typeLabels: Record<string, { label: string; color: string; icon: IconName }> = {
+  confirmation: { label: 'Confirmação', color: colors.success, icon: 'check' },
+  reschedule: { label: 'Reagendamento', color: colors.warning, icon: 'calendar' },
+  cancellation: { label: 'Cancelamento', color: colors.error, icon: 'error' },
+  reminder: { label: 'Lembrete', color: colors.textSecondary, icon: 'time' },
 };
 
 export default function NotificationsScreen() {
   const { notifications, loading, error, refetch } = useNotificationsHistory();
 
   const renderItem = ({ item }: { item: any }) => {
-    const typeInfo = typeLabels[item.type] || { label: item.type, color: colors.textSecondary, icon: 'notifications-outline' };
+    const typeInfo = typeLabels[item.type] || { label: item.type, color: colors.textSecondary, icon: 'bell' };
 
     return (
       <View style={styles.item}>
         <View style={styles.itemIconContainer}>
-          <Ionicons name={typeInfo.icon} size={iconSizes.md} color={typeInfo.color} />
+          <AppIcon name={typeInfo.icon} size={iconSizes.md} color={typeInfo.color as 'primary' | 'secondary' | 'gold' | 'success' | 'error' | 'warning' | 'disabled' | 'surface'} />
         </View>
         <View style={styles.itemContent}>
           <View style={styles.itemHeader}>

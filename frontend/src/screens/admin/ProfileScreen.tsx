@@ -4,7 +4,7 @@ import * as Notifications from 'expo-notifications';
 import { useAuth } from '@hooks';
 import { useNotifications } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import DangerButton from '@components/base/DangerButton';
 import Divider from '@components/base/Divider';
 import Avatar from '@components/base/Avatar';
@@ -73,7 +73,7 @@ export default function AdminProfileScreen({ _navigation }: any) {
         <View style={styles.card}>
           <View style={styles.row}>
             <View style={styles.iconLabelRow}>
-              <Ionicons name="person-outline" size={iconSizes.sm} color={colors.gold} />
+              <AppIcon name="user" size={iconSizes.sm} color="gold" />
               <Text style={styles.label}>Nome</Text>
             </View>
             <Text style={styles.value}>{profile?.name || '—'}</Text>
@@ -81,7 +81,7 @@ export default function AdminProfileScreen({ _navigation }: any) {
           <Divider gold />
           <View style={styles.row}>
             <View style={styles.iconLabelRow}>
-              <Ionicons name="mail-outline" size={iconSizes.sm} color={colors.gold} />
+              <AppIcon name="mail" size={iconSizes.sm} color="gold" />
               <Text style={styles.label}>E-mail</Text>
             </View>
             <Text style={styles.value}>{profile?.email || '—'}</Text>
@@ -89,7 +89,7 @@ export default function AdminProfileScreen({ _navigation }: any) {
           <Divider gold />
           <View style={styles.row}>
             <View style={styles.iconLabelRow}>
-              <Ionicons name="call-outline" size={iconSizes.sm} color={colors.gold} />
+              <AppIcon name="phone" size={iconSizes.sm} color="gold" />
               <Text style={styles.label}>Telefone</Text>
             </View>
             <Text style={styles.value}>{profile?.phone || '—'}</Text>
@@ -102,14 +102,14 @@ export default function AdminProfileScreen({ _navigation }: any) {
         <View style={styles.card}>
           <TouchableOpacity style={styles.row} onPress={handleToggleNotifications}>
             <View style={styles.iconLabelRow}>
-              <Ionicons name="notifications-outline" size={iconSizes.sm} color={colors.gold} />
+              <AppIcon name="bell" size={iconSizes.sm} color="gold" />
               <Text style={styles.label}>Notificações</Text>
             </View>
             <View style={styles.valueRow}>
               <Text style={styles.value}>
                 {token || permissionStatus?.granted ? 'Ativadas' : 'Desativadas'}
               </Text>
-              <Ionicons name="chevron-forward" size={iconSizes.sm} color={colors.textSecondary} />
+              <AppIcon name="chevron-right" size={iconSizes.sm} color="secondary" />
             </View>
           </TouchableOpacity>
         </View>

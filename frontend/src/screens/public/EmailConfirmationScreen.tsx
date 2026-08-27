@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '@hooks/useAuth';
 import Button from '@components/base/Button';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 
 export default function EmailConfirmationScreen({ route, navigation }: any) {
   const { resend, loading } = useAuth();
@@ -25,7 +25,7 @@ export default function EmailConfirmationScreen({ route, navigation }: any) {
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <Ionicons name="mail-outline" size={iconSizes.lg} color={colors.gold} />
+          <AppIcon name="mail" size={iconSizes.lg} color="gold" />
         </View>
         <Text style={styles.title}>Verifique seu e-mail</Text>
         <Text style={styles.text}>

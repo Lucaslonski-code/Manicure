@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { useMyAppointments, useProfessionals } from '@hooks';
 import type { Appointment } from '../../supabase/types';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import ScreenHeader from '@components/base/ScreenHeader';
 import StatusBadge from '@components/base/StatusBadge';
 import LoadingState from '@components/base/LoadingState';
@@ -53,7 +53,7 @@ export default function MyAppointmentsScreen({ navigation }: any) {
         onPress={() => navigation.navigate('AppointmentDetails', { appointmentId: item.id })}
       >
         <View style={styles.cardIconContainer}>
-          <Ionicons name="calendar-outline" size={iconSizes.md} color={colors.gold} />
+          <AppIcon name="calendar" size={iconSizes.md} color="gold" />
         </View>
         <View style={styles.cardContent}>
           <Text style={styles.professional}>{getProfessionalName(item.professional_id)}</Text>

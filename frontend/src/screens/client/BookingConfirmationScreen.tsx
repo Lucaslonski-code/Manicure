@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
 import SecondaryButton from '@components/base/SecondaryButton';
 
@@ -9,7 +9,7 @@ export default function BookingConfirmationScreen({ navigation }: any) {
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <Ionicons name="checkmark" size={iconSizes.xl} color={colors.success} />
+        <AppIcon name="check" size={iconSizes.xl} color="success" />
       </View>
       <Text style={styles.title}>Agendamento confirmado!</Text>
       <Text style={styles.text}>

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useProfessionalServices, useProfessional } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import ScreenHeader from '@components/base/ScreenHeader';
 import type { Service } from '../../supabase/types';
 import Button from '@components/base/Button';
@@ -20,13 +20,13 @@ export default function ServiceSelectionScreen({ route, navigation }: any) {
       onPress={() => navigation.navigate('DateSelection', { professionalId, serviceId: item.id })}
     >
       <View style={styles.serviceIconContainer}>
-        <Ionicons name="sparkles-outline" size={iconSizes.md} color={colors.gold} />
+        <AppIcon name="sparkles" size={iconSizes.md} color="gold" />
       </View>
       <View style={styles.cardContent}>
         <Text style={styles.name}>{item.name}</Text>
         <Text style={styles.duration}>{item.default_duration_minutes} min</Text>
       </View>
-      <Ionicons name="chevron-forward" size={iconSizes.sm} color={colors.textSecondary} />
+      <AppIcon name="chevron-right" size={iconSizes.sm} color="secondary" />
     </TouchableOpacity>
   );
 
@@ -55,7 +55,7 @@ export default function ServiceSelectionScreen({ route, navigation }: any) {
       />
       {professional && (
         <View style={styles.professionalChip}>
-          <Ionicons name="person-outline" size={iconSizes.sm} color={colors.gold} />
+          <AppIcon name="user" size={iconSizes.sm} color="gold" />
           <Text style={styles.professionalName}>{professional.display_name}</Text>
         </View>
       )}

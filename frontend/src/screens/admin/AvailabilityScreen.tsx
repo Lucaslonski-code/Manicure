@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { useAvailability } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
@@ -16,7 +16,7 @@ export default function AvailabilityScreen() {
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
       <View style={styles.cardIconContainer}>
-        <Ionicons name="time-outline" size={iconSizes.md} color={colors.gold} />
+        <AppIcon name="time" size={iconSizes.md} color="gold" />
       </View>
       <View style={styles.cardContent}>
         <Text style={styles.weekday}>{WEEKDAYS[item.weekday] || item.weekday}</Text>

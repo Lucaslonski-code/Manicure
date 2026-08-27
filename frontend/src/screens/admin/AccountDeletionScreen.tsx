@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useAuth } from '@hooks';
 import { deleteAccount } from '../../services/api';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import DangerButton from '@components/base/DangerButton';
 import ConfirmationDialog from '@components/base/ConfirmationDialog';
 import ScreenHeader from '@components/base/ScreenHeader';
@@ -32,7 +32,7 @@ export default function AccountDeletionScreen({ navigation }: any) {
       <ScreenHeader title="Excluir minha conta" subtitle="Esta ação é irreversível" accent />
       <View style={styles.warning}>
         <View style={styles.warningIconContainer}>
-          <Ionicons name="warning-outline" size={iconSizes.md} color={colors.error} />
+          <AppIcon name="warning" size={iconSizes.md} color="error" />
         </View>
         <Text style={styles.warningTitle}>Atenção</Text>
         <Text style={styles.warningText}>

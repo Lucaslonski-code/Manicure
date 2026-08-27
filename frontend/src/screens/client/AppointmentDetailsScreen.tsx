@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointment, useBooking, useProfessionals } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
 import DangerButton from '@components/base/DangerButton';
 import StatusBadge from '@components/base/StatusBadge';
@@ -61,7 +61,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
       <View style={styles.card}>
         <View style={styles.row}>
           <View style={styles.iconLabelRow}>
-            <Ionicons name="person-outline" size={iconSizes.sm} color={colors.gold} />
+            <AppIcon name="user" size={iconSizes.sm} color="gold" />
             <Text style={styles.label}>Profissional</Text>
           </View>
           <Text style={styles.value}>{professional?.display_name || '—'}</Text>
@@ -69,7 +69,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
         <Divider gold />
         <View style={styles.row}>
           <View style={styles.iconLabelRow}>
-            <Ionicons name="calendar-outline" size={iconSizes.sm} color={colors.gold} />
+            <AppIcon name="calendar" size={iconSizes.sm} color="gold" />
             <Text style={styles.label}>Data e horário</Text>
           </View>
           <Text style={styles.value}>
@@ -79,7 +79,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
         <Divider gold />
         <View style={styles.row}>
           <View style={styles.iconLabelRow}>
-            <Ionicons name="checkmark-circle-outline" size={iconSizes.sm} color={colors.gold} />
+            <AppIcon name="check" size={iconSizes.sm} color="gold" />
             <Text style={styles.label}>Status</Text>
           </View>
           <StatusBadge label={status.label} variant={status.variant} />
@@ -89,7 +89,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
             <Divider gold />
             <View style={styles.section}>
               <View style={styles.iconLabelRow}>
-                <Ionicons name="document-text-outline" size={iconSizes.sm} color={colors.gold} />
+                <AppIcon name="document-text" size={iconSizes.sm} color="gold" />
                 <Text style={styles.label}>Observação</Text>
               </View>
               <Text style={styles.noteText}>{appointment.client_note}</Text>

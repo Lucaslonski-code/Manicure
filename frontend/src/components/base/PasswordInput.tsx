@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import Input from './Input';
-import { colors, spacing, typography, radius, elevation } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import AppIcon from '@components/icons/AppIcon';
 
 interface PasswordInputProps {
   label: string;
@@ -60,10 +60,10 @@ export default function PasswordInput({
           accessibilityLabel={visible ? 'Ocultar senha' : 'Mostrar senha'}
           accessibilityRole="button"
         >
-          <Ionicons
-            name={visible ? 'eye-off-outline' : 'eye-outline'}
-            size={20}
-            color={colors.textSecondary}
+          <AppIcon
+            name={visible ? 'eye-off' : 'eye'}
+            size={iconSizes.md}
+            color="secondary"
           />
         </TouchableOpacity>
       </View>
@@ -73,10 +73,10 @@ export default function PasswordInput({
             const passed = req.test(value);
             return (
               <View key={req.label} style={styles.requirementRow}>
-                <Ionicons
-                  name={passed ? 'checkmark-circle' : 'close-circle'}
-                  size={16}
-                  color={passed ? colors.success : colors.error}
+                <AppIcon
+                  name={passed ? 'check' : 'error'}
+                  size={iconSizes.sm}
+                  color={passed ? 'success' : 'error'}
                 />
                 <Text style={[styles.requirement, passed ? styles.requirementMet : styles.requirementUnmet]}>
                   {req.label}

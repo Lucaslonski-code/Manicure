@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, iconSizes, elevation } from '@theme';
-import { Ionicons } from '@expo/vector-icons';
+import AppIcon from '@components/icons/AppIcon';
 import HomeScreen from '@screens/client/HomeScreen';
 import MyAppointmentsScreen from '@screens/client/MyAppointmentsScreen';
 import ProfileScreen from '@screens/client/ProfileScreen';
@@ -11,13 +11,13 @@ import NotificationsScreen from '@screens/client/NotificationsScreen';
 
 const Tab = createBottomTabNavigator();
 
-function TabBarIcon({ name, focused }: { name: keyof typeof Ionicons.glyphMap; focused: boolean }) {
+function TabBarIcon({ name, focused }: { name: 'home' | 'calendar' | 'bell' | 'user'; focused: boolean }) {
   return (
     <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
-      <Ionicons
+      <AppIcon
         name={name}
         size={iconSizes.md}
-        color={focused ? colors.gold : colors.textSecondary}
+        color={focused ? 'gold' : 'secondary'}
       />
     </View>
   );
@@ -31,7 +31,7 @@ export default function ClientTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ focused }) => {
-          const iconName = route.name === 'Home' ? 'home-outline' : route.name === 'MyAppointments' ? 'calendar-outline' : route.name === 'Notifications' ? 'notifications-outline' : 'person-outline';
+          const iconName = route.name === 'Home' ? 'home' : route.name === 'MyAppointments' ? 'calendar' : route.name === 'Notifications' ? 'bell' : 'user';
           return <TabBarIcon name={iconName} focused={focused} />;
         },
         tabBarLabel: ({ focused, children }) => (

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, radius, elevation, iconSizes, touchTarget } from '@theme';
+import AppIcon from '@components/icons/AppIcon';
 
 interface ModalProps {
   visible: boolean;
@@ -32,7 +32,11 @@ export default function AppModal({ visible, onClose, title, children, footer }: 
             accessibilityLabel="Fechar modal"
             accessibilityRole="button"
           >
-            <Ionicons name="close-outline" size={iconSizes.md} color={colors.textSecondary} />
+            <AppIcon
+            name="close"
+            size={iconSizes.md}
+            color="secondary"
+          />
           </TouchableOpacity>
         </View>
         <View style={styles.content}>{children}</View>
