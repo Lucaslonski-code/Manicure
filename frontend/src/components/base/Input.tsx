@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TextInput, View, Text, TextInputProps, StyleSheet, ViewStyle } from 'react-native';
-import { colors, spacing, radius, typography } from '@theme';
+import { colors, spacing, radius, typography, elevation } from '@theme';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -9,12 +9,20 @@ interface InputProps extends TextInputProps {
 }
 
 export default function Input({ label, error, containerStyle, ...props }: InputProps) {
+  const [focused, setFocused] = useState(false);
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
-        style={[styles.input, error && styles.inputError]}
+        style={[
+          styles.input,
+          error && styles.inputError,
+          focused && styles.inputFocused,
+        ]}
         placeholderTextColor={colors.textSecondary}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         {...props}
       />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -29,17 +37,23 @@ const styles = StyleSheet.create({
   label: {
     ...typography.label,
     color: colors.textPrimary,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   input: {
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
     ...typography.input,
     color: colors.textPrimary,
     backgroundColor: colors.surface,
+    ...elevation.none,
+  },
+  inputFocused: {
+    borderColor: colors.gold,
+    borderWidth: 1.5,
+    ...elevation.sm,
   },
   inputError: {
     borderColor: colors.error,
@@ -47,6 +61,6 @@ const styles = StyleSheet.create({
   errorText: {
     ...typography.bodySmall,
     color: colors.error,
-    marginTop: spacing.xs,
+    marginTop: spacing.sm,
   },
 });

@@ -4,8 +4,9 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMyAppointments, useProfessionals } from '@hooks';
 import type { Appointment } from '../../supabase/types';
-import { colors, spacing, typography, radius } from '@theme';
-import SectionHeader from '@components/base/SectionHeader';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
+import ScreenHeader from '@components/base/ScreenHeader';
 import StatusBadge from '@components/base/StatusBadge';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
@@ -39,25 +40,28 @@ export default function MyAppointmentsScreen({ navigation }: any) {
   };
 
   const renderAppointment = ({ item }: { item: Appointment }) => {
-    const statusMap: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'default' }> = {
-      confirmed: { label: 'Confirmado', variant: 'success' },
-      cancelled: { label: 'Cancelado', variant: 'error' },
-      completed: { label: 'Concluído', variant: 'default' },
+    const statusMap: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'default' | 'gold' }> = {
+      confirmed: { label: 'Confirmado', variant: 'gold' as const },
+      cancelled: { label: 'Cancelado', variant: 'error' as const },
+      completed: { label: 'Concluído', variant: 'default' as const },
     };
-    const status = statusMap[item.status] || { label: item.status, variant: 'default' };
+    const status = statusMap[item.status] || { label: item.status, variant: 'default' as const };
 
     return (
       <TouchableOpacity
         style={styles.card}
         onPress={() => navigation.navigate('AppointmentDetails', { appointmentId: item.id })}
       >
-        <View style={styles.cardHeader}>
-          <Text style={styles.professional}>{getProfessionalName(item.professional_id)}</Text>
-          <StatusBadge label={status.label} variant={status.variant} />
+        <View style={styles.cardIconContainer}>
+          <Ionicons name="calendar-outline" size={iconSizes.md} color={colors.gold} />
         </View>
-        <Text style={styles.date}>
-          {format(parseISO(item.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-        </Text>
+        <View style={styles.cardContent}>
+          <Text style={styles.professional}>{getProfessionalName(item.professional_id)}</Text>
+          <Text style={styles.date}>
+            {format(parseISO(item.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+          </Text>
+        </View>
+        <StatusBadge label={status.label} variant={status.variant} />
       </TouchableOpacity>
     );
   };
@@ -66,7 +70,7 @@ export default function MyAppointmentsScreen({ navigation }: any) {
     if (items.length === 0) return null;
     return (
       <View style={styles.section}>
-        <SectionHeader title={title} />
+        <ScreenHeader title={title} accent={title === 'Hoje'} />
         {items.map((item) => renderAppointment({ item }))}
       </View>
     );
@@ -87,9 +91,7 @@ export default function MyAppointmentsScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Meus agendamentos</Text>
-      </View>
+      <ScreenHeader title="Meus agendamentos" />
 
       {appointments.length === 0 ? (
         <EmptyState
@@ -127,17 +129,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
-  },
   section: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   list: {
     paddingHorizontal: spacing.lg,
@@ -150,12 +143,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-  },
-  cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.xs,
+    ...elevation.sm,
+  },
+  cardIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.goldOverlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  cardContent: {
+    flex: 1,
   },
   professional: {
     ...typography.bodyLarge,
@@ -166,6 +168,7 @@ const styles = StyleSheet.create({
   date: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
   errorText: {
     ...typography.bodySmall,

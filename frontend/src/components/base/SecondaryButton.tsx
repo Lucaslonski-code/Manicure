@@ -1,31 +1,41 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import React, { useState } from 'react';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
 import { colors, spacing, radius, typography, touchTarget } from '@theme';
 
 interface SecondaryButtonProps {
   title: string;
   onPress: () => void;
   disabled?: boolean;
+  loading?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
 
-export default function SecondaryButton({ title, onPress, disabled, style, textStyle }: SecondaryButtonProps) {
+export default function SecondaryButton({ title, onPress, disabled, loading, style, textStyle }: SecondaryButtonProps) {
+  const [pressed, setPressed] = useState(false);
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={disabled}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      disabled={disabled || loading}
       style={[
         styles.button,
+        pressed && !disabled && !loading && styles.pressed,
         disabled && styles.disabled,
-        { minHeight: touchTarget.min },
+        { minHeight: touchTarget.comfortable },
         style,
       ]}
       accessibilityLabel={title}
       accessibilityRole="button"
-      accessibilityState={{ disabled: !!disabled }}
+      accessibilityState={{ disabled: !!disabled || !!loading, busy: !!loading }}
     >
-      <Text style={[styles.text, textStyle]}>{title}</Text>
+      {loading ? (
+        <ActivityIndicator size="small" color={colors.textSecondary} />
+      ) : (
+        <Text style={[styles.text, textStyle]}>{title}</Text>
+      )}
     </TouchableOpacity>
   );
 }
@@ -41,12 +51,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  pressed: {
+    backgroundColor: colors.goldOverlay,
+    borderColor: colors.goldLight,
+  },
   disabled: {
-    opacity: 0.5,
     borderColor: colors.disabled,
+    backgroundColor: colors.disabledBackground,
   },
   text: {
     color: colors.textPrimary,
     ...typography.button,
+    letterSpacing: 0.3,
   },
 });

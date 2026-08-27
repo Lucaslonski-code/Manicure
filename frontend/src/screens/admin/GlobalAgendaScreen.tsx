@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointments, useProfessionals } from '@hooks';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import StatusBadge from '@components/base/StatusBadge';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
 import Button from '@components/base/Button';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function GlobalAgendaScreen({ navigation }: any) {
   const { appointments, loading, error, refetch } = useAppointments();
@@ -18,25 +20,28 @@ export default function GlobalAgendaScreen({ navigation }: any) {
   };
 
   const renderAppointment = ({ item }: { item: any }) => {
-    const statusMap: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'default' }> = {
-      confirmed: { label: 'Confirmado', variant: 'success' },
-      cancelled: { label: 'Cancelado', variant: 'error' },
-      completed: { label: 'Concluído', variant: 'default' },
+    const statusMap: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'default' | 'gold' }> = {
+      confirmed: { label: 'Confirmado', variant: 'gold' as const },
+      cancelled: { label: 'Cancelado', variant: 'error' as const },
+      completed: { label: 'Concluído', variant: 'default' as const },
     };
-    const status = statusMap[item.status] || { label: item.status, variant: 'default' };
+    const status = statusMap[item.status] || { label: item.status, variant: 'default' as const };
 
     return (
       <TouchableOpacity
         style={styles.card}
         onPress={() => navigation.navigate('AppointmentDetails', { appointmentId: item.id })}
       >
-        <View style={styles.cardHeader}>
-          <Text style={styles.professional}>{getProfessionalName(item.professional_id)}</Text>
-          <StatusBadge label={status.label} variant={status.variant} />
+        <View style={styles.cardIconContainer}>
+          <Ionicons name="calendar-outline" size={iconSizes.md} color={colors.gold} />
         </View>
-        <Text style={styles.date}>
-          {format(parseISO(item.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-        </Text>
+        <View style={styles.cardContent}>
+          <Text style={styles.professional}>{getProfessionalName(item.professional_id)}</Text>
+          <Text style={styles.date}>
+            {format(parseISO(item.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+          </Text>
+        </View>
+        <StatusBadge label={status.label} variant={status.variant} />
       </TouchableOpacity>
     );
   };
@@ -56,11 +61,10 @@ export default function GlobalAgendaScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Agenda Global</Text>
-        <Text style={styles.subtitle}>Visão geral de todos os agendamentos</Text>
-      </View>
-
+      <ScreenHeader
+        title="Agenda Global"
+        subtitle="Visão geral de todos os agendamentos"
+      />
       {appointments.length === 0 ? (
         <EmptyState title="Nenhum agendamento" description="Não há agendamentos cadastrados." />
       ) : (
@@ -86,20 +90,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
   list: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
@@ -111,12 +101,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-  },
-  cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.xs,
+    ...elevation.sm,
+  },
+  cardIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.goldOverlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  cardContent: {
+    flex: 1,
   },
   professional: {
     ...typography.bodyLarge,

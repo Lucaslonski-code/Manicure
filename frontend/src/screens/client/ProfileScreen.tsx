@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'rea
 import * as Notifications from 'expo-notifications';
 import { useAuth } from '@hooks';
 import { useNotifications } from '@hooks';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import DangerButton from '@components/base/DangerButton';
 import Divider from '@components/base/Divider';
 import Avatar from '@components/base/Avatar';
@@ -56,7 +57,7 @@ export default function ProfileScreen({ _navigation }: any) {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Avatar name={profile?.name} size={80} />
+        <Avatar name={profile?.name} size={88} borderColor={colors.goldLight} />
         <Text style={styles.name}>{profile?.name || '—'}</Text>
         <Text style={styles.email}>{profile?.email || '—'}</Text>
       </View>
@@ -65,17 +66,26 @@ export default function ProfileScreen({ _navigation }: any) {
         <Text style={styles.sectionTitle}>Informações pessoais</Text>
         <View style={styles.card}>
           <View style={styles.row}>
-            <Text style={styles.label}>Nome</Text>
+            <View style={styles.iconLabelRow}>
+              <Ionicons name="person-outline" size={iconSizes.sm} color={colors.gold} />
+              <Text style={styles.label}>Nome</Text>
+            </View>
             <Text style={styles.value}>{profile?.name || '—'}</Text>
           </View>
-          <Divider />
+          <Divider gold />
           <View style={styles.row}>
-            <Text style={styles.label}>E-mail</Text>
+            <View style={styles.iconLabelRow}>
+              <Ionicons name="mail-outline" size={iconSizes.sm} color={colors.gold} />
+              <Text style={styles.label}>E-mail</Text>
+            </View>
             <Text style={styles.value}>{profile?.email || '—'}</Text>
           </View>
-          <Divider />
+          <Divider gold />
           <View style={styles.row}>
-            <Text style={styles.label}>Telefone</Text>
+            <View style={styles.iconLabelRow}>
+              <Ionicons name="call-outline" size={iconSizes.sm} color={colors.gold} />
+              <Text style={styles.label}>Telefone</Text>
+            </View>
             <Text style={styles.value}>{profile?.phone || '—'}</Text>
           </View>
         </View>
@@ -85,10 +95,16 @@ export default function ProfileScreen({ _navigation }: any) {
         <Text style={styles.sectionTitle}>Preferências</Text>
         <View style={styles.card}>
           <TouchableOpacity style={styles.row} onPress={handleToggleNotifications}>
-            <Text style={styles.label}>Notificações</Text>
-            <Text style={styles.value}>
-              {token || permissionStatus?.granted ? 'Ativadas' : 'Desativadas'}
-            </Text>
+            <View style={styles.iconLabelRow}>
+              <Ionicons name="notifications-outline" size={iconSizes.sm} color={colors.gold} />
+              <Text style={styles.label}>Notificações</Text>
+            </View>
+            <View style={styles.valueRow}>
+              <Text style={styles.value}>
+                {token || permissionStatus?.granted ? 'Ativadas' : 'Desativadas'}
+              </Text>
+              <Ionicons name="chevron-forward" size={iconSizes.sm} color={colors.textSecondary} />
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -133,8 +149,7 @@ const styles = StyleSheet.create({
     ...typography.label,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   card: {
     backgroundColor: colors.surface,
@@ -142,6 +157,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
+    ...elevation.sm,
   },
   row: {
     flexDirection: 'row',
@@ -149,9 +165,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
   },
+  iconLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  valueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   label: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
+    marginLeft: spacing.xs,
   },
   value: {
     ...typography.bodyMedium,

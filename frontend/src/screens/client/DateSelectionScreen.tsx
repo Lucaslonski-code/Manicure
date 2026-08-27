@@ -3,8 +3,9 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { format, addDays, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAvailability, useBlockedTimes } from '@hooks';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation } from '@theme';
 import Button from '@components/base/Button';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function DateSelectionScreen({ route, navigation }: any) {
   const { professionalId, serviceId } = route.params;
@@ -66,10 +67,10 @@ export default function DateSelectionScreen({ route, navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Selecione a data</Text>
-        <Text style={styles.subtitle}>Escolha o melhor dia para o atendimento</Text>
-      </View>
+      <ScreenHeader
+        title="Selecione a data"
+        subtitle="Escolha o melhor dia para o atendimento"
+      />
       <FlatList
         data={dates}
         keyExtractor={(item) => format(item, 'yyyy-MM-dd')}
@@ -79,7 +80,7 @@ export default function DateSelectionScreen({ route, navigation }: any) {
       />
       {selectedDate && (
         <View style={styles.footer}>
-          <Button title="Continuar" onPress={handleContinue} />
+          <Button title="Continuar" onPress={handleContinue} style={styles.continueButton} />
         </View>
       )}
     </View>
@@ -90,20 +91,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
   },
   list: {
     paddingHorizontal: spacing.lg,
@@ -119,13 +106,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     margin: spacing.xs,
     backgroundColor: colors.surface,
+    ...elevation.sm,
   },
   disabled: {
-    opacity: 0.3,
+    backgroundColor: colors.disabledBackground,
+    ...elevation.none,
   },
   selected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.gold,
+    borderColor: colors.gold,
+    ...elevation.sm,
   },
   day: {
     ...typography.caption,
@@ -143,7 +133,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   disabledText: {
-    color: colors.textSecondary,
+    color: colors.disabled,
   },
   selectedText: {
     color: colors.surface,
@@ -151,5 +141,8 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
+  },
+  continueButton: {
+    ...elevation.sm,
   },
 });

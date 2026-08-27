@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Input from './Input';
-import { colors, spacing, typography } from '@theme';
+import { colors, spacing, typography, radius, elevation } from '@theme';
 
 interface PasswordInputProps {
   label: string;
@@ -41,29 +42,46 @@ export default function PasswordInput({
 
   return (
     <View style={styles.container}>
-      <Input
-        label={label}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        secureTextEntry={!visible}
-        error={error || (matchError ? 'Senhas não coincidem' : undefined)}
-      />
-      <TouchableOpacity
-        onPress={() => setVisible((v) => !v)}
-        accessibilityLabel={visible ? 'Ocultar senha' : 'Mostrar senha'}
-        accessibilityRole="button"
-      >
-        <Text style={styles.toggle}>{visible ? 'Ocultar' : 'Mostrar'}</Text>
-      </TouchableOpacity>
+      <View style={styles.inputWrapper}>
+        <View style={styles.inputContainer}>
+          <Input
+            label={label}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            secureTextEntry={!visible}
+            error={error || (matchError ? 'Senhas não coincidem' : undefined)}
+            containerStyle={styles.inputContainerInner}
+          />
+        </View>
+        <TouchableOpacity
+          onPress={() => setVisible((v) => !v)}
+          style={styles.toggleButton}
+          accessibilityLabel={visible ? 'Ocultar senha' : 'Mostrar senha'}
+          accessibilityRole="button"
+        >
+          <Ionicons
+            name={visible ? 'eye-off-outline' : 'eye-outline'}
+            size={20}
+            color={colors.textSecondary}
+          />
+        </TouchableOpacity>
+      </View>
       {showRequirements && value.length > 0 ? (
-        <View style={styles.requirements}>
+        <View style={styles.requirementsCard}>
           {requirements.map((req) => {
             const passed = req.test(value);
             return (
-              <Text key={req.label} style={[styles.requirement, passed ? styles.requirementMet : styles.requirementUnmet]}>
-                {passed ? '✓' : '✕'} {req.label}
-              </Text>
+              <View key={req.label} style={styles.requirementRow}>
+                <Ionicons
+                  name={passed ? 'checkmark-circle' : 'close-circle'}
+                  size={16}
+                  color={passed ? colors.success : colors.error}
+                />
+                <Text style={[styles.requirement, passed ? styles.requirementMet : styles.requirementUnmet]}>
+                  {req.label}
+                </Text>
+              </View>
             );
           })}
         </View>
@@ -76,18 +94,40 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: spacing.md,
   },
-  toggle: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-    textAlign: 'right',
+  inputWrapper: {
+    position: 'relative',
   },
-  requirements: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inputContainerInner: {
+    flex: 1,
+  },
+  toggleButton: {
+    position: 'absolute',
+    right: spacing.md,
+    top: 28,
+    padding: spacing.xs,
+    zIndex: 1,
+  },
+  requirementsCard: {
     marginTop: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...elevation.sm,
+  },
+  requirementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
   },
   requirement: {
     ...typography.bodySmall,
-    marginBottom: spacing.xs,
+    marginLeft: spacing.sm,
   },
   requirementMet: {
     color: colors.success,

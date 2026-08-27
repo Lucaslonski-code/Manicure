@@ -1,23 +1,48 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { colors, spacing, radius, typography } from '@theme';
+import React, { useState } from 'react';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
+import { colors, spacing, radius, typography, touchTarget, elevation } from '@theme';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
   disabled?: boolean;
+  loading?: boolean;
+  variant?: 'primary' | 'secondary' | 'gold';
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
 
-export default function Button({ title, onPress, disabled, style, textStyle }: ButtonProps) {
+export default function Button({ title, onPress, disabled, loading, variant = 'primary', style, textStyle }: ButtonProps) {
+  const [pressed, setPressed] = useState(false);
+
+  const buttonStyle = [
+    styles.button,
+    variant === 'secondary' && styles.secondary,
+    variant === 'gold' && styles.gold,
+    pressed && !disabled && !loading && styles.pressed,
+    disabled && styles.disabled,
+    style,
+  ];
+
+  const textColor = variant === 'secondary' ? colors.textPrimary : colors.surface;
+  const textStyleFinal = [styles.text, { color: textColor }, textStyle];
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={disabled}
-      style={[styles.button, disabled && styles.disabled, style]}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      disabled={disabled || loading}
+      style={[{ minHeight: touchTarget.comfortable }, buttonStyle]}
+      accessibilityLabel={title}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!disabled || !!loading, busy: !!loading }}
     >
-      <Text style={[styles.text, textStyle]}>{title}</Text>
+      {loading ? (
+        <ActivityIndicator size="small" color={variant === 'secondary' ? colors.textPrimary : colors.surface} />
+      ) : (
+        <Text style={textStyleFinal}>{title}</Text>
+      )}
     </TouchableOpacity>
   );
 }
@@ -30,13 +55,28 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    ...elevation.sm,
+  },
+  secondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...elevation.none,
+  },
+  gold: {
+    backgroundColor: colors.gold,
+    ...elevation.sm,
+  },
+  pressed: {
+    backgroundColor: colors.primaryPressed,
+    transform: [{ scale: 0.98 }],
   },
   disabled: {
-    opacity: 0.5,
+    backgroundColor: colors.disabledBackground,
+    ...elevation.none,
   },
   text: {
-    color: colors.background,
-    ...typography.bodyLarge,
-    fontWeight: '600',
+    ...typography.button,
+    letterSpacing: 0.3,
   },
 });

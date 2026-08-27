@@ -10,6 +10,7 @@ import Button from '@components/base/Button';
 import DangerButton from '@components/base/DangerButton';
 import LoadingState from '@components/base/LoadingState';
 import ConfirmationDialog from '@components/base/ConfirmationDialog';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function AppointmentDetailsScreen({ route, navigation }: any) {
   const { appointmentId } = route.params;
@@ -54,10 +55,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Detalhes do agendamento</Text>
-      </View>
-
+      <ScreenHeader title="Detalhes do agendamento" />
       <View style={styles.card}>
         <View style={styles.row}>
           <Text style={styles.label}>Profissional</Text>
@@ -138,15 +136,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.lg,
-  },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
   },
   card: {
     backgroundColor: colors.surface,

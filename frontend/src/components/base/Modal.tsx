@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { colors, spacing, typography, radius } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, typography, radius, elevation, iconSizes, touchTarget } from '@theme';
 
 interface ModalProps {
   visible: boolean;
@@ -31,7 +32,7 @@ export default function AppModal({ visible, onClose, title, children, footer }: 
             accessibilityLabel="Fechar modal"
             accessibilityRole="button"
           >
-            <Text style={styles.closeText}>✕</Text>
+            <Ionicons name="close-outline" size={iconSizes.md} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
         <View style={styles.content}>{children}</View>
@@ -44,7 +45,7 @@ export default function AppModal({ visible, onClose, title, children, footer }: 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(37, 34, 31, 0.4)',
+    backgroundColor: colors.overlay,
   },
   container: {
     position: 'absolute',
@@ -56,6 +57,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.xl,
     padding: spacing.lg,
     maxHeight: '80%',
+    ...elevation.lg,
   },
   header: {
     flexDirection: 'row',
@@ -66,16 +68,13 @@ const styles = StyleSheet.create({
   title: {
     ...typography.headingMedium,
     color: colors.textPrimary,
+    letterSpacing: -0.2,
   },
   closeButton: {
-    width: 32,
-    height: 32,
+    width: touchTarget.min,
+    height: touchTarget.min,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  closeText: {
-    ...typography.bodyLarge,
-    color: colors.textSecondary,
   },
   content: {
     marginBottom: spacing.md,

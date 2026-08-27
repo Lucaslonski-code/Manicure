@@ -5,10 +5,18 @@ import { colors, spacing, radius, elevation } from '@theme';
 interface CardProps {
   children: React.ReactNode;
   style?: ViewStyle;
+  variant?: 'default' | 'appointment' | 'gold';
 }
 
-export default function Card({ children, style }: CardProps) {
-  return <View style={[styles.card, style]}>{children}</View>;
+export default function Card({ children, style, variant = 'default' }: CardProps) {
+  const cardStyle = [
+    styles.card,
+    variant === 'appointment' && styles.appointment,
+    variant === 'gold' && styles.goldAccent,
+    style,
+  ];
+
+  return <View style={cardStyle}>{children}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -17,5 +25,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     padding: spacing.md,
     ...elevation.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  appointment: {
+    borderLeftWidth: 3,
+    borderLeftColor: colors.gold,
+  },
+  goldAccent: {
+    borderTopWidth: 3,
+    borderTopColor: colors.gold,
   },
 });

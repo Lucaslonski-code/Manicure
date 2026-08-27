@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import Button from './Button';
 
 interface EmptyStateProps {
@@ -8,6 +9,7 @@ interface EmptyStateProps {
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
+  icon?: keyof typeof Ionicons.glyphMap;
 }
 
 export default function EmptyState({
@@ -15,14 +17,19 @@ export default function EmptyState({
   description,
   actionLabel,
   onAction,
+  icon = 'sparkles',
 }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>📋</Text>
+      <View style={styles.iconContainer}>
+        <Ionicons name={icon} size={iconSizes.lg} color={colors.gold} />
+      </View>
       <Text style={styles.title}>{title}</Text>
       {description ? <Text style={styles.description}>{description}</Text> : null}
       {actionLabel && onAction ? (
-        <Button title={actionLabel} onPress={onAction} />
+        <View style={styles.actionContainer}>
+          <Button title={actionLabel} onPress={onAction} variant="gold" />
+        </View>
       ) : null}
     </View>
   );
@@ -33,11 +40,17 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xl,
+    padding: spacing.xxl,
   },
-  icon: {
-    fontSize: 48,
+  iconContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.xl,
+    backgroundColor: colors.goldOverlay,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.lg,
+    ...elevation.sm,
   },
   title: {
     ...typography.headingSmall,
@@ -49,6 +62,11 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
+    lineHeight: 22,
+  },
+  actionContainer: {
+    width: '100%',
+    maxWidth: 280,
   },
 });

@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointment, useBooking, useProfessionals } from '@hooks';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import Button from '@components/base/Button';
 import DangerButton from '@components/base/DangerButton';
 import StatusBadge from '@components/base/StatusBadge';
 import Divider from '@components/base/Divider';
 import ConfirmationDialog from '@components/base/ConfirmationDialog';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function AppointmentDetailsScreen({ route, navigation }: any) {
   const { appointmentId } = route.params;
@@ -55,33 +57,42 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Detalhes do agendamento</Text>
-      </View>
-
+      <ScreenHeader title="Detalhes do agendamento" />
       <View style={styles.card}>
         <View style={styles.row}>
-          <Text style={styles.label}>Profissional</Text>
+          <View style={styles.iconLabelRow}>
+            <Ionicons name="person-outline" size={iconSizes.sm} color={colors.gold} />
+            <Text style={styles.label}>Profissional</Text>
+          </View>
           <Text style={styles.value}>{professional?.display_name || '—'}</Text>
         </View>
-        <Divider />
+        <Divider gold />
         <View style={styles.row}>
-          <Text style={styles.label}>Data</Text>
+          <View style={styles.iconLabelRow}>
+            <Ionicons name="calendar-outline" size={iconSizes.sm} color={colors.gold} />
+            <Text style={styles.label}>Data e horário</Text>
+          </View>
           <Text style={styles.value}>
             {format(parseISO(appointment.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
           </Text>
         </View>
-        <Divider />
+        <Divider gold />
         <View style={styles.row}>
-          <Text style={styles.label}>Status</Text>
+          <View style={styles.iconLabelRow}>
+            <Ionicons name="checkmark-circle-outline" size={iconSizes.sm} color={colors.gold} />
+            <Text style={styles.label}>Status</Text>
+          </View>
           <StatusBadge label={status.label} variant={status.variant} />
         </View>
         {appointment.client_note && (
           <>
-            <Divider />
+            <Divider gold />
             <View style={styles.section}>
-              <Text style={styles.label}>Observação</Text>
-              <Text style={styles.value}>{appointment.client_note}</Text>
+              <View style={styles.iconLabelRow}>
+                <Ionicons name="document-text-outline" size={iconSizes.sm} color={colors.gold} />
+                <Text style={styles.label}>Observação</Text>
+              </View>
+              <Text style={styles.noteText}>{appointment.client_note}</Text>
             </View>
           </>
         )}
@@ -121,15 +132,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
-  },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
@@ -137,6 +139,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginHorizontal: spacing.lg,
     overflow: 'hidden',
+    ...elevation.sm,
   },
   row: {
     flexDirection: 'row',
@@ -144,17 +147,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
   },
+  iconLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   section: {
     padding: spacing.md,
   },
   label: {
     ...typography.label,
     color: colors.textSecondary,
-    marginBottom: spacing.xs,
+    marginLeft: spacing.xs,
   },
   value: {
     ...typography.bodyLarge,
     color: colors.textPrimary,
+    fontWeight: '500',
+  },
+  noteText: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+    marginTop: spacing.xs,
+    lineHeight: 22,
   },
   actions: {
     paddingHorizontal: spacing.lg,

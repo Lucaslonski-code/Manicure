@@ -6,9 +6,10 @@ interface AvatarProps {
   source?: { uri: string };
   name?: string;
   size?: number;
+  borderColor?: string;
 }
 
-export default function Avatar({ source, name, size = 40 }: AvatarProps) {
+export default function Avatar({ source, name, size = 40, borderColor }: AvatarProps) {
   const initials = name
     ? name
         .split(' ')
@@ -18,36 +19,30 @@ export default function Avatar({ source, name, size = 40 }: AvatarProps) {
         .toUpperCase()
     : '';
 
+  const avatarStyle = [
+    styles.base,
+    {
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      borderWidth: borderColor ? 2 : 0,
+      borderColor: borderColor || 'transparent',
+    },
+  ];
+
   if (source?.uri) {
     return (
       <Image
         source={{ uri: source.uri }}
-        style={[
-          styles.image,
-          {
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-          },
-        ]}
+        style={avatarStyle}
         accessibilityLabel={`Avatar de ${name || 'usuário'}`}
       />
     );
   }
 
   return (
-    <View
-      style={[
-        styles.fallback,
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-        },
-      ]}
-      accessibilityLabel={`Avatar de ${name || 'usuário'}`}
-    >
-      <Text style={[styles.initials, { fontSize: size * 0.4 }]}>
+    <View style={avatarStyle} accessibilityLabel={`Avatar de ${name || 'usuário'}`}>
+      <Text style={[styles.initials, { fontSize: size * 0.38 }]}>
         {initials || '?'}
       </Text>
     </View>
@@ -55,16 +50,15 @@ export default function Avatar({ source, name, size = 40 }: AvatarProps) {
 }
 
 const styles = StyleSheet.create({
-  image: {
-    backgroundColor: colors.beige,
-  },
-  fallback: {
+  base: {
     backgroundColor: colors.beige,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   initials: {
     color: colors.textPrimary,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
 });

@@ -1,31 +1,41 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { colors, spacing, radius, typography, touchTarget } from '@theme';
+import React, { useState } from 'react';
+import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
+import { colors, spacing, radius, typography, touchTarget, elevation } from '@theme';
 
 interface DangerButtonProps {
   title: string;
   onPress: () => void;
   disabled?: boolean;
+  loading?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
 
-export default function DangerButton({ title, onPress, disabled, style, textStyle }: DangerButtonProps) {
+export default function DangerButton({ title, onPress, disabled, loading, style, textStyle }: DangerButtonProps) {
+  const [pressed, setPressed] = useState(false);
+
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={disabled}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      disabled={disabled || loading}
       style={[
         styles.button,
+        pressed && !disabled && !loading && styles.pressed,
         disabled && styles.disabled,
-        { minHeight: touchTarget.min },
+        { minHeight: touchTarget.comfortable },
         style,
       ]}
       accessibilityLabel={title}
       accessibilityRole="button"
-      accessibilityState={{ disabled: !!disabled }}
+      accessibilityState={{ disabled: !!disabled || !!loading, busy: !!loading }}
     >
-      <Text style={[styles.text, textStyle]}>{title}</Text>
+      {loading ? (
+        <ActivityIndicator size="small" color={colors.surface} />
+      ) : (
+        <Text style={[styles.text, textStyle]}>{title}</Text>
+      )}
     </TouchableOpacity>
   );
 }
@@ -38,12 +48,19 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    ...elevation.sm,
+  },
+  pressed: {
+    backgroundColor: colors.primaryPressed,
+    transform: [{ scale: 0.98 }],
   },
   disabled: {
-    opacity: 0.5,
+    backgroundColor: colors.disabled,
+    ...elevation.none,
   },
   text: {
     color: colors.surface,
     ...typography.button,
+    letterSpacing: 0.3,
   },
 });

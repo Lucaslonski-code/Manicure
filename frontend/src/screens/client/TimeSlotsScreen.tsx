@@ -3,11 +3,12 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '../../supabase/client';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation } from '@theme';
 import Button from '@components/base/Button';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
 import ErrorState from '@components/base/ErrorState';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function TimeSlotsScreen({ route, navigation }: any) {
   const { professionalId, serviceId, date } = route.params;
@@ -70,13 +71,12 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Horários disponíveis</Text>
-        <Text style={styles.subtitle}>
-          {format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-        </Text>
-      </View>
-
+      <ScreenHeader
+        title="Horários disponíveis"
+        subtitle={
+          format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+        }
+      />
       {loading ? (
         <LoadingState message="Buscando horários disponíveis..." />
       ) : error ? (
@@ -100,7 +100,7 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
 
       {selectedTime && !loading && !error && (
         <View style={styles.footer}>
-          <Button title="Continuar" onPress={handleContinue} />
+          <Button title="Continuar" onPress={handleContinue} style={styles.continueButton} />
         </View>
       )}
     </View>
@@ -112,27 +112,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
   list: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
   },
   slot: {
     flex: 1,
-    aspectRatio: 1.5,
+    aspectRatio: 1.8,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.lg,
@@ -140,14 +126,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     margin: spacing.xs,
     backgroundColor: colors.surface,
+    ...elevation.sm,
   },
   selected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.gold,
+    borderColor: colors.gold,
+    ...elevation.sm,
   },
   slotText: {
     ...typography.bodyMedium,
     color: colors.textPrimary,
+    fontWeight: '500',
   },
   selectedText: {
     color: colors.surface,
@@ -156,5 +145,8 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
+  },
+  continueButton: {
+    ...elevation.sm,
   },
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import Button from '@components/base/Button';
 import SecondaryButton from '@components/base/SecondaryButton';
 
@@ -8,7 +9,7 @@ export default function BookingConfirmationScreen({ navigation }: any) {
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <Text style={styles.icon}>✓</Text>
+        <Ionicons name="checkmark" size={iconSizes.xl} color={colors.success} />
       </View>
       <Text style={styles.title}>Agendamento confirmado!</Text>
       <Text style={styles.text}>
@@ -18,6 +19,7 @@ export default function BookingConfirmationScreen({ navigation }: any) {
         <Button
           title="Ver meus agendamentos"
           onPress={() => navigation.replace('MyAppointments')}
+          style={styles.primaryAction}
         />
         <SecondaryButton
           title="Voltar para início"
@@ -34,21 +36,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.lg,
+    padding: spacing.xxl,
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(74, 124, 89, 0.12)',
+    width: 88,
+    height: 88,
+    borderRadius: radius.xl,
+    backgroundColor: 'rgba(74, 124, 89, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  icon: {
-    fontSize: 40,
-    color: colors.success,
-    fontWeight: '700',
+    marginBottom: spacing.xl,
+    ...elevation.sm,
   },
   title: {
     ...typography.headingMedium,
@@ -59,11 +57,16 @@ const styles = StyleSheet.create({
   text: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.xxl,
     textAlign: 'center',
+    lineHeight: 22,
   },
   actions: {
     width: '100%',
+    maxWidth: 320,
     gap: spacing.md,
+  },
+  primaryAction: {
+    ...elevation.sm,
   },
 });

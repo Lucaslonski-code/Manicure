@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import { colors, spacing, radius, typography } from '@theme';
+import { colors, spacing, radius, typography, elevation } from '@theme';
 
 interface ChipProps {
   label: string;
@@ -20,8 +20,8 @@ export default function Chip({ label, selected = false, onPress, disabled = fals
       style={[
         styles.chip,
         {
-          borderColor: selected ? colors.primary : colors.border,
-          backgroundColor: selected ? colors.primary : colors.surface,
+          borderColor: selected ? colors.gold : colors.border,
+          backgroundColor: selected ? colors.goldOverlay : colors.surface,
         },
         disabled && styles.disabled,
         style,
@@ -30,7 +30,7 @@ export default function Chip({ label, selected = false, onPress, disabled = fals
       accessibilityRole="button"
       accessibilityState={{ selected, disabled }}
     >
-      <Text style={[styles.text, { color: selected ? colors.surface : colors.textPrimary }]}>
+      <Text style={[styles.text, { color: selected ? colors.gold : colors.textPrimary }]}>
         {label}
       </Text>
     </Wrapper>
@@ -44,11 +44,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     borderWidth: 1,
     alignSelf: 'flex-start',
+    ...elevation.sm,
   },
   disabled: {
     opacity: 0.5,
   },
   text: {
     ...typography.label,
+    letterSpacing: 0.3,
   },
 });

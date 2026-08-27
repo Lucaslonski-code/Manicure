@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useAuth } from '@hooks';
 import { deleteAccount } from '../../services/api';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import DangerButton from '@components/base/DangerButton';
 import ConfirmationDialog from '@components/base/ConfirmationDialog';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function AccountDeletionScreen({ navigation }: any) {
   const { signOut } = useAuth();
@@ -27,12 +29,11 @@ export default function AccountDeletionScreen({ navigation }: any) {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Excluir conta</Text>
-        <Text style={styles.subtitle}>Esta ação é irreversível</Text>
-      </View>
-
+      <ScreenHeader title="Excluir conta" subtitle="Esta ação é irreversível" accent />
       <View style={styles.warning}>
+        <View style={styles.warningIconContainer}>
+          <Ionicons name="warning-outline" size={iconSizes.md} color={colors.error} />
+        </View>
         <Text style={styles.warningTitle}>Atenção</Text>
         <Text style={styles.warningText}>
           Ao excluir sua conta, você não poderá recuperar seus dados. Esta ação é irreversível.
@@ -47,6 +48,7 @@ export default function AccountDeletionScreen({ navigation }: any) {
           title="Excluir minha conta"
           onPress={() => setShowDialog(true)}
           disabled={loading}
+          loading={loading}
         />
       </View>
 
@@ -68,39 +70,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
   warning: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.lg,
-    padding: spacing.md,
+    padding: spacing.lg,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.xl,
+    ...elevation.sm,
+  },
+  warningIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(166, 61, 64, 0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
   warningTitle: {
     ...typography.bodyLarge,
-    color: colors.textPrimary,
     fontWeight: '600',
+    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   warningText: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
+    lineHeight: 22,
   },
   actions: {
     paddingHorizontal: spacing.lg,

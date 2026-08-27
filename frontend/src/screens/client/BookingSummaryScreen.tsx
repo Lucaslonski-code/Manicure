@@ -4,9 +4,11 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useProfessionalServices, useProfessional } from '@hooks';
 import { useBooking } from '@hooks';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import Button from '@components/base/Button';
 import LoadingState from '@components/base/LoadingState';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function BookingSummaryScreen({ route, navigation }: any) {
   const { professionalId, serviceId, date, time } = route.params;
@@ -35,18 +37,23 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Resumo do agendamento</Text>
-
-      <View style={styles.card}>
+      <ScreenHeader title="Resumo do agendamento" />
+      <View style={styles.summaryCard}>
         <View style={styles.section}>
-          <Text style={styles.label}>Profissional</Text>
+          <View style={styles.labelRow}>
+            <Ionicons name="person-outline" size={iconSizes.sm} color={colors.gold} />
+            <Text style={styles.label}>Profissional</Text>
+          </View>
           <Text style={styles.value}>{professional?.display_name || '—'}</Text>
         </View>
 
-        <View style={styles.divider} />
+        <Divider gold />
 
         <View style={styles.section}>
-          <Text style={styles.label}>Serviço</Text>
+          <View style={styles.labelRow}>
+            <Ionicons name="sparkles-outline" size={iconSizes.sm} color={colors.gold} />
+            <Text style={styles.label}>Serviço</Text>
+          </View>
           <Text style={styles.value}>{service?.service.name || '—'}</Text>
           <Text style={styles.duration}>{service?.duration_minutes || 60} minutos</Text>
           {service?.price ? (
@@ -54,27 +61,36 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
           ) : null}
         </View>
 
-        <View style={styles.divider} />
+        <Divider gold />
 
         <View style={styles.section}>
-          <Text style={styles.label}>Data</Text>
+          <View style={styles.labelRow}>
+            <Ionicons name="calendar-outline" size={iconSizes.sm} color={colors.gold} />
+            <Text style={styles.label}>Data</Text>
+          </View>
           <Text style={styles.value}>
             {format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </Text>
         </View>
 
-        <View style={styles.divider} />
+        <Divider gold />
 
         <View style={styles.section}>
-          <Text style={styles.label}>Horário</Text>
+          <View style={styles.labelRow}>
+            <Ionicons name="time-outline" size={iconSizes.sm} color={colors.gold} />
+            <Text style={styles.label}>Horário</Text>
+          </View>
           <Text style={styles.value}>{time}</Text>
         </View>
       </View>
 
       <View style={styles.noteSection}>
-        <Text style={styles.noteLabel}>Observação (opcional)</Text>
+        <View style={styles.labelRow}>
+          <Ionicons name="document-text-outline" size={iconSizes.sm} color={colors.gold} />
+          <Text style={styles.noteLabel}>Observação (opcional)</Text>
+        </View>
         <TextInput
-          style={styles.input}
+          style={styles.noteInput}
           value={note}
           onChangeText={setNote}
           placeholder="Adicione uma observação..."
@@ -91,11 +107,17 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
           title={bookingLoading ? 'Agendando...' : 'Confirmar agendamento'}
           onPress={handleConfirm}
           disabled={bookingLoading}
+          loading={bookingLoading}
+          style={styles.confirmButton}
         />
       </View>
     </View>
   );
 }
+
+const Divider = ({ gold = false }: { gold?: boolean }) => (
+  <View style={[styles.divider, gold && styles.dividerGold]} />
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -103,34 +125,32 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     padding: spacing.lg,
   },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
-    marginBottom: spacing.lg,
-  },
-  card: {
+  summaryCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
-    padding: spacing.md,
+    padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.lg,
+    ...elevation.sm,
   },
   section: {
     paddingVertical: spacing.sm,
   },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
   },
   label: {
     ...typography.label,
     color: colors.textSecondary,
-    marginBottom: spacing.xs,
+    marginLeft: spacing.xs,
   },
   value: {
     ...typography.bodyLarge,
     color: colors.textPrimary,
+    fontWeight: '500',
   },
   duration: {
     ...typography.bodyMedium,
@@ -139,9 +159,18 @@ const styles = StyleSheet.create({
   },
   price: {
     ...typography.bodyMedium,
-    color: colors.primary,
+    color: colors.gold,
     fontWeight: '600',
     marginTop: spacing.xs,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.md,
+  },
+  dividerGold: {
+    backgroundColor: colors.goldLight,
+    opacity: 0.4,
   },
   noteSection: {
     marginBottom: spacing.lg,
@@ -150,8 +179,9 @@ const styles = StyleSheet.create({
     ...typography.label,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
   },
-  input: {
+  noteInput: {
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
@@ -161,6 +191,7 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top',
     backgroundColor: colors.surface,
+    marginTop: spacing.sm,
   },
   error: {
     ...typography.bodySmall,
@@ -170,5 +201,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: 'auto',
+  },
+  confirmButton: {
+    ...elevation.sm,
   },
 });

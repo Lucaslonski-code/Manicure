@@ -4,15 +4,16 @@ import { colors, spacing, radius, typography } from '@theme';
 
 interface StatusBadgeProps {
   label: string;
-  variant?: 'success' | 'warning' | 'error' | 'info' | 'default';
+  variant?: 'success' | 'warning' | 'error' | 'info' | 'default' | 'gold';
 }
 
 export default function StatusBadge({ label, variant = 'default' }: StatusBadgeProps) {
   const backgroundColor = {
-    success: 'rgba(74, 124, 89, 0.12)',
-    warning: 'rgba(185, 155, 104, 0.12)',
-    error: 'rgba(166, 61, 64, 0.12)',
-    info: 'rgba(111, 98, 86, 0.12)',
+    success: 'rgba(74, 124, 89, 0.10)',
+    warning: 'rgba(185, 155, 104, 0.10)',
+    error: 'rgba(166, 61, 64, 0.10)',
+    info: 'rgba(111, 98, 86, 0.08)',
+    gold: 'rgba(185, 155, 104, 0.12)',
     default: colors.border,
   }[variant];
 
@@ -21,6 +22,7 @@ export default function StatusBadge({ label, variant = 'default' }: StatusBadgeP
     warning: colors.warning,
     error: colors.error,
     info: colors.textSecondary,
+    gold: colors.gold,
     default: colors.textSecondary,
   }[variant];
 
@@ -36,12 +38,13 @@ export default function StatusBadge({ label, variant = 'default' }: StatusBadgeP
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs + 1,
     borderRadius: radius.full,
     alignSelf: 'flex-start',
   },
   text: {
     ...typography.label,
+    letterSpacing: 0.3,
   },
 });

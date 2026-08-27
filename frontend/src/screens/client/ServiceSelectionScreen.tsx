@@ -1,13 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { useProfessionalServices } from '@hooks';
-import { colors, spacing, typography, radius } from '@theme';
+import { useProfessionalServices, useProfessional } from '@hooks';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
+import ScreenHeader from '@components/base/ScreenHeader';
 import type { Service } from '../../supabase/types';
 import Button from '@components/base/Button';
 
 export default function ServiceSelectionScreen({ route, navigation }: any) {
   const { professionalId } = route.params;
   const { items, loading, error } = useProfessionalServices(professionalId);
+  const { professional } = useProfessional(professionalId);
 
   const services = items.map(item => item.service);
 
@@ -16,11 +19,14 @@ export default function ServiceSelectionScreen({ route, navigation }: any) {
       style={styles.card}
       onPress={() => navigation.navigate('DateSelection', { professionalId, serviceId: item.id })}
     >
+      <View style={styles.serviceIconContainer}>
+        <Ionicons name="sparkles-outline" size={iconSizes.md} color={colors.gold} />
+      </View>
       <View style={styles.cardContent}>
         <Text style={styles.name}>{item.name}</Text>
         <Text style={styles.duration}>{item.default_duration_minutes} min</Text>
       </View>
-      <Text style={styles.chevron}>›</Text>
+      <Ionicons name="chevron-forward" size={iconSizes.sm} color={colors.textSecondary} />
     </TouchableOpacity>
   );
 
@@ -43,10 +49,16 @@ export default function ServiceSelectionScreen({ route, navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Serviços</Text>
-        <Text style={styles.subtitle}>Escolha o serviço desejado</Text>
-      </View>
+      <ScreenHeader
+        title="Serviços"
+        subtitle="Escolha o serviço desejado"
+      />
+      {professional && (
+        <View style={styles.professionalChip}>
+          <Ionicons name="person-outline" size={iconSizes.sm} color={colors.gold} />
+          <Text style={styles.professionalName}>{professional.display_name}</Text>
+        </View>
+      )}
       <FlatList
         data={services}
         keyExtractor={(item) => item.id}
@@ -73,19 +85,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
+  professionalChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.goldOverlay,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    alignSelf: 'flex-start',
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
+  professionalName: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
+    color: colors.gold,
+    fontWeight: '600',
+    marginLeft: spacing.xs,
   },
   list: {
     paddingHorizontal: spacing.lg,
@@ -101,6 +116,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    ...elevation.sm,
+  },
+  serviceIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.goldOverlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
   },
   cardContent: {
     flex: 1,

@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { useProfessionals } from '@hooks';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
 import ErrorState from '@components/base/ErrorState';
+import StatusBadge from '@components/base/StatusBadge';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function AdminProfessionalsScreen() {
   const { professionals, loading, error, refetch } = useProfessionals();
@@ -23,11 +26,7 @@ export default function AdminProfessionalsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Profissionais</Text>
-        <Text style={styles.subtitle}>Lista de profissionais cadastrados</Text>
-      </View>
-
+      <ScreenHeader title="Profissionais" subtitle="Lista de profissionais cadastrados" />
       {professionals.length === 0 ? (
         <EmptyState title="Nenhum profissional" description="Não há profissionais cadastrados." />
       ) : (
@@ -36,11 +35,12 @@ export default function AdminProfessionalsScreen() {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.card}>
+              <View style={styles.cardIconContainer}>
+                <Ionicons name="person-outline" size={iconSizes.md} color={colors.gold} />
+              </View>
               <View style={styles.cardContent}>
                 <Text style={styles.name}>{item.display_name}</Text>
-                <Text style={styles.status}>
-                  {item.is_active ? 'Ativo' : 'Inativo'}
-                </Text>
+                <StatusBadge label={item.is_active ? 'Ativo' : 'Inativo'} variant={item.is_active ? 'gold' : 'default'} />
               </View>
             </View>
           )}
@@ -62,20 +62,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
   list: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
@@ -87,6 +73,18 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    ...elevation.sm,
+  },
+  cardIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.goldOverlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
   },
   cardContent: {
     flex: 1,

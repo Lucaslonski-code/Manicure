@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, ViewStyle } from 'react-native';
-import { colors, spacing, radius, typography } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, radius, typography, elevation } from '@theme';
 
 interface SearchInputProps {
   value: string;
@@ -40,11 +41,13 @@ export default function SearchInput({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      <View style={styles.row}>
+      <View style={[styles.row, focused && styles.rowFocused]}>
         <View style={styles.iconContainer}>
-          <Text style={[styles.icon, focused && styles.iconFocused]}>
-            {focused ? '🔍' : '🔍'}
-          </Text>
+          <Ionicons
+            name={focused ? 'search' : 'search-outline'}
+            size={18}
+            color={focused ? colors.gold : colors.textSecondary}
+          />
         </View>
         <TextInput
           style={styles.input}
@@ -75,6 +78,12 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
+    ...elevation.none,
+  },
+  rowFocused: {
+    borderColor: colors.gold,
+    borderWidth: 1.5,
+    ...elevation.sm,
   },
   iconContainer: {
     marginRight: spacing.sm,
@@ -83,12 +92,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
   },
-  iconFocused: {
-    color: colors.primary,
-  },
   input: {
     flex: 1,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.sm + 2,
     ...typography.input,
     color: colors.textPrimary,
   },

@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { useAvailability } from '@hooks';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import Button from '@components/base/Button';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
@@ -13,10 +15,15 @@ export default function AvailabilityScreen() {
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
-      <Text style={styles.weekday}>{WEEKDAYS[item.weekday] || item.weekday}</Text>
-      <Text style={styles.time}>
-        {item.start_time} - {item.end_time}
-      </Text>
+      <View style={styles.cardIconContainer}>
+        <Ionicons name="time-outline" size={iconSizes.md} color={colors.gold} />
+      </View>
+      <View style={styles.cardContent}>
+        <Text style={styles.weekday}>{WEEKDAYS[item.weekday] || item.weekday}</Text>
+        <Text style={styles.time}>
+          {item.start_time} - {item.end_time}
+        </Text>
+      </View>
     </View>
   );
 
@@ -35,11 +42,7 @@ export default function AvailabilityScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Disponibilidade</Text>
-        <Text style={styles.subtitle}>Jornada semanal</Text>
-      </View>
-
+      <ScreenHeader title="Disponibilidade" subtitle="Jornada semanal" />
       {availability.length === 0 ? (
         <EmptyState title="Sem disponibilidade" description="Nenhuma disponibilidade cadastrada." />
       ) : (
@@ -65,20 +68,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
   list: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
@@ -91,8 +80,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    ...elevation.sm,
+  },
+  cardIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.goldOverlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  cardContent: {
+    flex: 1,
   },
   weekday: {
     ...typography.bodyLarge,
@@ -102,6 +103,7 @@ const styles = StyleSheet.create({
   time: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
   errorText: {
     ...typography.bodySmall,

@@ -1,14 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointments, useProfessionals } from '@hooks';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import SectionHeader from '@components/base/SectionHeader';
 import StatusBadge from '@components/base/StatusBadge';
 import Button from '@components/base/Button';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function DashboardScreen({ navigation }: any) {
   const { appointments, loading, error, refetch } = useAppointments();
@@ -48,13 +50,13 @@ export default function DashboardScreen({ navigation }: any) {
         style={styles.card}
         onPress={() => navigation.navigate('AppointmentDetails', { appointmentId: item.id })}
       >
-        <View style={styles.cardHeader}>
+        <View style={styles.cardContent}>
           <Text style={styles.professional}>{getProfessionalName(item.professional_id)}</Text>
-          <StatusBadge label={status.label} variant={status.variant} />
+          <Text style={styles.date}>
+            {format(parseISO(item.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+          </Text>
         </View>
-        <Text style={styles.date}>
-          {format(parseISO(item.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-        </Text>
+        <StatusBadge label={status.label} variant={status.variant} />
       </TouchableOpacity>
     );
   };
@@ -74,22 +76,33 @@ export default function DashboardScreen({ navigation }: any) {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Painel</Text>
-
+      <ScreenHeader title="Painel" />
       <View style={styles.statsGrid}>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
+          <View style={styles.statIconContainer}>
+            <Ionicons name="calendar-outline" size={iconSizes.md} color={colors.gold} />
+          </View>
           <Text style={styles.statValue}>{todayAppointments.length}</Text>
           <Text style={styles.statLabel}>Hoje</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
+          <View style={styles.statIconContainer}>
+            <Ionicons name="checkmark-circle-outline" size={iconSizes.md} color={colors.success} />
+          </View>
           <Text style={styles.statValue}>{confirmed}</Text>
           <Text style={styles.statLabel}>Confirmados</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
+          <View style={styles.statIconContainer}>
+            <Ionicons name="close-circle-outline" size={iconSizes.md} color={colors.error} />
+          </View>
           <Text style={styles.statValue}>{cancelled}</Text>
           <Text style={styles.statLabel}>Cancelados</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
+          <View style={styles.statIconContainer}>
+            <Ionicons name="time-outline" size={iconSizes.md} color={colors.warning} />
+          </View>
           <Text style={styles.statValue}>{upcoming}</Text>
           <Text style={styles.statLabel}>Próximos</Text>
         </View>
@@ -97,7 +110,7 @@ export default function DashboardScreen({ navigation }: any) {
 
       {nextAppointment && (
         <View style={styles.section}>
-          <SectionHeader title="Próximo atendimento" subtitle="Não perca" />
+          <SectionHeader title="Próximo atendimento" subtitle="Não perca" accent />
           {renderAppointment({ item: nextAppointment })}
         </View>
       )}
@@ -120,11 +133,15 @@ export default function DashboardScreen({ navigation }: any) {
         <SectionHeader title="Gerenciar" />
         <View style={styles.actionsGrid}>
           <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AdminProfessionals')}>
-            <Text style={styles.actionIcon}>👥</Text>
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="people-outline" size={iconSizes.md} color={colors.gold} />
+            </View>
             <Text style={styles.actionLabel}>Profissionais</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AdminServices')}>
-            <Text style={styles.actionIcon}>💅</Text>
+            <View style={styles.actionIconContainer}>
+              <Ionicons name="sparkles-outline" size={iconSizes.md} color={colors.gold} />
+            </View>
             <Text style={styles.actionLabel}>Serviços</Text>
           </TouchableOpacity>
         </View>
@@ -144,13 +161,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  title: {
-    ...typography.display,
-    color: colors.textPrimary,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    marginBottom: spacing.lg,
-  },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -166,6 +176,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
+    ...elevation.sm,
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.goldOverlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
   statValue: {
     ...typography.headingLarge,
@@ -188,13 +208,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
-    padding: spacing.md,
+    padding: spacing.lg,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
+    ...elevation.sm,
   },
-  actionIcon: {
-    fontSize: 32,
+  actionIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.lg,
+    backgroundColor: colors.goldOverlay,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   actionLabel: {
@@ -209,12 +235,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-  },
-  cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.xs,
+    justifyContent: 'space-between',
+    ...elevation.sm,
+  },
+  cardContent: {
+    flex: 1,
   },
   professional: {
     ...typography.bodyLarge,

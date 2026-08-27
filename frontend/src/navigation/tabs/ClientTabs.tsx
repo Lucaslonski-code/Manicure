@@ -1,8 +1,9 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography, iconSizes } from '@theme';
+import { View, Text, StyleSheet } from 'react-native';
+import { colors, spacing, typography, iconSizes, elevation } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '@screens/client/HomeScreen';
 import MyAppointmentsScreen from '@screens/client/MyAppointmentsScreen';
 import ProfileScreen from '@screens/client/ProfileScreen';
@@ -10,11 +11,15 @@ import NotificationsScreen from '@screens/client/NotificationsScreen';
 
 const Tab = createBottomTabNavigator();
 
-function TabBarIcon({ name, focused }: { name: string; focused: boolean }) {
+function TabBarIcon({ name, focused }: { name: keyof typeof Ionicons.glyphMap; focused: boolean }) {
   return (
-    <Text style={[styles.icon, focused && styles.iconFocused]}>
-      {name}
-    </Text>
+    <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
+      <Ionicons
+        name={name}
+        size={iconSizes.md}
+        color={focused ? colors.gold : colors.textSecondary}
+      />
+    </View>
   );
 }
 
@@ -26,7 +31,7 @@ export default function ClientTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ focused }) => {
-          const iconName = route.name === 'Home' ? '🏠' : route.name === 'MyAppointments' ? '📅' : route.name === 'Notifications' ? '🔔' : '👤';
+          const iconName = route.name === 'Home' ? 'home-outline' : route.name === 'MyAppointments' ? 'calendar-outline' : route.name === 'Notifications' ? 'notifications-outline' : 'person-outline';
           return <TabBarIcon name={iconName} focused={focused} />;
         },
         tabBarLabel: ({ focused, children }) => (
@@ -40,6 +45,7 @@ export default function ClientTabs() {
           borderTopWidth: 1,
           paddingBottom: Math.max(insets.bottom, spacing.sm),
           height: 56 + Math.max(insets.bottom, spacing.sm),
+          ...elevation.sm,
         },
         tabBarItemStyle: {
           flex: 1,
@@ -75,20 +81,24 @@ export default function ClientTabs() {
 }
 
 const styles = StyleSheet.create({
-  icon: {
-    fontSize: iconSizes.md,
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.xs,
-    color: colors.textSecondary,
   },
-  iconFocused: {
-    color: colors.primary,
+  iconContainerFocused: {
+    backgroundColor: colors.goldOverlay,
   },
   label: {
     ...typography.caption,
     color: colors.textSecondary,
+    letterSpacing: 0.2,
   },
   labelFocused: {
-    color: colors.primary,
+    color: colors.gold,
     fontWeight: '600',
   },
 });

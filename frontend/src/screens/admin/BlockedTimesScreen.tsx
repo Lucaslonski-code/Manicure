@@ -3,23 +3,30 @@ import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useBlockedTimes } from '@hooks';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { Ionicons } from '@expo/vector-icons';
 import Button from '@components/base/Button';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
+import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function BlockedTimesScreen() {
   const { blockedTimes, loading, error, refetch } = useBlockedTimes(null);
 
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
-      <Text style={styles.reason}>{item.reason || 'Bloqueio'}</Text>
-      <Text style={styles.time}>
-        {format(parseISO(item.start_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-      </Text>
-      <Text style={styles.time}>
-        até {format(parseISO(item.end_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-      </Text>
+      <View style={styles.cardIconContainer}>
+        <Ionicons name="lock-closed-outline" size={iconSizes.md} color={colors.error} />
+      </View>
+      <View style={styles.cardContent}>
+        <Text style={styles.reason}>{item.reason || 'Bloqueio'}</Text>
+        <Text style={styles.time}>
+          {format(parseISO(item.start_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+        </Text>
+        <Text style={styles.timeEnd}>
+          até {format(parseISO(item.end_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+        </Text>
+      </View>
     </View>
   );
 
@@ -38,11 +45,7 @@ export default function BlockedTimesScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Bloqueios</Text>
-        <Text style={styles.subtitle}>Horários indisponíveis</Text>
-      </View>
-
+      <ScreenHeader title="Bloqueios" subtitle="Horários indisponíveis" />
       {blockedTimes.length === 0 ? (
         <EmptyState title="Sem bloqueios" description="Nenhum bloqueio cadastrado." />
       ) : (
@@ -68,20 +71,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  title: {
-    ...typography.headingLarge,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
   list: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
@@ -93,6 +82,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    ...elevation.sm,
+  },
+  cardIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(166, 61, 64, 0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  cardContent: {
+    flex: 1,
   },
   reason: {
     ...typography.bodyLarge,
@@ -104,6 +108,10 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  timeEnd: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
   },
   errorText: {
     ...typography.bodySmall,
