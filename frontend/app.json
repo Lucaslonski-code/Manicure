@@ -4,7 +4,7 @@
     "slug": "appmanicure",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icons/icon.png",
     "userInterfaceStyle": "automatic",
     "assetBundlePatterns": [
       "**/*"
@@ -16,7 +16,7 @@
       "package": "com.appmanicure.mobile",
       "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/android-icon-foreground.png",
+        "foregroundImage": "./assets/icons/android-icon-foreground.png",
         "backgroundColor": "#F5F0EA"
       },
       "permissions": [
@@ -25,7 +25,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/icons/favicon.png"
     },
     "scheme": "appmanicure",
     "plugins": [
@@ -33,14 +33,14 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/android-icon-monochrome.png",
+          "icon": "./assets/icons/android-icon-monochrome.png",
           "color": "#331E0B"
         }
       ],
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
+          "image": "./assets/splash/splash-icon.png",
           "resizeMode": "contain",
           "backgroundColor": "#F5F0EA"
         }
