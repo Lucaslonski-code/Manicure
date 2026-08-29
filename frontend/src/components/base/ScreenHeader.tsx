@@ -27,7 +27,7 @@ export default function ScreenHeader({ title, subtitle, style, accent }: ScreenH
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     paddingTop: spacing.xl,
     paddingBottom: spacing.md,
   },

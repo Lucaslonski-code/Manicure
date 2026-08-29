@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     gap: spacing.md,
     marginBottom: spacing.lg,
   },
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: spacing.lg,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
   },
   actionsGrid: {
     flexDirection: 'row',

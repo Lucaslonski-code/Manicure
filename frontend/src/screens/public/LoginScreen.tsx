@@ -7,7 +7,7 @@ import PasswordInput from '@components/base/PasswordInput';
 import { loginSchema } from '@forms/schemas';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 
-const LOGO = require('../../../assets/icon.png');
+const LOGO = require('../../../assets/brand-icon.jpeg');
 
 export default function LoginScreen({ navigation }: any) {
   const { signIn, loading } = useAuth();
@@ -33,7 +33,6 @@ export default function LoginScreen({ navigation }: any) {
       <View style={styles.header}>
         <View style={styles.brandContainer}>
           <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
-          <Text style={styles.brand}>AppManicure</Text>
         </View>
         <Text style={styles.title}>Bom dia</Text>
         <Text style={styles.subtitle}>Seu momento de cuidado começa aqui</Text>
@@ -86,40 +85,34 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     paddingTop: spacing.xxxl,
     paddingBottom: spacing.xl,
+    alignItems: 'center',
   },
   brandContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: spacing.xl,
   },
   logoImage: {
-    width: 40,
-    height: 40,
-    marginRight: spacing.md,
-  },
-  brand: {
-    ...typography.headingMedium,
-    color: colors.textPrimary,
-    fontWeight: '600',
-    letterSpacing: -0.3,
+    width: 96,
+    height: 96,
   },
   title: {
     ...typography.display,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
     letterSpacing: -0.5,
+    textAlign: 'center',
   },
   subtitle: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
     lineHeight: 22,
+    textAlign: 'center',
   },
   form: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
   },
   formCard: {
     backgroundColor: colors.surface,

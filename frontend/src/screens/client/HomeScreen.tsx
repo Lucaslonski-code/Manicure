@@ -10,7 +10,7 @@ import SectionHeader from '@components/base/SectionHeader';
 import StatusBadge from '@components/base/StatusBadge';
 import type { Professional, Service } from '../../supabase/types';
 
-const LOGO = require('../../../assets/icon.png');
+const LOGO = require('../../../assets/brand-icon.jpeg');
 
 export default function HomeScreen({ navigation }: any) {
   const { profile } = useAuth();
@@ -177,19 +177,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     paddingTop: spacing.xl,
     paddingBottom: spacing.lg,
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   logoImage: {
-    width: 36,
-    height: 36,
-    marginRight: spacing.md,
+    width: 32,
+    height: 32,
+    marginRight: spacing.sm,
   },
   brand: {
     ...typography.headingSmall,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   nextAppointment: {
-    marginHorizontal: spacing.lg,
+    marginHorizontal: spacing.screenPadding,
     marginBottom: spacing.lg,
   },
   appointmentCard: {
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   ctaSection: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     marginBottom: spacing.xl,
   },
   ctaButton: {
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   horizontalList: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
   },
   professionalCard: {
     flexDirection: 'row',
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   },
   shortcutsGrid: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     gap: spacing.md,
   },
   shortcut: {

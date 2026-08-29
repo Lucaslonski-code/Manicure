@@ -105,6 +105,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   actions: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
   },
 });

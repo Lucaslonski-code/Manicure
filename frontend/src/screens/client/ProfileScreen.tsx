@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     paddingTop: spacing.xl,
     paddingBottom: spacing.lg,
   },
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: spacing.lg,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
   },
   sectionTitle: {
     ...typography.label,

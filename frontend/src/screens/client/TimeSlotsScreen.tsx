@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   list: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     paddingBottom: spacing.xl,
   },
   slot: {
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   footer: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     paddingBottom: spacing.xl,
   },
   continueButton: {

@@ -7,7 +7,7 @@ import PasswordInput from '@components/base/PasswordInput';
 import { signUpSchema } from '@forms/schemas';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 
-const LOGO = require('../../../assets/icon.png');
+const LOGO = require('../../../assets/brand-icon.jpeg');
 
 export default function SignUpScreen({ navigation }: any) {
   const { signUp, loading } = useAuth();
@@ -36,7 +36,6 @@ export default function SignUpScreen({ navigation }: any) {
       <View style={styles.header}>
         <View style={styles.brandContainer}>
           <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
-          <Text style={styles.brand}>AppManicure</Text>
         </View>
         <Text style={styles.title}>Criar conta</Text>
         <Text style={styles.subtitle}>Preencha os dados para começar</Text>
@@ -107,40 +106,34 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
   },
   header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxxl,
-    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.screenPadding,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.lg,
+    alignItems: 'center',
   },
   brandContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   logoImage: {
-    width: 40,
-    height: 40,
-    marginRight: spacing.md,
-  },
-  brand: {
-    ...typography.headingMedium,
-    color: colors.textPrimary,
-    fontWeight: '600',
-    letterSpacing: -0.3,
+    width: 88,
+    height: 88,
   },
   title: {
     ...typography.display,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
     letterSpacing: -0.5,
+    textAlign: 'center',
   },
   subtitle: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
     lineHeight: 22,
+    textAlign: 'center',
   },
   form: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
   },
   formCard: {
     backgroundColor: colors.surface,

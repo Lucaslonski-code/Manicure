@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   list: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     paddingBottom: spacing.xl,
   },
   card: {

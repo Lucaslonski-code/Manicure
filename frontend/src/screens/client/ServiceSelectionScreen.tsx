@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     marginLeft: spacing.xs,
   },
   list: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     paddingBottom: spacing.xl,
   },
   card: {

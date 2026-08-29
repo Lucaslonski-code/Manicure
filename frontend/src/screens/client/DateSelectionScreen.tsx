@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   list: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     paddingBottom: spacing.xl,
   },
   dateCard: {
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     color: colors.surface,
   },
   footer: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     paddingBottom: spacing.xl,
   },
   continueButton: {

@@ -55,6 +55,7 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+    paddingHorizontal: 0,
   },
   action: {
     justifyContent: 'center',

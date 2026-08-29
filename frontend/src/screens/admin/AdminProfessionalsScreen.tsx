@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   list: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     paddingBottom: spacing.xl,
   },
   card: {

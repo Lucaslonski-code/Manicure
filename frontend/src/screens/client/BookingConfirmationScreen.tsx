@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xxl,
+    padding: spacing.screenPadding,
   },
   iconContainer: {
     width: 88,

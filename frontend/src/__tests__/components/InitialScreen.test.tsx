@@ -18,7 +18,7 @@ jest.mock('react-native', () => ({
   Platform: { OS: 'android', select: (o: any) => o?.android || o?.default },
 }));
 
-jest.mock('../../assets/TelaInicial.png', () => 'TelaInicial', { virtual: true });
+jest.mock('../../assets/brand-icon.jpeg', () => 'BrandIcon', { virtual: true });
 
 jest.mock('@theme', () => ({ colors: { background: '#F5F0EA' } }));
 
@@ -32,8 +32,8 @@ describe('InitialScreen', () => {
     expect(element.type).toBe(InitialScreen);
   });
 
-  it('should load TelaInicial.png', () => {
-    expect(SOURCE).toContain('TelaInicial.png');
+  it('should load brand icon', () => {
+    expect(SOURCE).toContain('brand-icon.jpeg');
   });
 
   it('should not depend on session/auth (no useAuth, supabase or getSession)', () => {

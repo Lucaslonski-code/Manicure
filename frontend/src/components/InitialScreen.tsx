@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Image, Animated, StyleSheet } from 'react-native';
 import { colors } from '@theme';
 
-const INTRO_IMAGE = require('../../assets/TelaInicial.png');
+const BRAND_ICON = require('../../assets/brand-icon.jpeg');
 
 const FADE_DURATION_MS = 300;
 const ANIMATION_TIMEOUT_MS = 1500;
@@ -25,7 +25,6 @@ export default function InitialScreen({ dismiss = false, onFinish }: InitialScre
       return;
     }
 
-    // Tenta com native driver primeiro; se falhar, cai para JS driver
     const startAnimation = (useNative: boolean) => {
       const animation = Animated.timing(opacity, {
         toValue: 0,
@@ -52,7 +51,6 @@ export default function InitialScreen({ dismiss = false, onFinish }: InitialScre
       }, ANIMATION_TIMEOUT_MS);
     };
 
-    // Tenta native driver; se der erro, cai para JS driver
     try {
       startAnimation(true);
     } catch {
@@ -64,11 +62,9 @@ export default function InitialScreen({ dismiss = false, onFinish }: InitialScre
         clearTimeout(animationTimeoutRef.current);
         animationTimeoutRef.current = null;
       }
-      // Animated.stop() não lança erro se já parou
       try {
         Animated.timing(opacity, { toValue: 0, duration: 0, useNativeDriver: false }).stop();
       } catch {
-        // ignore
       }
     };
   }, [dismiss, opacity, onFinish]);
@@ -79,8 +75,8 @@ export default function InitialScreen({ dismiss = false, onFinish }: InitialScre
       accessibilityLabel="Tela inicial do AppManicure"
       accessibilityRole="image"
     >
-      <Animated.View style={[styles.imageWrap, { opacity }]}>
-        <Image source={INTRO_IMAGE} style={styles.image} resizeMode="contain" />
+      <Animated.View style={[styles.iconWrap, { opacity }]}>
+        <Image source={BRAND_ICON} style={styles.icon} resizeMode="contain" />
       </Animated.View>
     </View>
   );
@@ -93,11 +89,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  imageWrap: {
-    width: '100%',
-    height: '100%',
+  iconWrap: {
+    width: 144,
+    height: 144,
   },
-  image: {
+  icon: {
     width: '100%',
     height: '100%',
   },

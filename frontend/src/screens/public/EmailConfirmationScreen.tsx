@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useAuth } from '@hooks/useAuth';
 import Button from '@components/base/Button';
-import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
-import AppIcon from '@components/icons/AppIcon';
+import { colors, spacing, typography } from '@theme';
+
+const LOGO = require('../../../assets/brand-icon.jpeg');
 
 export default function EmailConfirmationScreen({ route, navigation }: any) {
   const { resend, loading } = useAuth();
@@ -24,8 +25,8 @@ export default function EmailConfirmationScreen({ route, navigation }: any) {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.iconContainer}>
-          <AppIcon name="mail" size={iconSizes.lg} color="gold" />
+        <View style={styles.brandContainer}>
+          <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
         </View>
         <Text style={styles.title}>Verifique seu e-mail</Text>
         <Text style={styles.text}>
@@ -61,17 +62,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
   },
-  iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.xl,
-    backgroundColor: colors.goldOverlay,
-    alignItems: 'center',
-    justifyContent: 'center',
+  brandContainer: {
     marginBottom: spacing.lg,
-    ...elevation.sm,
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
   },
   title: {
     ...typography.headingMedium,

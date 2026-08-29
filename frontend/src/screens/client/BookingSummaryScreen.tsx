@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    padding: spacing.lg,
+    padding: spacing.screenPadding,
   },
   summaryCard: {
     backgroundColor: colors.surface,

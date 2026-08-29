@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: spacing.lg,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
   },
   sectionTitle: {
     ...typography.label,

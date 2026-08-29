@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.screenPadding,
     marginTop: spacing.lg,
   },
   readOnlyNotice: {
