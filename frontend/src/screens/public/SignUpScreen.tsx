@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useAuth } from '@hooks/useAuth';
 import Button from '@components/base/Button';
 import Input from '@components/base/Input';
 import PasswordInput from '@components/base/PasswordInput';
 import { signUpSchema } from '@forms/schemas';
 import { colors, spacing, typography, radius, elevation } from '@theme';
+
+const LOGO = require('../../../assets/icon.png');
 
 export default function SignUpScreen({ navigation }: any) {
   const { signUp, loading } = useAuth();
@@ -30,12 +32,10 @@ export default function SignUpScreen({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
         <View style={styles.brandContainer}>
-          <View style={styles.logoMark}>
-            <Text style={styles.logoText}>A</Text>
-          </View>
+          <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
           <Text style={styles.brand}>AppManicure</Text>
         </View>
         <Text style={styles.title}>Criar conta</Text>
@@ -93,7 +93,7 @@ export default function SignUpScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -101,6 +101,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  contentContainer: {
+    flexGrow: 1,
+    paddingBottom: spacing.xxl,
   },
   header: {
     paddingHorizontal: spacing.lg,
@@ -112,21 +116,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
-  logoMark: {
+  logoImage: {
     width: 40,
     height: 40,
-    borderRadius: radius.lg,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: spacing.md,
-    ...elevation.sm,
-  },
-  logoText: {
-    color: colors.surface,
-    fontSize: 20,
-    fontWeight: '700',
-    letterSpacing: -0.5,
   },
   brand: {
     ...typography.headingMedium,

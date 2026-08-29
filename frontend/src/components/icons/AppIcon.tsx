@@ -329,3 +329,10 @@ export default function AppIcon({
 }
 
 export { SIZE_MAP, iconColors };
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

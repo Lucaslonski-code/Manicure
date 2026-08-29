@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useAuth } from '@hooks/useAuth';
 import { useProfessionals, useMyAppointments, useServices } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
@@ -9,6 +9,8 @@ import Button from '@components/base/Button';
 import SectionHeader from '@components/base/SectionHeader';
 import StatusBadge from '@components/base/StatusBadge';
 import type { Professional, Service } from '../../supabase/types';
+
+const LOGO = require('../../../assets/icon.png');
 
 export default function HomeScreen({ navigation }: any) {
   const { profile } = useAuth();
@@ -66,9 +68,7 @@ export default function HomeScreen({ navigation }: any) {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <View style={styles.brandRow}>
-          <View style={styles.logoMark}>
-            <Text style={styles.logoText}>A</Text>
-          </View>
+          <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
           <Text style={styles.brand}>AppManicure</Text>
         </View>
         <Text style={styles.greeting}>{greeting()}, {profile?.name?.split(' ')[0] || 'cliente'}</Text>
@@ -186,21 +186,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
-  logoMark: {
+  logoImage: {
     width: 36,
     height: 36,
-    borderRadius: radius.md,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: spacing.md,
-    ...elevation.sm,
-  },
-  logoText: {
-    color: colors.surface,
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: -0.5,
   },
   brand: {
     ...typography.headingSmall,

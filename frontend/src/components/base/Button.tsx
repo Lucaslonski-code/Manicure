@@ -49,7 +49,7 @@ export default function Button({ title, onPress, disabled, loading, variant = 'p
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.gold,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     borderRadius: radius.md,
@@ -68,15 +68,16 @@ const styles = StyleSheet.create({
     ...elevation.sm,
   },
   pressed: {
-    backgroundColor: colors.primaryPressed,
+    backgroundColor: '#9A8050',
     transform: [{ scale: 0.98 }],
   },
   disabled: {
-    backgroundColor: colors.disabledBackground,
+    backgroundColor: colors.disabled,
     ...elevation.none,
   },
   text: {
     ...typography.button,
+    color: colors.surface,
     letterSpacing: 0.3,
   },
 });

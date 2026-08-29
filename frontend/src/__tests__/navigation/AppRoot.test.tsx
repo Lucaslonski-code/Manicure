@@ -10,9 +10,9 @@ describe('AppRoot intro orchestration', () => {
     expect(SOURCE).not.toContain('hideAsync');
   });
 
-  it('should define a ~1s minimum intro duration', () => {
+  it('should define a ~1.5s minimum intro duration', () => {
     expect(SOURCE).toContain('MIN_INTRO_MS');
-    expect(require('@navigation/introConfig').MIN_INTRO_MS).toBe(1000);
+    expect(require('@navigation/introConfig').MIN_INTRO_MS).toBe(1500);
   });
 
   it('should render InitialScreen before finishing', () => {

@@ -2,43 +2,54 @@ import { Audio } from 'expo-av';
 
 type Sound = 'appointment-success' | 'action-success' | 'action-error' | 'notification' | 'cancel' | 'reschedule';
 
-const soundMap: Record<Sound, string> = {
-  appointment-success: require('../assets/audio/appointment-success.mp3'),
-  action-success: require('../assets/audio/action-success.mp3'),
-  action-error: require('../assets/audio/action-error.mp3'),
-  notification: require('../assets/audio/notification.mp3'),
-  cancel: require('../assets/audio/cancel.mp3'),
-  reschedule: require('../assets/audio/reschedule.mp3'),
+const soundFiles: Record<Sound, string> = {
+  'appointment-success': 'appointment-success',
+  'action-success': 'action-success',
+  'action-error': 'action-error',
+  'notification': 'notification',
+  'cancel': 'cancel',
+  'reschedule': 'reschedule',
 };
 
 export class AudioService {
-  private pendingPlayers = new Set<AVAudio.Sound>();
+  private pendingPlayers = new Set<Audio.Sound>();
 
-  async play<S extends Sound>(sound: S): Promise<void> {
+  private async getSoundSrc(sound: Sound): Promise<any> {
     try {
-      const src = soundMap[sound];
+      const name = soundFiles[sound];
+      const path = '../assets/audio/' + name;
+      const r: (id: string) => any = require;
+      return r(path);
+    } catch {
+      return null;
+    }
+  }
+
+  async play(sound: Sound): Promise<void> {
+    try {
+      const src = await this.getSoundSrc(sound);
       if (!src) return;
 
-      const soundObj = await Audio.Sound.createAsync(src);
+      const { sound: soundObj } = await Audio.Sound.createAsync(src);
       this.pendingPlayers.add(soundObj);
       await soundObj.playAsync();
-      soundObj.setOnEnd(() => {
-        this.pendingPlayers.delete(soundObj);
-        soundObj.unloadAsync();
+      soundObj.setOnPlaybackStatusUpdate((status: any) => {
+        if (status.didJustFinish) {
+          this.pendingPlayers.delete(soundObj);
+          soundObj.unloadAsync().catch(() => {});
+        }
       });
     } catch (e) {
-      // fail silently
       console.warn(`AudioService: failed to play ${sound}`, e);
     }
   }
 
-  async preload<S extends Sound>(sound: S): Promise<void> {
+  async preload(sound: Sound): Promise<void> {
     try {
-      const src = soundMap[sound];
+      const src = await this.getSoundSrc(sound);
       if (!src) return;
-      await Audio.Sound.createAsync(src);
-      // unload immediately but keep reference for later play
-      // In practice we could keep a map of preloaded sounds
+      const { sound: soundObj } = await Audio.Sound.createAsync(src);
+      await soundObj.unloadAsync();
     } catch (e) {
       console.warn(`AudioService preload failed for ${sound}`, e);
     }

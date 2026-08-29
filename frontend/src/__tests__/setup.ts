@@ -28,10 +28,43 @@ jest.mock('expo-splash-screen', () => ({
   hideAsync: jest.fn(),
 }));
 
+// Mock expo-av
+jest.mock('expo-av', () => ({
+  Audio: {
+    Sound: {
+      createAsync: jest.fn().mockResolvedValue({ sound: { playAsync: jest.fn(), setOnPlaybackStatusUpdate: jest.fn(), unloadAsync: jest.fn() } }),
+    },
+  },
+}));
+
 // Mock @expo/vector-icons
 jest.mock('@expo/vector-icons', () => ({
   Ionicons: 'Ionicons',
 }));
+
+// Mock react-native-svg
+jest.mock('react-native-svg', () => {
+  const React = require('react');
+  const mockComponent = (name: string) => {
+    const comp = (props: any) => React.createElement(name, props, props.children);
+    comp.displayName = name;
+    return comp;
+  };
+  return {
+    __esModule: true,
+    default: mockComponent('Svg'),
+    Path: mockComponent('Path'),
+    Circle: mockComponent('Circle'),
+    Rect: mockComponent('Rect'),
+    Line: mockComponent('Line'),
+    Polygon: mockComponent('Polygon'),
+    Polyline: mockComponent('Polyline'),
+    G: mockComponent('G'),
+    Defs: mockComponent('Defs'),
+    Stop: mockComponent('Stop'),
+    LinearGradient: mockComponent('LinearGradient'),
+  };
+});
 
 // Silence console errors in tests
 global.console = {
