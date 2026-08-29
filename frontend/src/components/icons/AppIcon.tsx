@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, AccessibilityRole } from 'react-native';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { colors } from '@theme';
 
 const STROKE_WIDTH = 1.5;
@@ -326,49 +327,5 @@ export default function AppIcon({
     </View>
   );
 }
-
-const Svg = ({ width, height, viewBox, fill, stroke, strokeWidth, strokeLinecap, strokeLinejoin, children }: any) => (
-  <svg
-    width={width}
-    height={height}
-    viewBox={viewBox}
-    fill={fill}
-    stroke={stroke}
-    strokeWidth={strokeWidth}
-    strokeLinecap={strokeLinecap}
-    strokeLinejoin={strokeLinejoin}
-    style={{ display: 'block' }}
-  >
-    {children}
-  </svg>
-);
-
-const Path = ({ d, fill, stroke }: any) => (
-  <path d={d} fill={fill || 'none'} stroke={stroke || 'none'} />
-);
-
-const Circle = ({ cx, cy, r, fill, stroke }: any) => (
-  <circle cx={cx} cy={cy} r={r} fill={fill || 'none'} stroke={stroke || 'none'} />
-);
-
-const Rect = ({ x, y, width, height, rx, ry, fill, stroke }: any) => (
-  <rect
-    x={x}
-    y={y}
-    width={width}
-    height={height}
-    rx={rx || 0}
-    ry={ry || rx || 0}
-    fill={fill || 'none'}
-    stroke={stroke || 'none'}
-  />
-);
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
 
 export { SIZE_MAP, iconColors };
