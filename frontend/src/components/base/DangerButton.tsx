@@ -43,8 +43,8 @@ export default function DangerButton({ title, onPress, disabled, loading, style,
 const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.error,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xxxxxxl,
+    paddingHorizontal: spacing.xxxxxxl,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',

@@ -130,14 +130,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.lg,
+    padding: spacing.xxxxxxl,
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    marginHorizontal: spacing.lg,
+    marginHorizontal: spacing.xxxxxxl,
     overflow: 'hidden',
     ...elevation.sm,
   },
@@ -145,14 +145,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.md,
+    padding: spacing.xxxxxxl,
   },
   iconLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   section: {
-    padding: spacing.md,
+    padding: spacing.xxxxxxl,
   },
   label: {
     ...typography.label,
@@ -160,28 +160,28 @@ const styles = StyleSheet.create({
     marginLeft: spacing.xs,
   },
   value: {
-    ...typography.bodyLarge,
+    ...typography.body,
     color: colors.textPrimary,
     fontWeight: '500',
   },
   noteText: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textPrimary,
     marginTop: spacing.xs,
     lineHeight: 22,
   },
   actions: {
     paddingHorizontal: spacing.screenPadding,
-    marginTop: spacing.lg,
+    marginTop: spacing.xxxxxxl,
   },
   loadingText: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
   },
   errorText: {
     ...typography.bodySmall,
     color: colors.error,
     textAlign: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xxxxxxl,
   },
 });

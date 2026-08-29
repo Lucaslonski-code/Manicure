@@ -2,10 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import { View, Image, Animated, StyleSheet } from 'react-native';
 import { colors } from '@theme';
 
-const BRAND_ICON = require('../../assets/brand-icon.jpeg');
+const BRAND_ICON = require('../../assets/IconAppWhite.png');
 
-const FADE_DURATION_MS = 300;
-const ANIMATION_TIMEOUT_MS = 1500;
+const FADE_DURATION_MS = 400;
+const DISPLAY_DURATION_MS = 1200;
+const TOTAL_DURATION_MS = FADE_DURATION_MS + DISPLAY_DURATION_MS + FADE_DURATION_MS;
 
 export type InitialScreenProps = {
   dismiss?: boolean;
@@ -13,11 +14,17 @@ export type InitialScreenProps = {
 };
 
 export default function InitialScreen({ dismiss = false, onFinish }: InitialScreenProps) {
-  const opacity = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
   const finishedRef = useRef(false);
   const animationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: FADE_DURATION_MS,
+      useNativeDriver: true,
+    }).start();
+
     if (!dismiss) {
       return;
     }
@@ -25,46 +32,32 @@ export default function InitialScreen({ dismiss = false, onFinish }: InitialScre
       return;
     }
 
-    const startAnimation = (useNative: boolean) => {
-      const animation = Animated.timing(opacity, {
+    const dismissTimer = setTimeout(() => {
+      if (finishedRef.current) return;
+      Animated.timing(opacity, {
         toValue: 0,
         duration: FADE_DURATION_MS,
-        useNativeDriver: useNative,
-      });
-
-      const animationFinished = (result: { finished: boolean }) => {
-        if (animationTimeoutRef.current) {
-          clearTimeout(animationTimeoutRef.current);
-          animationTimeoutRef.current = null;
-        }
-        if ((result.finished || !finishedRef.current) && !finishedRef.current) {
+        useNativeDriver: true,
+      }).start(() => {
+        if (!finishedRef.current) {
           finishedRef.current = true;
           onFinish?.();
         }
-      };
+      });
+    }, FADE_DURATION_MS + DISPLAY_DURATION_MS);
 
-      animation.start(animationFinished);
-
-      animationTimeoutRef.current = setTimeout(() => {
-        animation.stop();
-        animationFinished({ finished: false });
-      }, ANIMATION_TIMEOUT_MS);
-    };
-
-    try {
-      startAnimation(true);
-    } catch {
-      startAnimation(false);
-    }
+    animationTimeoutRef.current = setTimeout(() => {
+      if (!finishedRef.current) {
+        finishedRef.current = true;
+        onFinish?.();
+      }
+    }, TOTAL_DURATION_MS + 200);
 
     return () => {
+      clearTimeout(dismissTimer);
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
         animationTimeoutRef.current = null;
-      }
-      try {
-        Animated.timing(opacity, { toValue: 0, duration: 0, useNativeDriver: false }).stop();
-      } catch {
       }
     };
   }, [dismiss, opacity, onFinish]);
@@ -91,7 +84,7 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     width: 144,
-    height: 144,
+    height: 96,
   },
   icon: {
     width: '100%',

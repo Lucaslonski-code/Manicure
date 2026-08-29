@@ -1,2 +1,2 @@
-export { colors, typography, spacing, radius, elevation, iconSizes, touchTarget } from './tokens';
+export { colors, typography, spacing, radius, elevation, iconSizes, touchTarget, componentSizes } from './tokens';
 export { ThemeProvider, useTheme } from './ThemeProvider';

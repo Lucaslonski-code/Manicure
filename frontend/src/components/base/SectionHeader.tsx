@@ -29,11 +29,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xxl,
   },
   textContainer: {
     flex: 1,
-    marginRight: spacing.md,
+    marginRight: spacing.xxl,
   },
   titleRow: {
     marginBottom: spacing.xs,
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     paddingLeft: spacing.sm,
   },
   title: {
-    ...typography.headingSmall,
+    ...typography.section,
     color: colors.textPrimary,
     letterSpacing: -0.1,
   },
@@ -55,7 +55,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
     marginTop: spacing.xs,
-    paddingHorizontal: 0,
   },
   action: {
     justifyContent: 'center',

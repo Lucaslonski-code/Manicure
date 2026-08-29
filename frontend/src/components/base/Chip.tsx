@@ -39,7 +39,7 @@ export default function Chip({ label, selected = false, onPress, disabled = fals
 
 const styles = StyleSheet.create({
   chip: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.xxxxxxl,
     paddingVertical: spacing.sm,
     borderRadius: radius.full,
     borderWidth: 1,

@@ -127,11 +127,11 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+    borderRadius: radius.card,
+    padding: spacing.xxxxxxl,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxxxxxl,
     ...elevation.sm,
   },
   section: {
@@ -148,17 +148,17 @@ const styles = StyleSheet.create({
     marginLeft: spacing.xs,
   },
   value: {
-    ...typography.bodyLarge,
+    ...typography.body,
     color: colors.textPrimary,
     fontWeight: '500',
   },
   duration: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
     marginTop: spacing.xs,
   },
   price: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.gold,
     fontWeight: '600',
     marginTop: spacing.xs,
@@ -166,14 +166,14 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: colors.border,
-    marginVertical: spacing.md,
+    marginVertical: spacing.xxxxxxl,
   },
   dividerGold: {
     backgroundColor: colors.goldLight,
     opacity: 0.4,
   },
   noteSection: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxxxxxl,
   },
   noteLabel: {
     ...typography.label,
@@ -184,8 +184,8 @@ const styles = StyleSheet.create({
   noteInput: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
+    borderRadius: radius.input,
+    padding: spacing.xxxxxxl,
     ...typography.input,
     color: colors.textPrimary,
     minHeight: 80,
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   error: {
     ...typography.bodySmall,
     color: colors.error,
-    marginBottom: spacing.md,
+    marginBottom: spacing.xxxxxxl,
     textAlign: 'center',
   },
   footer: {

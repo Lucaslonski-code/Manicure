@@ -18,7 +18,7 @@ jest.mock('react-native', () => ({
   Platform: { OS: 'android', select: (o: any) => o?.android || o?.default },
 }));
 
-jest.mock('../../assets/brand-icon.jpeg', () => 'BrandIcon', { virtual: true });
+jest.mock('../../assets/IconAppWhite.png', () => 'IconAppWhite', { virtual: true });
 
 jest.mock('@theme', () => ({ colors: { background: '#F5F0EA' } }));
 
@@ -32,8 +32,8 @@ describe('InitialScreen', () => {
     expect(element.type).toBe(InitialScreen);
   });
 
-  it('should load brand icon', () => {
-    expect(SOURCE).toContain('brand-icon.jpeg');
+  it('should load IconAppWhite', () => {
+    expect(SOURCE).toContain('IconAppWhite.png');
   });
 
   it('should not depend on session/auth (no useAuth, supabase or getSession)', () => {
@@ -61,6 +61,7 @@ describe('InitialScreen', () => {
   });
 
   it('should clean up the animation on unmount', () => {
-    expect(SOURCE).toContain('animation.stop()');
+    expect(SOURCE).toContain('clearTimeout');
+    expect(SOURCE).toContain('useNativeDriver');
   });
 });

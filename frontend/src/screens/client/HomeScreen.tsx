@@ -10,7 +10,7 @@ import SectionHeader from '@components/base/SectionHeader';
 import StatusBadge from '@components/base/StatusBadge';
 import type { Professional, Service } from '../../supabase/types';
 
-const LOGO = require('../../../assets/brand-icon.jpeg');
+const LOGO = require('../../../assets/IconAppWhite.png');
 
 export default function HomeScreen({ navigation }: any) {
   const { profile } = useAuth();
@@ -39,7 +39,7 @@ export default function HomeScreen({ navigation }: any) {
       style={styles.professionalCard}
       onPress={() => handleSelectProfessional(item)}
     >
-      <Avatar name={item.display_name} size={56} borderColor={colors.goldLight} />
+      <Avatar name={item.display_name} size={64} borderColor={colors.goldLight} />
       <View style={styles.cardContent}>
         <Text style={styles.name}>{item.display_name}</Text>
         <Text style={styles.specialty}>Especialista</Text>
@@ -178,44 +178,41 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.lg,
+    paddingTop: spacing.xxxxxxxl,
+    paddingBottom: spacing.xxxxxxl,
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxxxxxl,
   },
   logoImage: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 19,
     marginRight: spacing.sm,
   },
   brand: {
-    ...typography.headingSmall,
+    ...typography.section,
     color: colors.textPrimary,
     fontWeight: '600',
-    letterSpacing: -0.2,
   },
   greeting: {
-    ...typography.headingMedium,
+    ...typography.title,
     color: colors.textPrimary,
-    marginBottom: spacing.xs,
-    letterSpacing: -0.2,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    ...typography.bodyMedium,
+    ...typography.subtitle,
     color: colors.textSecondary,
-    lineHeight: 22,
   },
   nextAppointment: {
     marginHorizontal: spacing.screenPadding,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxxxxxl,
   },
   appointmentCard: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    borderRadius: radius.card,
+    padding: spacing.xxxxxxl,
     borderWidth: 1,
     borderColor: colors.border,
     flexDirection: 'row',
@@ -235,37 +232,37 @@ const styles = StyleSheet.create({
     backgroundColor: colors.goldOverlay,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
+    marginRight: spacing.xxxxxxl,
   },
   appointmentInfo: {
     flex: 1,
   },
   appointmentProfessional: {
-    ...typography.bodyLarge,
+    ...typography.body,
     color: colors.textPrimary,
     fontWeight: '600',
     marginBottom: spacing.xs,
   },
   appointmentDate: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
     textTransform: 'capitalize',
   },
   appointmentTime: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.gold,
     fontWeight: '600',
     marginTop: spacing.xs,
   },
   ctaSection: {
     paddingHorizontal: spacing.screenPadding,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.xxxxxxxl,
   },
   ctaButton: {
     ...elevation.sm,
   },
   section: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxxxxxxl,
   },
   horizontalList: {
     paddingHorizontal: spacing.screenPadding,
@@ -274,33 +271,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginRight: spacing.md,
+    borderRadius: radius.card,
+    padding: spacing.xxxxxxl,
+    marginRight: spacing.xxxxxxl,
     borderWidth: 1,
     borderColor: colors.border,
     width: 200,
     ...elevation.sm,
   },
   cardContent: {
-    marginLeft: spacing.md,
+    marginLeft: spacing.xxxxxxl,
     flex: 1,
   },
   name: {
-    ...typography.bodyLarge,
+    ...typography.body,
     color: colors.textPrimary,
     fontWeight: '600',
   },
   specialty: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
     marginTop: spacing.xs,
   },
   serviceCard: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginRight: spacing.md,
+    borderRadius: radius.card,
+    padding: spacing.xxxxxxl,
+    marginRight: spacing.xxxxxxl,
     borderWidth: 1,
     borderColor: colors.border,
     width: 160,
@@ -316,28 +313,28 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   serviceName: {
-    ...typography.bodyLarge,
+    ...typography.body,
     color: colors.textPrimary,
     fontWeight: '600',
     marginBottom: spacing.xs,
   },
   serviceDuration: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
   },
   shortcuts: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxxxxxxl,
   },
   shortcutsGrid: {
     flexDirection: 'row',
     paddingHorizontal: spacing.screenPadding,
-    gap: spacing.md,
+    gap: spacing.xxxxxxl,
   },
   shortcut: {
     flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+    borderRadius: radius.card,
+    padding: spacing.xxxxxxl,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
@@ -346,18 +343,19 @@ const styles = StyleSheet.create({
   shortcutIconContainer: {
     width: 48,
     height: 48,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     backgroundColor: colors.goldOverlay,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   shortcutLabel: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textPrimary,
     textAlign: 'center',
+    fontWeight: '500',
   },
   spacer: {
-    height: spacing.xxl,
+    height: spacing.xxxxxl,
   },
 });

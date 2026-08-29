@@ -6,7 +6,7 @@ import Input from '@components/base/Input';
 import { passwordRecoverySchema } from '@forms/schemas';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 
-const LOGO = require('../../../assets/brand-icon.jpeg');
+const LOGO = require('../../../assets/IconAppWhite.png');
 
 export default function PasswordRecoveryScreen({ navigation }: any) {
   const { resetPassword, loading } = useAuth();
@@ -75,36 +75,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.screenPadding,
   },
   brandContainer: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxxxxxl,
   },
   logoImage: {
     width: 80,
     height: 80,
   },
   title: {
-    ...typography.headingMedium,
+    ...typography.title,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
   text: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.xxxxl,
   },
   formCard: {
     width: '100%',
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+    borderRadius: radius.card,
+    padding: spacing.xxxxxxl,
     borderWidth: 1,
     borderColor: colors.border,
     ...elevation.sm,
   },
   recoverButton: {
-    marginTop: spacing.md,
+    marginTop: spacing.xxxxxxl,
   },
   error: {
     ...typography.bodySmall,
@@ -119,10 +119,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   link: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.gold,
     textAlign: 'center',
-    marginTop: spacing.md,
+    marginTop: spacing.xxxxxxl,
     fontWeight: '500',
   },
 });

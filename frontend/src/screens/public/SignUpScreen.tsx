@@ -7,7 +7,7 @@ import PasswordInput from '@components/base/PasswordInput';
 import { signUpSchema } from '@forms/schemas';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 
-const LOGO = require('../../../assets/brand-icon.jpeg');
+const LOGO = require('../../../assets/IconAppWhite.png');
 
 export default function SignUpScreen({ navigation }: any) {
   const { signUp, loading } = useAuth();
@@ -87,7 +87,7 @@ export default function SignUpScreen({ navigation }: any) {
             loading={loading}
             style={styles.signupButton}
           />
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.loginLink}>
             <Text style={styles.link}>Já tenho conta</Text>
           </TouchableOpacity>
         </View>
@@ -103,32 +103,30 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xxxxxl,
   },
   header: {
     paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.lg,
+    paddingTop: spacing.xxxxxl,
+    paddingBottom: spacing.xxxxxxl,
     alignItems: 'center',
   },
   brandContainer: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxxxxxl,
   },
   logoImage: {
-    width: 88,
-    height: 88,
+    width: 96,
+    height: 64,
   },
   title: {
-    ...typography.display,
+    ...typography.title,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
-    letterSpacing: -0.5,
     textAlign: 'center',
   },
   subtitle: {
-    ...typography.bodyMedium,
+    ...typography.subtitle,
     color: colors.textSecondary,
-    lineHeight: 22,
     textAlign: 'center',
   },
   form: {
@@ -137,14 +135,18 @@ const styles = StyleSheet.create({
   },
   formCard: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+    borderRadius: radius.card,
+    padding: spacing.xxxxxxl,
     borderWidth: 1,
     borderColor: colors.border,
     ...elevation.sm,
   },
   signupButton: {
-    marginTop: spacing.md,
+    marginTop: spacing.xxxxl,
+  },
+  loginLink: {
+    marginTop: spacing.xxxxxxl,
+    alignItems: 'center',
   },
   error: {
     ...typography.bodySmall,
@@ -159,10 +161,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   link: {
-    ...typography.bodyMedium,
+    ...typography.body,
     color: colors.gold,
-    textAlign: 'center',
-    marginTop: spacing.md,
     fontWeight: '500',
   },
 });

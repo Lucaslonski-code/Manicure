@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
-import { colors, spacing, radius, typography, touchTarget, elevation } from '@theme';
+import { colors, spacing, radius, typography, elevation, componentSizes } from '@theme';
 
 interface ButtonProps {
   title: string;
@@ -18,7 +18,6 @@ export default function Button({ title, onPress, disabled, loading, variant = 'p
   const buttonStyle = [
     styles.button,
     variant === 'secondary' && styles.secondary,
-    variant === 'gold' && styles.gold,
     pressed && !disabled && !loading && styles.pressed,
     disabled && styles.disabled,
     style,
@@ -33,7 +32,7 @@ export default function Button({ title, onPress, disabled, loading, variant = 'p
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
       disabled={disabled || loading}
-      style={[{ minHeight: touchTarget.comfortable }, buttonStyle]}
+      style={[{ minHeight: componentSizes.buttonHeight }, buttonStyle]}
       accessibilityLabel={title}
       accessibilityRole="button"
       accessibilityState={{ disabled: !!disabled || !!loading, busy: !!loading }}
@@ -50,9 +49,9 @@ export default function Button({ title, onPress, disabled, loading, variant = 'p
 const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.gold,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
+    paddingVertical: spacing.xxxxxxl,
+    paddingHorizontal: spacing.xxxxl,
+    borderRadius: radius.button,
     alignItems: 'center',
     justifyContent: 'center',
     ...elevation.sm,
@@ -63,21 +62,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     ...elevation.none,
   },
-  gold: {
-    backgroundColor: colors.gold,
-    ...elevation.sm,
-  },
   pressed: {
-    backgroundColor: '#9A8050',
+    backgroundColor: colors.primaryPressed,
     transform: [{ scale: 0.98 }],
   },
   disabled: {
-    backgroundColor: colors.disabled,
+    backgroundColor: colors.disabledBackground,
     ...elevation.none,
   },
   text: {
     ...typography.button,
-    color: colors.surface,
     letterSpacing: 0.3,
   },
 });

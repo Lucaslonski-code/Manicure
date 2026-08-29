@@ -68,16 +68,16 @@ export default function SearchInput({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.xxxxxxl,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     backgroundColor: colors.surface,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.xxxxxxl,
     ...elevation.none,
   },
   rowFocused: {

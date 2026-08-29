@@ -38,10 +38,12 @@ export default function StatusBadge({ label, variant = 'default' }: StatusBadgeP
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: spacing.xs + 1,
+    paddingHorizontal: spacing.xxxxxxl,
+    paddingVertical: spacing.xs + 2,
     borderRadius: radius.full,
     alignSelf: 'flex-start',
+    minHeight: 26,
+    justifyContent: 'center',
   },
   text: {
     ...typography.label,

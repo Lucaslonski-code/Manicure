@@ -134,23 +134,23 @@ const styles = StyleSheet.create({
   avatarRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.xxxxxxl,
   },
   identityText: {
     flex: 1,
   },
   name: {
-    ...typography.headingMedium,
+    ...typography.title,
     color: colors.textPrimary,
-    marginTop: spacing.md,
+    marginTop: spacing.xxxxxxl,
   },
   email: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
     marginTop: spacing.xs,
   },
   section: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxxxxxl,
     paddingHorizontal: spacing.screenPadding,
   },
   sectionTitle: {
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.md,
+    padding: spacing.xxxxxxl,
   },
   iconLabelRow: {
     flexDirection: 'row',
@@ -182,18 +182,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
     marginLeft: spacing.xs,
   },
   value: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textPrimary,
     fontWeight: '500',
   },
   footer: {
     alignItems: 'center',
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing.xxxxl,
   },
   version: {
     ...typography.caption,

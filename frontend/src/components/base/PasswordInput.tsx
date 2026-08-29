@@ -92,7 +92,7 @@ export default function PasswordInput({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.xxxxxxl,
   },
   inputWrapper: {
     position: 'relative',
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     position: 'absolute',
-    right: spacing.md,
+    right: spacing.xxxxxxl,
     top: 28,
     padding: spacing.xs,
     zIndex: 1,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     backgroundColor: colors.surface,
     borderRadius: radius.md,
-    padding: spacing.md,
+    padding: spacing.xxxxxxl,
     borderWidth: 1,
     borderColor: colors.border,
     ...elevation.sm,

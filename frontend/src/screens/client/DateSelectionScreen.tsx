@@ -94,14 +94,14 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xxxxl,
   },
   dateCard: {
     flex: 1,
     aspectRatio: 1,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     alignItems: 'center',
     justifyContent: 'center',
     margin: spacing.xs,
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   number: {
-    ...typography.headingMedium,
+    ...typography.title,
     color: colors.textPrimary,
     marginVertical: spacing.xs,
   },
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xxxxl,
   },
   continueButton: {
     ...elevation.sm,

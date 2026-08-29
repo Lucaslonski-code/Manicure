@@ -12,7 +12,7 @@ interface DividerProps {
 export default function Divider({
   color = colors.border,
   thickness = 1,
-  marginVertical = spacing.md,
+  marginVertical = spacing.xxxxxxl,
   gold = false,
 }: DividerProps) {
   return (

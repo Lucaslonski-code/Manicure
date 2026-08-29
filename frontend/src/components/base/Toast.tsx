@@ -82,16 +82,16 @@ export default function Toast({
 const styles = StyleSheet.create({
   toast: {
     position: 'absolute',
-    top: spacing.xl,
-    left: spacing.lg,
-    right: spacing.lg,
+    top: spacing.xxxxl,
+    left: spacing.xxxxxxl,
+    right: spacing.xxxxxxl,
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.xxxxxxl,
     borderRadius: radius.md,
     zIndex: 1000,
   },
   message: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.surface,
     textAlign: 'center',
   },

@@ -61,16 +61,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(37, 34, 31, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.lg,
+    padding: spacing.xxxxxxl,
   },
   wrapper: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+    borderRadius: radius.card,
+    padding: spacing.xxxxxxl,
     width: '100%',
   },
   title: {
-    ...typography.headingSmall,
+    ...typography.section,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
@@ -78,14 +78,14 @@ const styles = StyleSheet.create({
     color: colors.error,
   },
   message: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
-    marginVertical: spacing.md,
+    marginVertical: spacing.xxxxxxl,
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    gap: spacing.xxxxxxl,
   },
   actionButton: {
     flex: 1,

@@ -114,14 +114,14 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xxxxl,
   },
   slot: {
     flex: 1,
     aspectRatio: 1.8,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     alignItems: 'center',
     justifyContent: 'center',
     margin: spacing.xs,
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     ...elevation.sm,
   },
   slotText: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textPrimary,
     fontWeight: '500',
   },
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xxxxl,
   },
   continueButton: {
     ...elevation.sm,

@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   title: {
-    ...typography.headingLarge,
+    ...typography.title,
     color: colors.primary,
   },
 });

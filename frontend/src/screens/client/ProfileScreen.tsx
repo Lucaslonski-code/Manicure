@@ -128,21 +128,21 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.lg,
+    paddingTop: spacing.xxxl,
+    paddingBottom: spacing.xxl,
   },
   name: {
-    ...typography.headingMedium,
+    ...typography.title,
     color: colors.textPrimary,
-    marginTop: spacing.md,
+    marginTop: spacing.xxl,
   },
   email: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
     marginTop: spacing.xs,
   },
   section: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxl,
     paddingHorizontal: spacing.screenPadding,
   },
   sectionTitle: {
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
@@ -163,7 +163,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.md,
+    padding: spacing.xxl,
+    minHeight: 52,
   },
   iconLabelRow: {
     flexDirection: 'row',
@@ -174,12 +175,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
     marginLeft: spacing.xs,
   },
   value: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textPrimary,
     fontWeight: '500',
   },

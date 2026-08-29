@@ -22,8 +22,8 @@ export default function Card({ children, style, variant = 'default' }: CardProps
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    borderRadius: radius.card,
+    padding: spacing.xxxxxxl,
     ...elevation.sm,
     borderWidth: 1,
     borderColor: colors.border,

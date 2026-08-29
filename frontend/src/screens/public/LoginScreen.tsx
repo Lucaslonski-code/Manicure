@@ -7,7 +7,7 @@ import PasswordInput from '@components/base/PasswordInput';
 import { loginSchema } from '@forms/schemas';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 
-const LOGO = require('../../../assets/brand-icon.jpeg');
+const LOGO = require('../../../assets/IconAppWhite.png');
 
 export default function LoginScreen({ navigation }: any) {
   const { signIn, loading } = useAuth();
@@ -63,7 +63,7 @@ export default function LoginScreen({ navigation }: any) {
             loading={loading}
             style={styles.loginButton}
           />
-          <TouchableOpacity onPress={() => navigation.navigate('PasswordRecovery')}>
+          <TouchableOpacity onPress={() => navigation.navigate('PasswordRecovery')} style={styles.recoveryLink}>
             <Text style={styles.link}>Esqueci minha senha</Text>
           </TouchableOpacity>
         </View>
@@ -86,28 +86,26 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.xxxl,
-    paddingBottom: spacing.xl,
+    paddingTop: spacing.xxxxxl,
+    paddingBottom: spacing.xxxxxxl,
     alignItems: 'center',
   },
   brandContainer: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.xxxxxxl,
   },
   logoImage: {
-    width: 96,
-    height: 96,
+    width: 104,
+    height: 70,
   },
   title: {
-    ...typography.display,
+    ...typography.title,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
-    letterSpacing: -0.5,
     textAlign: 'center',
   },
   subtitle: {
-    ...typography.bodyMedium,
+    ...typography.subtitle,
     color: colors.textSecondary,
-    lineHeight: 22,
     textAlign: 'center',
   },
   form: {
@@ -116,14 +114,18 @@ const styles = StyleSheet.create({
   },
   formCard: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+    borderRadius: radius.card,
+    padding: spacing.xxxxxxl,
     borderWidth: 1,
     borderColor: colors.border,
     ...elevation.sm,
   },
   loginButton: {
-    marginTop: spacing.md,
+    marginTop: spacing.xxxxl,
+  },
+  recoveryLink: {
+    marginTop: spacing.xxxxxxl,
+    alignItems: 'center',
   },
   error: {
     ...typography.bodySmall,
@@ -138,25 +140,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   link: {
-    ...typography.bodyMedium,
+    ...typography.body,
     color: colors.gold,
-    textAlign: 'center',
-    marginTop: spacing.md,
     fontWeight: '500',
   },
   linkBold: {
-    ...typography.bodyMedium,
+    ...typography.body,
     color: colors.gold,
     fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: spacing.xl,
-    paddingBottom: spacing.xl,
+    marginTop: spacing.xxxxxxxl,
+    paddingBottom: spacing.xxxxxxl,
   },
   footerText: {
-    ...typography.bodyMedium,
+    ...typography.body,
     color: colors.textSecondary,
   },
 });

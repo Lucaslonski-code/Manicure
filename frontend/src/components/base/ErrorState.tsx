@@ -42,11 +42,11 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 64,
     height: 64,
-    borderRadius: radius.xl,
+    borderRadius: radius.modal,
     backgroundColor: 'rgba(166, 61, 64, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxl,
     ...elevation.sm,
   },
   icon: {
@@ -55,13 +55,13 @@ const styles = StyleSheet.create({
     color: colors.error,
   },
   title: {
-    ...typography.headingSmall,
+    ...typography.section,
     color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   message: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.xl,

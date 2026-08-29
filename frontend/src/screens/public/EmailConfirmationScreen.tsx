@@ -4,7 +4,7 @@ import { useAuth } from '@hooks/useAuth';
 import Button from '@components/base/Button';
 import { colors, spacing, typography } from '@theme';
 
-const LOGO = require('../../../assets/brand-icon.jpeg');
+const LOGO = require('../../../assets/IconAppWhite.png');
 
 export default function EmailConfirmationScreen({ route, navigation }: any) {
   const { resend, loading } = useAuth();
@@ -65,27 +65,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.screenPadding,
   },
   brandContainer: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xxl,
   },
   logoImage: {
     width: 80,
     height: 80,
   },
   title: {
-    ...typography.headingMedium,
+    ...typography.title,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
   text: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: spacing.xl,
   },
   email: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textPrimary,
     fontWeight: '600',
   },
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   resendButton: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   error: {
     ...typography.bodySmall,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   link: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.gold,
     textAlign: 'center',
     fontWeight: '500',

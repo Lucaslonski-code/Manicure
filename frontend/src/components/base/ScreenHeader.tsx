@@ -28,8 +28,8 @@ export default function ScreenHeader({ title, subtitle, style, accent }: ScreenH
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
+    paddingTop: spacing.xxxxxxl,
+    paddingBottom: spacing.xxxxxxl,
   },
   textContainer: {
     flex: 1,
@@ -49,16 +49,16 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   title: {
-    ...typography.headingLarge,
+    ...typography.section,
     color: colors.textPrimary,
-    letterSpacing: -0.3,
+    letterSpacing: -0.1,
   },
   titleAccent: {
     color: colors.textPrimary,
   },
   subtitle: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: 20,
   },
 });

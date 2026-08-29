@@ -57,9 +57,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
+    borderTopLeftRadius: radius.modal,
+    borderTopRightRadius: radius.modal,
+    padding: spacing.xxxxxxl,
     maxHeight: '80%',
     ...elevation.lg,
   },
@@ -67,10 +67,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xxxxxxl,
   },
   title: {
-    ...typography.headingMedium,
+    ...typography.title,
     color: colors.textPrimary,
     letterSpacing: -0.2,
   },
@@ -81,9 +81,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   content: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.xxxxxxl,
   },
   footer: {
-    marginTop: spacing.md,
+    marginTop: spacing.xxxxxxl,
   },
 });
