@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Linking from 'expo-linking';
@@ -18,39 +18,50 @@ export function useNotifications() {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<Notifications.NotificationPermissionsStatus | null>(null);
+  const registrationRef = useRef<Promise<void> | null>(null);
 
   const register = useCallback(async () => {
-    try {
-      setLoading(true);
-      const existingStatus = await Notifications.getPermissionsAsync();
-      setPermissionStatus(existingStatus);
-      let finalStatus = existingStatus;
-
-      if (!existingStatus.granted) {
-        const requested = await Notifications.requestPermissionsAsync();
-        setPermissionStatus(requested);
-        finalStatus = requested;
-      }
-
-      if (!finalStatus.granted) {
-        setLoading(false);
-        return;
-      }
-
-      const expoPushToken = await Notifications.getExpoPushTokenAsync();
-      const pushToken = expoPushToken.data;
-      if (!pushToken) {
-        setLoading(false);
-        return;
-      }
-
-      setToken(pushToken);
-      await registerNotificationToken(pushToken, Platform.OS as 'android' | 'ios');
-    } catch (err) {
-      console.error('Error registering notification token:', err);
-    } finally {
-      setLoading(false);
+    // Prevent duplicate registrations
+    if (registrationRef.current) {
+      return registrationRef.current;
     }
+
+    registrationRef.current = (async () => {
+      try {
+        setLoading(true);
+        const existingStatus = await Notifications.getPermissionsAsync();
+        setPermissionStatus(existingStatus);
+        let finalStatus = existingStatus;
+
+        if (!existingStatus.granted) {
+          const requested = await Notifications.requestPermissionsAsync();
+          setPermissionStatus(requested);
+          finalStatus = requested;
+        }
+
+        if (!finalStatus.granted) {
+          setLoading(false);
+          return;
+        }
+
+        const expoPushToken = await Notifications.getExpoPushTokenAsync();
+        const pushToken = expoPushToken.data;
+        if (!pushToken) {
+          setLoading(false);
+          return;
+        }
+
+        setToken(pushToken);
+        await registerNotificationToken(pushToken, Platform.OS as 'android' | 'ios');
+      } catch (err) {
+        console.error('Error registering notification token:', err);
+      } finally {
+        setLoading(false);
+        registrationRef.current = null;
+      }
+    })();
+
+    return registrationRef.current;
   }, []);
 
   const unregister = useCallback(async () => {
@@ -97,7 +108,8 @@ export function useNotifications() {
     pushTokenSubscription = Notifications.addPushTokenListener(async (token) => {
       if (!isMounted) return;
       setToken(token.data);
-      await registerNotificationToken(token.data, Platform.OS as 'android' | 'ios');
+      // Don't register here - register is already called by useAuth
+      // Just update the local token state
     });
 
     receivedSubscription = Notifications.addNotificationReceivedListener(notification => {

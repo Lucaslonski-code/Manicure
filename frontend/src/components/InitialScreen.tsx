@@ -2,65 +2,50 @@ import React, { useEffect, useRef } from 'react';
 import { View, Image, Animated, StyleSheet } from 'react-native';
 import { colors } from '@theme';
 
-const BRAND_ICON = require('../../assets/IconAppWhite.png');
+const TELA_INICIAL = require('../../assets/TelaInicial.png');
 
 const FADE_DURATION_MS = 400;
-const DISPLAY_DURATION_MS = 1200;
-const TOTAL_DURATION_MS = FADE_DURATION_MS + DISPLAY_DURATION_MS + FADE_DURATION_MS;
+const HOLD_DURATION_MS = 1200; // time to hold after fade in before starting fade out
 
 export type InitialScreenProps = {
-  dismiss?: boolean;
   onFinish?: () => void;
 };
 
-export default function InitialScreen({ dismiss = false, onFinish }: InitialScreenProps) {
+export default function InitialScreen({ onFinish }: InitialScreenProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const finishedRef = useRef(false);
-  const animationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // Fade in
     Animated.timing(opacity, {
       toValue: 1,
       duration: FADE_DURATION_MS,
       useNativeDriver: true,
-    }).start();
-
-    if (!dismiss) {
-      return;
-    }
-    if (finishedRef.current) {
-      return;
-    }
-
-    const dismissTimer = setTimeout(() => {
-      if (finishedRef.current) return;
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: FADE_DURATION_MS,
-        useNativeDriver: true,
-      }).start(() => {
-        if (!finishedRef.current) {
-          finishedRef.current = true;
-          onFinish?.();
-        }
-      });
-    }, FADE_DURATION_MS + DISPLAY_DURATION_MS);
-
-    animationTimeoutRef.current = setTimeout(() => {
-      if (!finishedRef.current) {
-        finishedRef.current = true;
-        onFinish?.();
-      }
-    }, TOTAL_DURATION_MS + 200);
+    }).start(() => {
+      // After fade in, hold for HOLD_DURATION_MS
+      holdTimeoutRef.current = setTimeout(() => {
+        // Fade out
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: FADE_DURATION_MS,
+          useNativeDriver: true,
+        }).start(() => {
+          if (!finishedRef.current) {
+            finishedRef.current = true;
+            onFinish?.();
+          }
+        });
+      }, HOLD_DURATION_MS);
+    });
 
     return () => {
-      clearTimeout(dismissTimer);
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-        animationTimeoutRef.current = null;
+      if (holdTimeoutRef.current) {
+        clearTimeout(holdTimeoutRef.current);
+        holdTimeoutRef.current = null;
       }
     };
-  }, [dismiss, opacity, onFinish]);
+  }, [onFinish]);
 
   return (
     <View
@@ -68,8 +53,8 @@ export default function InitialScreen({ dismiss = false, onFinish }: InitialScre
       accessibilityLabel="Tela inicial do AppManicure"
       accessibilityRole="image"
     >
-      <Animated.View style={[styles.iconWrap, { opacity }]}>
-        <Image source={BRAND_ICON} style={styles.icon} resizeMode="contain" />
+      <Animated.View style={[styles.imageWrap, { opacity }]}>
+        <Image source={TELA_INICIAL} style={styles.image} resizeMode="contain" />
       </Animated.View>
     </View>
   );
@@ -82,11 +67,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconWrap: {
-    width: 144,
-    height: 96,
+  imageWrap: {
+    width: '80%',
+    maxWidth: 320,
+    height: '80%',
+    maxHeight: 400,
   },
-  icon: {
+  image: {
     width: '100%',
     height: '100%',
   },

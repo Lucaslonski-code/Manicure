@@ -10,10 +10,7 @@ describe('AppRoot intro orchestration', () => {
     expect(SOURCE).not.toContain('hideAsync');
   });
 
-  it('should define a ~1.5s minimum intro duration', () => {
-    expect(SOURCE).toContain('MIN_INTRO_MS');
-    expect(require('@navigation/introConfig').MIN_INTRO_MS).toBe(1500);
-  });
+  // Removed the test for MIN_INTRO_MS because the timing is now handled by InitialScreen
 
   it('should render InitialScreen before finishing', () => {
     expect(SOURCE).toContain('InitialScreen');
@@ -23,9 +20,7 @@ describe('AppRoot intro orchestration', () => {
     expect(SOURCE).toContain('authState={authState}');
   });
 
-  it('should clear the intro timer on unmount', () => {
-    expect(SOURCE).toContain('clearTimeout');
-  });
+  // Removed the test for clearing the intro timer because we don't have timers in AppRoot anymore
 
   it('should use useAuth once at the App Root level', () => {
     expect(SOURCE).toContain("useAuth()");

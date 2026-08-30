@@ -129,27 +129,23 @@ export function useAuth(): AuthState & {
             const sessionTimeoutPromise = new Promise<{ data: { session: null } }>((resolve) => {
               setTimeout(() => resolve({ data: { session: null } }), BOOTSTRAP_TIMEOUT_MS);
             });
-            const { data } = await Promise.race([sessionPromise, sessionTimeoutPromise]);
+const { data } = await Promise.race([sessionPromise, sessionTimeoutPromise]);
 
-            if (!isMounted) return;
-            setSession(data.session);
+             if (!isMounted) return;
+             setSession(data.session);
 
-            if (data.session?.user) {
-              // loadProfile pode travar em rede no Preview standalone
-              const profilePromise = loadProfile(data.session.user.id);
-              const profileTimeoutPromise = new Promise<void>((resolve) => {
-                setTimeout(() => resolve(), BOOTSTRAP_TIMEOUT_MS);
-              });
-              await Promise.race([profilePromise, profileTimeoutPromise]);
-
-              if (isMounted) {
-                registerNotification().catch((err) => {
-                  console.error('Error registering notification during bootstrap:', err);
-                });
-              }
-            } else {
-              setLoading(false);
-            }
+             if (data.session?.user) {
+               // Register push token
+               await registerNotification();
+               // loadProfile pode travar em rede no Preview standalone
+               const profilePromise = loadProfile(data.session.user.id);
+               const profileTimeoutPromise = new Promise<void>((resolve) => {
+                 setTimeout(() => resolve(), BOOTSTRAP_TIMEOUT_MS);
+               });
+               await Promise.race([profilePromise, profileTimeoutPromise]);
+             } else {
+               setLoading(false);
+             }
           } catch (err) {
             console.error('Error getting session after bootstrap:', err);
             if (isMounted) {
@@ -180,23 +176,19 @@ export function useAuth(): AuthState & {
 
     linkingSubscription = Linking.addEventListener('url', handleUrl);
 
-    const { data: { subscription } }: { data: { subscription: Subscription } } = authClient.onAuthStateChange(
-      async (_event: AuthChangeEvent, session: Session | null) => {
-        if (!isMounted) return;
-        setSession(session);
-        if (session?.user) {
-          await loadProfile(session.user.id);
-          if (isMounted) {
-            registerNotification().catch((err) => {
-              console.error('Error registering notification after auth change:', err);
-            });
-          }
-        } else {
-          setProfile(null);
-          setLoading(false);
-        }
-      }
-    );
+const { data: { subscription } }: { data: { subscription: Subscription } } = authClient.onAuthStateChange(
+       async (_event: AuthChangeEvent, session: Session | null) => {
+         if (!isMounted) return;
+         setSession(session);
+         if (session?.user) {
+           await registerNotification();
+           await loadProfile(session.user.id);
+         } else {
+           setProfile(null);
+           setLoading(false);
+         }
+       }
+     );
 
     return () => {
       isMounted = false;
@@ -205,7 +197,7 @@ export function useAuth(): AuthState & {
         linkingSubscription.remove();
       }
     };
-  }, [loadProfile, registerNotification]);
+  }, [loadProfile]);
 
   const signUp = async (name: string, email: string, phone: string, password: string): Promise<void> => {
     const result = await signUpService(name, email, phone, password);

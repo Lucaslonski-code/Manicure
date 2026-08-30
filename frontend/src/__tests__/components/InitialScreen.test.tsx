@@ -18,7 +18,7 @@ jest.mock('react-native', () => ({
   Platform: { OS: 'android', select: (o: any) => o?.android || o?.default },
 }));
 
-jest.mock('../../assets/IconAppWhite.png', () => 'IconAppWhite', { virtual: true });
+jest.mock('../../assets/TelaInicial.png', () => 'TelaInicial', { virtual: true });
 
 jest.mock('@theme', () => ({ colors: { background: '#F5F0EA' } }));
 
@@ -27,13 +27,13 @@ const SOURCE = fs.readFileSync(path.join(__dirname, '../../components/InitialScr
 describe('InitialScreen', () => {
   it('should render without crashing', () => {
     const InitialScreen = require('@components/InitialScreen').default;
-    const element = React.createElement(InitialScreen, { dismiss: false });
+    const element = React.createElement(InitialScreen, { onFinish: () => {} });
     expect(element).toBeTruthy();
     expect(element.type).toBe(InitialScreen);
   });
 
-  it('should load IconAppWhite', () => {
-    expect(SOURCE).toContain('IconAppWhite.png');
+  it('should load TelaInicial', () => {
+    expect(SOURCE).toContain('TelaInicial.png');
   });
 
   it('should not depend on session/auth (no useAuth, supabase or getSession)', () => {
