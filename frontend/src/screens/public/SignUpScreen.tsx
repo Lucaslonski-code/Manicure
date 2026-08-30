@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native';
 import { useAuth } from '@hooks/useAuth';
 import Button from '@components/base/Button';
 import Input from '@components/base/Input';
 import PasswordInput from '@components/base/PasswordInput';
+import BrandLogo from '@components/base/BrandLogo';
 import { signUpSchema } from '@forms/schemas';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 
-const LOGO = require('../../../assets/IconAppWhite.png');
-
 export default function SignUpScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { signUp, loading } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -32,67 +34,81 @@ export default function SignUpScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} keyboardShouldPersistTaps="handled">
-      <View style={styles.header}>
-        <View style={styles.brandContainer}>
-          <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
-        </View>
-        <Text style={styles.title}>Criar conta</Text>
-        <Text style={styles.subtitle}>Preencha os dados para começar</Text>
-      </View>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView
+        style={styles.keyboard}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        enabled
+      >
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.contentContainer,
+            { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.lg },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator
+        >
+          <View style={styles.header}>
+            <BrandLogo size={104} />
+            <Text style={styles.title}>Criar conta</Text>
+            <Text style={styles.subtitle}>Preencha os dados para começar</Text>
+          </View>
 
-      <View style={styles.form}>
-        <View style={styles.formCard}>
-          <Input
-            label="Nome completo"
-            value={name}
-            onChangeText={setName}
-            placeholder="Seu nome"
-          />
-          <Input
-            label="E-mail"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            placeholder="seu@email.com"
-          />
-          <Input
-            label="Telefone"
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="(00) 00000-0000"
-            keyboardType="phone-pad"
-          />
-          <PasswordInput
-            label="Senha"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Crie uma senha"
-            showRequirements
-          />
-          <PasswordInput
-            label="Confirmar senha"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Repita a senha"
-            confirmPassword={password}
-          />
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          {success ? <Text style={styles.success}>{success}</Text> : null}
-          <Button
-            title="Cadastrar"
-            onPress={handleSignUp}
-            disabled={loading || !!success}
-            loading={loading}
-            style={styles.signupButton}
-          />
-          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.loginLink}>
-            <Text style={styles.link}>Já tenho conta</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ScrollView>
+          <View style={styles.form}>
+            <View style={styles.formCard}>
+              <Input
+                label="Nome completo"
+                value={name}
+                onChangeText={setName}
+                placeholder="Seu nome"
+              />
+              <Input
+                label="E-mail"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                placeholder="seu@email.com"
+              />
+              <Input
+                label="Telefone"
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="(00) 00000-0000"
+                keyboardType="phone-pad"
+              />
+              <PasswordInput
+                label="Senha"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Crie uma senha"
+                showRequirements
+              />
+              <PasswordInput
+                label="Confirmar senha"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Repita a senha"
+                confirmPassword={password}
+              />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+              {success ? <Text style={styles.success}>{success}</Text> : null}
+              <Button
+                title="Cadastrar"
+                onPress={handleSignUp}
+                disabled={loading || !!success}
+                loading={loading}
+                style={styles.signupButton}
+              />
+              <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.loginLink}>
+                <Text style={styles.link}>Já tenho conta</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -101,28 +117,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  keyboard: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
   contentContainer: {
     flexGrow: 1,
-    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.screenPadding,
+    paddingTop: spacing.xl,
   },
   header: {
-    paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
     alignItems: 'center',
-  },
-  brandContainer: {
-    marginBottom: spacing.lg,
-  },
-  logoImage: {
-    width: 96,
-    height: 64,
+    paddingBottom: spacing.xl,
   },
   title: {
     ...typography.title,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
     textAlign: 'center',
+    marginTop: spacing.lg,
   },
   subtitle: {
     ...typography.subtitle,
@@ -131,7 +146,6 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
-    paddingHorizontal: spacing.screenPadding,
   },
   formCard: {
     backgroundColor: colors.surface,

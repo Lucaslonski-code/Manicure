@@ -134,11 +134,15 @@ const { data } = await Promise.race([sessionPromise, sessionTimeoutPromise]);
              if (!isMounted) return;
              setSession(data.session);
 
-             if (data.session?.user) {
-               // Register push token
-               await registerNotification();
-               // loadProfile pode travar em rede no Preview standalone
-               const profilePromise = loadProfile(data.session.user.id);
+              if (data.session?.user) {
+                // Register push token (non-fatal: never block the bootstrap)
+                try {
+                  await registerNotification();
+                } catch (tokenErr) {
+                  console.warn('Push token registration failed, continuing without it:', tokenErr);
+                }
+                // loadProfile pode travar em rede no Preview standalone
+                const profilePromise = loadProfile(data.session.user.id);
                const profileTimeoutPromise = new Promise<void>((resolve) => {
                  setTimeout(() => resolve(), BOOTSTRAP_TIMEOUT_MS);
                });
@@ -180,9 +184,14 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
        async (_event: AuthChangeEvent, session: Session | null) => {
          if (!isMounted) return;
          setSession(session);
-         if (session?.user) {
-           await registerNotification();
-           await loadProfile(session.user.id);
+          if (session?.user) {
+            // Register push token (non-fatal: must not block profile load)
+            try {
+              await registerNotification();
+            } catch (tokenErr) {
+              console.warn('Push token registration failed, continuing without it:', tokenErr);
+            }
+            await loadProfile(session.user.id);
          } else {
            setProfile(null);
            setLoading(false);

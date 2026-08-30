@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native';
 import { useAuth } from '@hooks/useAuth';
 import Button from '@components/base/Button';
 import Input from '@components/base/Input';
 import PasswordInput from '@components/base/PasswordInput';
+import BrandLogo from '@components/base/BrandLogo';
 import { loginSchema } from '@forms/schemas';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 
-const LOGO = require('../../../assets/IconAppWhite.png');
-
 export default function LoginScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { signIn, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,53 +31,67 @@ export default function LoginScreen({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.brandContainer}>
-          <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
-        </View>
-        <Text style={styles.title}>Bom dia</Text>
-        <Text style={styles.subtitle}>Seu momento de cuidado começa aqui</Text>
-      </View>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView
+        style={styles.keyboard}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        enabled
+      >
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.header}>
+            <BrandLogo size={104} />
+            <Text style={styles.title}>Bom dia</Text>
+            <Text style={styles.subtitle}>Seu momento de cuidado começa aqui</Text>
+          </View>
 
-      <View style={styles.form}>
-        <View style={styles.formCard}>
-          <Input
-            label="E-mail"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            placeholder="seu@email.com"
-          />
-          <PasswordInput
-            label="Senha"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Sua senha"
-          />
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          {success ? <Text style={styles.success}>{success}</Text> : null}
-          <Button
-            title="Entrar"
-            onPress={handleLogin}
-            disabled={loading}
-            loading={loading}
-            style={styles.loginButton}
-          />
-          <TouchableOpacity onPress={() => navigation.navigate('PasswordRecovery')} style={styles.recoveryLink}>
-            <Text style={styles.link}>Esqueci minha senha</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+          <View style={styles.form}>
+            <View style={styles.formCard}>
+              <Input
+                label="E-mail"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                placeholder="seu@email.com"
+              />
+              <PasswordInput
+                label="Senha"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Sua senha"
+              />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+              {success ? <Text style={styles.success}>{success}</Text> : null}
+              <Button
+                title="Entrar"
+                onPress={handleLogin}
+                disabled={loading}
+                loading={loading}
+                style={styles.loginButton}
+              />
+              <TouchableOpacity
+                onPress={() => navigation.navigate('PasswordRecovery')}
+                style={styles.recoveryLink}
+              >
+                <Text style={styles.link}>Esqueci minha senha</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Ainda não tem conta? </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-          <Text style={styles.linkBold}>Criar conta</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+            <Text style={styles.footerText}>Ainda não tem conta? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+              <Text style={styles.linkBold}>Criar conta</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -84,24 +100,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  keyboard: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    flexGrow: 1,
     paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
+  },
+  header: {
     alignItems: 'center',
-  },
-  brandContainer: {
-    marginBottom: spacing.lg,
-  },
-  logoImage: {
-    width: 104,
-    height: 70,
+    paddingBottom: spacing.xl,
   },
   title: {
     ...typography.title,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
     textAlign: 'center',
+    marginTop: spacing.lg,
   },
   subtitle: {
     ...typography.subtitle,
@@ -110,7 +130,6 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
-    paddingHorizontal: spacing.screenPadding,
   },
   formCard: {
     backgroundColor: colors.surface,
@@ -152,8 +171,7 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingTop: spacing.lg,
   },
   footerText: {
     ...typography.body,

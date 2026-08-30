@@ -42,6 +42,23 @@ jest.mock('@expo/vector-icons', () => ({
   Ionicons: 'Ionicons',
 }));
 
+// Mock react-native-safe-area-context
+jest.mock('react-native-safe-area-context', () => {
+  const React = require('react');
+  const View = require('react-native').View;
+  const insets = { top: 0, right: 0, bottom: 0, left: 0 };
+  const SafeAreaView = (props: any) => React.createElement(View, props, props.children);
+  const SafeAreaProvider = (props: any) => React.createElement(View, props, props.children);
+  return {
+    __esModule: true,
+    SafeAreaView,
+    SafeAreaProvider,
+    SafeAreaConsumer: ({ children }: any) => children(insets),
+    useSafeAreaInsets: () => insets,
+    useSafeAreaFrame: () => ({ x: 0, y: 0, width: 360, height: 800 }),
+  };
+});
+
 // Mock react-native-svg
 jest.mock('react-native-svg', () => {
   const React = require('react');

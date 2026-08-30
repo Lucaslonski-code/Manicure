@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Input from './Input';
-import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { colors, spacing, typography, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 
 interface PasswordInputProps {
@@ -40,33 +40,28 @@ export default function PasswordInput({
 
   const matchError = confirmPassword !== undefined && confirmPassword.length > 0 && value !== confirmPassword;
 
+  const toggle = (
+    <TouchableOpacity
+      onPress={() => setVisible((v) => !v)}
+      style={styles.toggleButton}
+      accessibilityLabel={visible ? 'Ocultar senha' : 'Mostrar senha'}
+      accessibilityRole="button"
+    >
+      <AppIcon name={visible ? 'eye-off' : 'eye'} size="sm" color="secondary" />
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
-      <View style={styles.inputWrapper}>
-        <View style={styles.inputContainer}>
-          <Input
-            label={label}
-            value={value}
-            onChangeText={onChangeText}
-            placeholder={placeholder}
-            secureTextEntry={!visible}
-            error={error || (matchError ? 'Senhas não coincidem' : undefined)}
-            containerStyle={styles.inputContainerInner}
-          />
-        </View>
-        <TouchableOpacity
-          onPress={() => setVisible((v) => !v)}
-          style={styles.toggleButton}
-          accessibilityLabel={visible ? 'Ocultar senha' : 'Mostrar senha'}
-          accessibilityRole="button"
-        >
-          <AppIcon
-            name={visible ? 'eye-off' : 'eye'}
-            size={iconSizes.md}
-            color="secondary"
-          />
-        </TouchableOpacity>
-      </View>
+      <Input
+        label={label}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        secureTextEntry={!visible}
+        error={error || (matchError ? 'Senhas não coincidem' : undefined)}
+        rightAccessory={toggle}
+      />
       {showRequirements && value.length > 0 ? (
         <View style={styles.requirementsCard}>
           {requirements.map((req) => {
@@ -75,7 +70,7 @@ export default function PasswordInput({
               <View key={req.label} style={styles.requirementRow}>
                 <AppIcon
                   name={passed ? 'check' : 'error'}
-                  size={iconSizes.sm}
+                  size="sm"
                   color={passed ? 'success' : 'error'}
                 />
                 <Text style={[styles.requirement, passed ? styles.requirementMet : styles.requirementUnmet]}>
@@ -92,24 +87,13 @@ export default function PasswordInput({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.md,
-  },
-  inputWrapper: {
-    position: 'relative',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  inputContainerInner: {
-    flex: 1,
+    marginBottom: 0,
   },
   toggleButton: {
-    position: 'absolute',
-    right: spacing.md,
-    top: spacing.md,
-    padding: spacing.xs,
-    zIndex: 1,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   requirementsCard: {
     marginTop: spacing.sm,

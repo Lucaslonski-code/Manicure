@@ -1,5 +1,4 @@
 import { supabase } from '../../supabase/client';
-import { fetchProfile as fetchProfileService } from '../auth/authService';
 
 export type NotificationToken = {
   id: string;
@@ -18,18 +17,11 @@ export async function registerNotificationToken(token: string, platform: 'androi
     return; // Silently return if not authenticated
   }
 
-  // Fetch the user profile to ensure it exists and is active
-  const profile = await fetchProfileService(authUserId);
-  if (!profile || !profile.is_active) {
-    return; // Do not register token if profile does not exist or is inactive
-  }
-  const userId = profile.id; // This is the same as authUserId, but we use the profile to ensure validity
-
   // Check if token already exists for this user/platform to avoid duplicate registration
   const { data: existing } = await supabase
     .from('notifications_tokens')
     .select('id')
-    .eq('user_id', userId)
+    .eq('user_id', authUserId)
     .eq('token', token)
     .single();
 
@@ -46,11 +38,11 @@ export async function registerNotificationToken(token: string, platform: 'androi
     return;
   }
 
-  // Insert new token
+  // Insert new token using authUserId directly (the FK references users.id from auth session)
   const { error } = await supabase
     .from('notifications_tokens')
     .insert({
-      user_id: userId,
+      user_id: authUserId,
       token,
       platform,
       is_active: true,

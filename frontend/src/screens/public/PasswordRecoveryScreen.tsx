@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@hooks/useAuth';
 import Button from '@components/base/Button';
 import Input from '@components/base/Input';
+import BrandLogo from '@components/base/BrandLogo';
 import { passwordRecoverySchema } from '@forms/schemas';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 
-const LOGO = require('../../../assets/IconAppWhite.png');
-
 export default function PasswordRecoveryScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { resetPassword, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -26,15 +27,13 @@ export default function PasswordRecoveryScreen({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={[styles.content, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}>
         <View style={styles.brandContainer}>
-          <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
+          <BrandLogo size={80} />
         </View>
         <Text style={styles.title}>Recuperar senha</Text>
-        <Text style={styles.text}>
-          Enviaremos um link para redefinir sua senha.
-        </Text>
+        <Text style={styles.text}>Enviaremos um link para redefinir sua senha.</Text>
 
         <View style={styles.formCard}>
           <Input
@@ -59,7 +58,7 @@ export default function PasswordRecoveryScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -75,11 +74,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.screenPadding,
   },
   brandContainer: {
-    marginBottom: spacing.xxxxxxl,
-  },
-  logoImage: {
-    width: 80,
-    height: 80,
+    marginBottom: spacing.xl,
   },
   title: {
     ...typography.title,
@@ -92,19 +87,20 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: spacing.xxxxl,
+    marginBottom: spacing.xl,
   },
   formCard: {
     width: '100%',
+    maxWidth: 360,
     backgroundColor: colors.surface,
     borderRadius: radius.card,
-    padding: spacing.xxxxxxl,
+    padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
     ...elevation.sm,
   },
   recoverButton: {
-    marginTop: spacing.xxxxxxl,
+    marginTop: spacing.lg,
   },
   error: {
     ...typography.bodySmall,
@@ -122,7 +118,7 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.gold,
     textAlign: 'center',
-    marginTop: spacing.xxxxxxl,
+    marginTop: spacing.lg,
     fontWeight: '500',
   },
 });

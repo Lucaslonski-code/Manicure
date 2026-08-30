@@ -14,7 +14,7 @@ export type InitialScreenProps = {
 export default function InitialScreen({ onFinish }: InitialScreenProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const finishedRef = useRef(false);
-  const holdTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     // Fade in
@@ -54,7 +54,7 @@ export default function InitialScreen({ onFinish }: InitialScreenProps) {
       accessibilityRole="image"
     >
       <Animated.View style={[styles.imageWrap, { opacity }]}>
-        <Image source={TELA_INICIAL} style={styles.image} resizeMode="contain" />
+        <Image source={TELA_INICIAL} style={styles.image} resizeMode="cover" />
       </Animated.View>
     </View>
   );
@@ -64,14 +64,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   imageWrap: {
-    width: '80%',
-    maxWidth: 320,
-    height: '80%',
-    maxHeight: 400,
+    width: '100%',
+    height: '100%',
   },
   image: {
     width: '100%',

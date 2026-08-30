@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@hooks/useAuth';
 import Button from '@components/base/Button';
+import BrandLogo from '@components/base/BrandLogo';
 import { colors, spacing, typography } from '@theme';
 
-const LOGO = require('../../../assets/IconAppWhite.png');
-
 export default function EmailConfirmationScreen({ route, navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { resend, loading } = useAuth();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
@@ -23,10 +24,10 @@ export default function EmailConfirmationScreen({ route, navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
+      <View style={[styles.content, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}>
         <View style={styles.brandContainer}>
-          <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
+          <BrandLogo size={80} />
         </View>
         <Text style={styles.title}>Verifique seu e-mail</Text>
         <Text style={styles.text}>
@@ -49,7 +50,7 @@ export default function EmailConfirmationScreen({ route, navigation }: any) {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -65,11 +66,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.screenPadding,
   },
   brandContainer: {
-    marginBottom: spacing.xxl,
-  },
-  logoImage: {
-    width: 80,
-    height: 80,
+    marginBottom: spacing.xl,
   },
   title: {
     ...typography.title,
