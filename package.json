@@ -1,6 +1,7 @@
 {
   "devDependencies": {
-    "supabase": "^2.115.0"
+    "supabase": "^2.115.0",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "sharp": "^0.35.4"

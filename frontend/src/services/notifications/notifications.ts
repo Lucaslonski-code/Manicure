@@ -1,4 +1,5 @@
 import { supabase } from '../../supabase/client';
+import { fetchProfile as fetchProfileService } from '../auth/authService';
 
 export type NotificationToken = {
   id: string;
@@ -17,16 +18,12 @@ export async function registerNotificationToken(token: string, platform: 'androi
     return; // Silently return if not authenticated
   }
 
-  // Check if user profile exists - FK likely references profiles.id
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('id', authUserId)
-    .single();
-
-  // If profile doesn't exist, use auth user ID (FK might reference auth.users)
-  // but if FK references profiles, we need the profile to exist
-  const userId = profile?.id ?? authUserId;
+  // Fetch the user profile to ensure it exists and is active
+  const profile = await fetchProfileService(authUserId);
+  if (!profile || !profile.is_active) {
+    return; // Do not register token if profile does not exist or is inactive
+  }
+  const userId = profile.id; // This is the same as authUserId, but we use the profile to ensure validity
 
   // Check if token already exists for this user/platform to avoid duplicate registration
   const { data: existing } = await supabase
@@ -62,7 +59,6 @@ export async function registerNotificationToken(token: string, platform: 'androi
   if (error) {
     console.error('Error registering notification token:', error);
     // Don't throw - just log the error to avoid breaking the app
-    // The FK error is likely due to missing profile, which is a data issue
   }
 }
 

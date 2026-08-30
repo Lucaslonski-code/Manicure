@@ -12,7 +12,11 @@ jest.mock('react-native', () => ({
         this.value = v;
       }
     },
-    timing: jest.fn(() => ({ start: (cb?: (s: { finished: boolean }) => void) => cb && cb({ finished: true }) })),
+    timing: jest.fn().mockImplementation(() => ({
+      start: (cb: (s: { finished: boolean }) => void) => {
+        cb && cb({ finished: true });
+      },
+    })),
   },
   StyleSheet: { create: (s: any) => s },
   Platform: { OS: 'android', select: (o: any) => o?.android || o?.default },

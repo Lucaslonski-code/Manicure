@@ -103,16 +103,16 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
-    paddingBottom: spacing.xxxxxl,
+    paddingBottom: spacing.md,
   },
   header: {
     paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.xxxxxl,
-    paddingBottom: spacing.xxxxxxl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
     alignItems: 'center',
   },
   brandContainer: {
-    marginBottom: spacing.xxxxxxl,
+    marginBottom: spacing.lg,
   },
   logoImage: {
     width: 96,
@@ -136,16 +136,16 @@ const styles = StyleSheet.create({
   formCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
-    padding: spacing.xxxxxxl,
+    padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
     ...elevation.sm,
   },
   signupButton: {
-    marginTop: spacing.xxxxl,
+    marginTop: spacing.lg,
   },
   loginLink: {
-    marginTop: spacing.xxxxxxl,
+    marginTop: spacing.lg,
     alignItems: 'center',
   },
   error: {

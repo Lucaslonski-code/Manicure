@@ -67,13 +67,13 @@ export default function LoginScreen({ navigation }: any) {
             <Text style={styles.link}>Esqueci minha senha</Text>
           </TouchableOpacity>
         </View>
+      </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Ainda não tem conta? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-            <Text style={styles.linkBold}>Criar conta</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>Ainda não tem conta? </Text>
+        <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+          <Text style={styles.linkBold}>Criar conta</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -86,12 +86,12 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.xxxxxl,
-    paddingBottom: spacing.xxxxxxl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
     alignItems: 'center',
   },
   brandContainer: {
-    marginBottom: spacing.xxxxxxl,
+    marginBottom: spacing.lg,
   },
   logoImage: {
     width: 104,
@@ -115,16 +115,16 @@ const styles = StyleSheet.create({
   formCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
-    padding: spacing.xxxxxxl,
+    padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
     ...elevation.sm,
   },
   loginButton: {
-    marginTop: spacing.xxxxl,
+    marginTop: spacing.lg,
   },
   recoveryLink: {
-    marginTop: spacing.xxxxxxl,
+    marginTop: spacing.lg,
     alignItems: 'center',
   },
   error: {
@@ -152,8 +152,8 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: spacing.xxxxxxxl,
-    paddingBottom: spacing.xxxxxxl,
+    marginTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   footerText: {
     ...typography.body,

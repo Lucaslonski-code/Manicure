@@ -32,7 +32,7 @@ export default function Input({ label, error, containerStyle, ...props }: InputP
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.xxxxxxl,
+    marginBottom: spacing.md,
   },
   label: {
     ...typography.bodySmall,
@@ -43,12 +43,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.input,
-    paddingVertical: spacing.xxxxxxl,
-    paddingHorizontal: spacing.xxxxxxl,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     ...typography.input,
     color: colors.textPrimary,
     backgroundColor: colors.surface,
-    minHeight: componentSizes.inputHeight,
+    height: componentSizes.inputHeight,
     ...elevation.none,
   },
   inputFocused: {

@@ -32,7 +32,7 @@ export default function Button({ title, onPress, disabled, loading, variant = 'p
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
       disabled={disabled || loading}
-      style={[{ minHeight: componentSizes.buttonHeight }, buttonStyle]}
+      style={[{ height: componentSizes.buttonHeight }, buttonStyle]}
       accessibilityLabel={title}
       accessibilityRole="button"
       accessibilityState={{ disabled: !!disabled || !!loading, busy: !!loading }}
@@ -49,8 +49,8 @@ export default function Button({ title, onPress, disabled, loading, variant = 'p
 const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.gold,
-    paddingVertical: spacing.xxxxxxl,
-    paddingHorizontal: spacing.xxxxl,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.button,
     alignItems: 'center',
     justifyContent: 'center',
