@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../supabase/client';
 import type { Profile, AuthState } from '../supabase/types';
 import type { AuthClient, Session, AuthChangeEvent, Subscription } from '../types/auth';
@@ -52,8 +52,16 @@ export function useAuth(): AuthState & {
   const { register: registerNotification, unregister: unregisterNotification } = useNotifications();
 
   const PROFILE_TIMEOUT_MS = 10000;
+  const AUTO_CREATE_TIMEOUT_MS = 10000;
+  const loadProfileRunning = useRef(false);
 
   const loadProfile = useCallback(async (userId: string) => {
+    if (loadProfileRunning.current) {
+      console.log('[USE_AUTH] loadProfile SKIPPED — already running for another call');
+      return;
+    }
+    loadProfileRunning.current = true;
+
     try {
       console.log('[USE_AUTH] loadProfile called — userId=%s', userId);
 
@@ -79,12 +87,17 @@ export function useAuth(): AuthState & {
       } else {
         console.warn('[USE_AUTH] loadProfile — profile NOT FOUND for userId=%s, attempting auto-create', userId);
 
-        const { data: { user: authUser } } = await authClient.getUser();
+        const getUserPromise = authClient.getUser();
+        const getUserTimeout = new Promise<{ data: { user: null } }>((resolve) => {
+          setTimeout(() => resolve({ data: { user: null } }), AUTO_CREATE_TIMEOUT_MS);
+        });
+        const { data: { user: authUser } } = await Promise.race([getUserPromise, getUserTimeout]);
+
         if (authUser) {
           const name = (authUser.user_metadata?.name as string) || '';
           const phone = (authUser.user_metadata?.phone as string) || '';
 
-          const { data: newProfile, error: insertError } = await supabase
+          const insertPromise = supabase
             .from('users')
             .insert({
               id: userId,
@@ -96,6 +109,10 @@ export function useAuth(): AuthState & {
             })
             .select()
             .single();
+          const insertTimeout = new Promise<{ data: null; error: { message: string } }>((resolve) => {
+            setTimeout(() => resolve({ data: null, error: { message: 'timeout' } }), AUTO_CREATE_TIMEOUT_MS);
+          });
+          const { data: newProfile, error: insertError } = await Promise.race([insertPromise, insertTimeout]);
 
           if (!insertError && newProfile) {
             console.log('[USE_AUTH] loadProfile — auto-created profile for userId=%s', userId);
@@ -113,6 +130,7 @@ export function useAuth(): AuthState & {
       console.error('[USE_AUTH] loadProfile EXCEPTION:', err);
       setProfileError('Erro ao carregar perfil. Verifique sua conexão e tente novamente.');
     } finally {
+      loadProfileRunning.current = false;
       setLoading(false);
     }
   }, []);
@@ -266,9 +284,17 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
       throw new Error(result.error);
     }
 
-    const { data: { session: freshSession } } = await authClient.getSession();
-    if (freshSession?.user) {
-      await loadProfile(freshSession.user.id);
+    if (result.userId) {
+      await Promise.race([
+        loadProfile(result.userId),
+        new Promise<void>((resolve) => {
+          setTimeout(() => {
+            console.warn('[USE_AUTH] signIn — loadProfile safety timeout fired');
+            setLoading(false);
+            resolve();
+          }, PROFILE_TIMEOUT_MS + 5000);
+        }),
+      ]);
     }
 
     setRecoveryMode(false);

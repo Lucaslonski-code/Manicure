@@ -5,6 +5,7 @@ export interface AuthResult {
   success: boolean;
   error?: string;
   profile?: Profile;
+  userId?: string;
 }
 
 const AUTH_REDIRECT = 'appmanicure://auth/confirm';
@@ -143,7 +144,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
     }
 
     console.log('[AUTH_SERVICE] signIn SUCCESS — user_id=%s', data.user.id);
-    return { success: true };
+    return { success: true, userId: data.user.id };
   } catch (err: any) {
     console.error('[AUTH_SERVICE] signIn EXCEPTION:', err?.name, err?.message);
     return { success: false, error: 'Erro de conexão' };
