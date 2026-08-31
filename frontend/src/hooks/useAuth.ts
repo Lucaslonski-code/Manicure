@@ -244,13 +244,7 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
          if (!isMounted) return;
          setSession(session);
           if (session?.user) {
-            // Register push token (non-fatal: must not block profile load)
-            try {
-              await registerNotification();
-            } catch (tokenErr) {
-              console.warn('Push token registration failed, continuing without it:', tokenErr);
-            }
-            await loadProfile(session.user.id);
+            loadProfile(session.user.id);
          } else {
            setProfile(null);
            setLoading(false);
@@ -283,22 +277,8 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
     if (!result.success) {
       throw new Error(result.error);
     }
-
-    if (result.userId) {
-      await Promise.race([
-        loadProfile(result.userId),
-        new Promise<void>((resolve) => {
-          setTimeout(() => {
-            console.warn('[USE_AUTH] signIn — loadProfile safety timeout fired');
-            setLoading(false);
-            resolve();
-          }, PROFILE_TIMEOUT_MS + 5000);
-        }),
-      ]);
-    }
-
     setRecoveryMode(false);
-  }, [loadProfile]);
+  }, []);
 
   const signOut = useCallback(async (): Promise<void> => {
     await unregisterNotification();
