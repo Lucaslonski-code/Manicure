@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView } from 'react-native';
@@ -21,13 +21,36 @@ export default function SignUpScreen({ navigation }: any) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    console.log('[SIGNUP] MOUNTED — loading=%s', loading);
+  }, []);
+
+  useEffect(() => {
+    console.log('[SIGNUP] loading changed: %s', loading);
+  }, [loading]);
+
   const handleSignUp = async () => {
     try {
       setError('');
+      console.log('[SIGNUP] SUBMIT START');
+      console.log('[SIGNUP] Fields: name=%s email=%s phone=%s password_len=%d confirm_len=%d',
+        name ? 'set' : 'empty',
+        email ? 'set' : 'empty',
+        phone ? 'set' : 'empty',
+        password.length,
+        confirmPassword.length,
+      );
+
+      console.log('[SIGNUP] Validating with Zod...');
       signUpSchema.parse({ name, email, phone, password, confirmPassword });
+      console.log('[SIGNUP] VALIDATION PASSED');
+
+      console.log('[SIGNUP] Calling auth.signUp()...');
       await signUp(name, email, phone, password);
-      navigation.navigate('Login', { signupSuccess: true });
+      console.log('[SIGNUP] AUTH SIGNUP RESOLVED — navigating to EmailConfirmation');
+      navigation.navigate('EmailConfirmation', { email });
     } catch (err: any) {
+      console.error('[SIGNUP] ERROR:', err?.name, err?.message);
       setError(err.message || 'Erro ao cadastrar');
     }
   };

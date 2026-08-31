@@ -10,6 +10,7 @@ type AuthContextValue = AuthState & {
   updatePassword: (password: string) => Promise<void>;
   resend: (email: string) => Promise<void>;
   recoveryMode: boolean;
+  profileError: string;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);

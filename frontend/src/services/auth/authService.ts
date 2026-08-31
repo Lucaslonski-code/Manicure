@@ -72,6 +72,7 @@ function getAuthError(message: string): string {
 
 export async function signUp(name: string, email: string, phone: string, password: string): Promise<AuthResult> {
   try {
+    console.log('[AUTH_SERVICE] signUp called — email_len=%d password_len=%d', email.length, password.length);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -84,37 +85,61 @@ export async function signUp(name: string, email: string, phone: string, passwor
       },
     });
 
+    console.log('[AUTH_SERVICE] signUp response — error=%s data.user=%s data.session=%s',
+      error ? `${error.status || 'no-status'}/${error.message}` : 'null',
+      data?.user ? `${data.user.id}` : 'null',
+      data?.session ? 'exists' : 'null',
+    );
+
     if (error) {
+      console.error('[AUTH_SERVICE] signUp ERROR:', error.status, error.name, error.message);
       return { success: false, error: getAuthError(error.message) };
     }
 
     if (!data.user) {
+      console.error('[AUTH_SERVICE] signUp returned user=null without error');
       return { success: false, error: 'Erro ao criar conta' };
     }
 
+    console.log('[AUTH_SERVICE] signUp SUCCESS — user_id=%s email_confirmed_at=%s',
+      data.user.id,
+      data.user.email_confirmed_at || 'null',
+    );
     return { success: true };
-  } catch {
+  } catch (err: any) {
+    console.error('[AUTH_SERVICE] signUp EXCEPTION:', err?.name, err?.message);
     return { success: false, error: 'Erro de conexão' };
   }
 }
 
 export async function signIn(email: string, password: string): Promise<AuthResult> {
   try {
+    console.log('[AUTH_SERVICE] signIn called — email_len=%d', email.length);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
+    console.log('[AUTH_SERVICE] signIn response — error=%s data.user=%s data.session=%s',
+      error ? `${error.status || 'no-status'}/${error.message}` : 'null',
+      data?.user ? `${data.user.id}` : 'null',
+      data?.session ? 'exists' : 'null',
+    );
+
     if (error) {
+      console.error('[AUTH_SERVICE] signIn ERROR:', error.status, error.name, error.message);
       return { success: false, error: getAuthError(error.message) };
     }
 
     if (!data.user) {
+      console.error('[AUTH_SERVICE] signIn returned user=null without error');
       return { success: false, error: 'Credenciais inválidas' };
     }
 
+    console.log('[AUTH_SERVICE] signIn SUCCESS — user_id=%s', data.user.id);
     return { success: true };
-  } catch {
+  } catch (err: any) {
+    console.error('[AUTH_SERVICE] signIn EXCEPTION:', err?.name, err?.message);
     return { success: false, error: 'Erro de conexão' };
   }
 }
@@ -151,14 +176,23 @@ export async function resetPassword(email: string): Promise<AuthResult> {
 
 export async function resendConfirmation(email: string): Promise<AuthResult> {
   try {
-    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    console.log('[AUTH_SERVICE] resendConfirmation called — email_len=%d', email.length);
+    const { data, error } = await supabase.auth.resend({ type: 'signup', email });
+
+    console.log('[AUTH_SERVICE] resendConfirmation response — error=%s data=%s',
+      error ? `${error.status || 'no-status'}/${error.message}` : 'null',
+      data ? JSON.stringify(data) : 'null',
+    );
 
     if (error) {
+      console.error('[AUTH_SERVICE] resendConfirmation ERROR:', error.status, error.name, error.message);
       return { success: false, error: getAuthError(error.message) };
     }
 
+    console.log('[AUTH_SERVICE] resendConfirmation SUCCESS');
     return { success: true };
-  } catch {
+  } catch (err: any) {
+    console.error('[AUTH_SERVICE] resendConfirmation EXCEPTION:', err?.name, err?.message);
     return { success: false, error: 'Erro de conexão' };
   }
 }

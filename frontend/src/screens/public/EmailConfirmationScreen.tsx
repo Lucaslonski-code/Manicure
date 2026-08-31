@@ -16,9 +16,13 @@ export default function EmailConfirmationScreen({ route, navigation }: any) {
   const handleResend = async () => {
     try {
       setError('');
+      setSent(false);
+      console.log('[EMAIL_CONFIRM] RESEND START — email_len=%d', email.length);
       await resend(email);
+      console.log('[EMAIL_CONFIRM] RESEND SUCCESS');
       setSent(true);
     } catch (err: any) {
+      console.error('[EMAIL_CONFIRM] RESEND ERROR:', err?.name, err?.message);
       setError(err.message || 'Erro ao reenviar');
     }
   };

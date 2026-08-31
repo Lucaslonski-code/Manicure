@@ -42,36 +42,48 @@ export function useAuth(): AuthState & {
   updatePassword: (password: string) => Promise<void>;
   resend: (email: string) => Promise<void>;
   recoveryMode: boolean;
+  profileError: string;
 } {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [recoveryMode, setRecoveryMode] = useState(false);
+  const [profileError, setProfileError] = useState('');
   const { register: registerNotification, unregister: unregisterNotification } = useNotifications();
+
+  const PROFILE_TIMEOUT_MS = 10000;
 
   const loadProfile = useCallback(async (userId: string) => {
     try {
-      const profileData = await fetchProfileService(userId);
+      console.log('[USE_AUTH] loadProfile called — userId=%s', userId);
+
+      const profilePromise = fetchProfileService(userId);
+      const timeoutPromise = new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), PROFILE_TIMEOUT_MS);
+      });
+      const profileData = await Promise.race([profilePromise, timeoutPromise]);
+
+      console.log('[USE_AUTH] loadProfile result — profile=%s', profileData ? `${profileData.id}/${profileData.role}` : 'null');
+
       if (profileData) {
-        // Perfis marcados como deletados ou inativos são considerados
-        // encerrados: a sessão é invalidada e o usuário retorna ao estado
-        // público (Login). Isso impede que contas desativadas acessem o app.
         if (profileData.deleted_at || !profileData.is_active) {
+          console.warn('[USE_AUTH] loadProfile — profile deleted/inactive, signing out');
           await authClient.signOut();
           setProfile(null);
           setSession(null);
+          setProfileError('Sua conta foi desativada. Entre em contato com o suporte.');
         } else {
           setProfile(profileData);
+          setProfileError('');
         }
+      } else {
+        console.warn('[USE_AUTH] loadProfile — profile NOT FOUND for userId=%s', userId);
+        setProfileError('Perfil não encontrado. Entre em contato com o suporte.');
       }
     } catch (err) {
-      console.error('Error loading profile:', err);
-      await authClient.signOut();
-      setProfile(null);
-      setSession(null);
+      console.error('[USE_AUTH] loadProfile EXCEPTION:', err);
+      setProfileError('Erro ao carregar perfil. Verifique sua conexão e tente novamente.');
     } finally {
-      // loading termina aqui porque o perfil é necessário para resolver
-      // a pilha de navegação (admin/client).
       setLoading(false);
     }
   }, []);
@@ -209,7 +221,9 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
   }, [loadProfile]);
 
   const signUp = useCallback(async (name: string, email: string, phone: string, password: string): Promise<void> => {
+    console.log('[USE_AUTH] signUp called');
     const result = await signUpService(name, email, phone, password);
+    console.log('[USE_AUTH] signUp result — success=%s error=%s', result.success, result.error || 'none');
     if (!result.success) {
       throw new Error(result.error);
     }
@@ -217,6 +231,7 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
   }, []);
 
   const signIn = useCallback(async (email: string, password: string): Promise<void> => {
+    setProfileError('');
     const result = await signInService(email, password);
     if (!result.success) {
       throw new Error(result.error);
@@ -247,7 +262,9 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
   }, []);
 
   const resend = useCallback(async (email: string): Promise<void> => {
+    console.log('[USE_AUTH] resend called');
     const result = await resendConfirmation(email);
+    console.log('[USE_AUTH] resend result — success=%s error=%s', result.success, result.error || 'none');
     if (!result.success) {
       throw new Error(result.error);
     }
@@ -257,7 +274,7 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
 
   const typedSession = useMemo(() => session ? { user: session.user } : null, [session]);
 
-  return useMemo(() => ({ session: typedSession, profile, loading, isEmailVerified, recoveryMode, signUp, signIn, signOut, resetPassword, updatePassword, resend }), [
-    typedSession, profile, loading, isEmailVerified, recoveryMode, signUp, signIn, signOut, resetPassword, updatePassword, resend
+  return useMemo(() => ({ session: typedSession, profile, loading, isEmailVerified, recoveryMode, profileError, signUp, signIn, signOut, resetPassword, updatePassword, resend }), [
+    typedSession, profile, loading, isEmailVerified, recoveryMode, profileError, signUp, signIn, signOut, resetPassword, updatePassword, resend
   ]);
 }

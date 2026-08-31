@@ -12,25 +12,36 @@ import { colors, spacing, typography, radius, elevation } from '@theme';
 
 export default function LoginScreen({ navigation, route }: any) {
   const insets = useSafeAreaInsets();
-  const { signIn, loading } = useAuthContext();
+  const { signIn, loading, profileError } = useAuthContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(
     route?.params?.signupSuccess
       ? 'Conta criada com sucesso. Confirme seu e-mail para poder entrar.'
       : ''
   );
 
+  const isBusy = loading || submitting;
+
   const handleLogin = async () => {
+    if (isBusy) return;
     try {
       setError('');
       setSuccess('');
+      setSubmitting(true);
+      console.log('[LOGIN] SUBMIT START');
       loginSchema.parse({ email, password });
+      console.log('[LOGIN] VALIDATION PASSED');
       await signIn(email, password);
+      console.log('[LOGIN] SIGNIN RESOLVED — success');
       setSuccess('Login realizado com sucesso.');
     } catch (err: any) {
+      console.error('[LOGIN] ERROR:', err?.name, err?.message);
       setError(err.message || 'Erro ao entrar');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -71,12 +82,13 @@ export default function LoginScreen({ navigation, route }: any) {
                 placeholder="Sua senha"
               />
               {error ? <Text style={styles.error}>{error}</Text> : null}
+              {profileError ? <Text style={styles.error}>{profileError}</Text> : null}
               {success ? <Text style={styles.success}>{success}</Text> : null}
               <Button
                 title="Entrar"
                 onPress={handleLogin}
-                disabled={loading}
-                loading={loading}
+                disabled={isBusy}
+                loading={isBusy}
                 style={styles.loginButton}
               />
               <TouchableOpacity
