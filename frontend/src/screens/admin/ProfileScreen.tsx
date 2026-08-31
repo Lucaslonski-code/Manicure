@@ -1,37 +1,29 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import { useAuthContext } from '@hooks/AuthContext';
 import { useNotifications } from '@hooks';
-import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { colors, spacing, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import DangerButton from '@components/base/DangerButton';
-import Divider from '@components/base/Divider';
 import Avatar from '@components/base/Avatar';
 import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function AdminProfileScreen({ _navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { profile, signOut } = useAuthContext();
   const { permissionStatus, register, token } = useNotifications();
 
   const handleToggleNotifications = async () => {
     try {
       if (permissionStatus?.granted) {
-        if (token) {
-          Alert.alert('Notificações', 'As notificações já estão ativadas para este dispositivo.');
-        } else {
-          await register();
-        }
+        if (token) Alert.alert('Notificações', 'As notificações já estão ativadas para este dispositivo.');
+        else await register();
       } else {
         const { status } = await Notifications.requestPermissionsAsync();
-        if (status === 'granted') {
-          await register();
-        } else {
-          Alert.alert(
-            'Notificações',
-            'As notificações estão desativadas. Você pode habilitá-las nas configurações do aplicativo.'
-          );
-        }
+        if (status === 'granted') await register();
+        else Alert.alert('Notificações', 'As notificações estão desativadas. Você pode habilitá-las nas configurações do aplicativo.');
       }
     } catch {
       Alert.alert('Erro', 'Não foi possível gerenciar notificações. Tente novamente.');
@@ -41,30 +33,22 @@ export default function AdminProfileScreen({ _navigation }: any) {
   const handleLogout = async () => {
     Alert.alert('Sair', 'Deseja realmente sair da conta?', [
       { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Sair',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOut();
-          } catch {
-            Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
-          }
-        },
-      },
+      { text: 'Sair', style: 'destructive', onPress: async () => { try { await signOut(); } catch { Alert.alert('Erro', 'Não foi possível sair. Tente novamente.'); } } },
     ]);
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
+      showsVerticalScrollIndicator={false}
+    >
       <ScreenHeader title="Perfil" subtitle="Área administrativa" />
-      <View style={styles.section}>
-        <View style={styles.avatarRow}>
-          <Avatar name={profile?.name} size={88} borderColor={colors.goldLight} />
-          <View style={styles.identityText}>
-            <Text style={styles.name}>{profile?.name || '—'}</Text>
-            <Text style={styles.email}>{profile?.email || '—'}</Text>
-          </View>
+      <View style={styles.identityBlock}>
+        <Avatar name={profile?.name} size={72} />
+        <View style={styles.identityText}>
+          <Text style={styles.name} numberOfLines={1}>{profile?.name || '—'}</Text>
+          <Text style={styles.email} numberOfLines={1}>{profile?.email || '—'}</Text>
         </View>
       </View>
 
@@ -72,27 +56,18 @@ export default function AdminProfileScreen({ _navigation }: any) {
         <Text style={styles.sectionTitle}>Informações pessoais</Text>
         <View style={styles.card}>
           <View style={styles.row}>
-            <View style={styles.iconLabelRow}>
-              <AppIcon name="user" size={iconSizes.sm} color="gold" />
-              <Text style={styles.label}>Nome</Text>
-            </View>
-            <Text style={styles.value}>{profile?.name || '—'}</Text>
+            <View style={styles.labelRow}><AppIcon name="user" size={16} color="gold" /><Text style={styles.label}>Nome</Text></View>
+            <Text style={styles.value} numberOfLines={1}>{profile?.name || '—'}</Text>
           </View>
-          <Divider gold />
+          <View style={styles.rowDivider} />
           <View style={styles.row}>
-            <View style={styles.iconLabelRow}>
-              <AppIcon name="mail" size={iconSizes.sm} color="gold" />
-              <Text style={styles.label}>E-mail</Text>
-            </View>
-            <Text style={styles.value}>{profile?.email || '—'}</Text>
+            <View style={styles.labelRow}><AppIcon name="mail" size={16} color="gold" /><Text style={styles.label}>E-mail</Text></View>
+            <Text style={styles.value} numberOfLines={1}>{profile?.email || '—'}</Text>
           </View>
-          <Divider gold />
+          <View style={styles.rowDivider} />
           <View style={styles.row}>
-            <View style={styles.iconLabelRow}>
-              <AppIcon name="phone" size={iconSizes.sm} color="gold" />
-              <Text style={styles.label}>Telefone</Text>
-            </View>
-            <Text style={styles.value}>{profile?.phone || '—'}</Text>
+            <View style={styles.labelRow}><AppIcon name="phone" size={16} color="gold" /><Text style={styles.label}>Telefone</Text></View>
+            <Text style={styles.value} numberOfLines={1}>{profile?.phone || '—'}</Text>
           </View>
         </View>
       </View>
@@ -100,16 +75,11 @@ export default function AdminProfileScreen({ _navigation }: any) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Preferências</Text>
         <View style={styles.card}>
-          <TouchableOpacity style={styles.row} onPress={handleToggleNotifications}>
-            <View style={styles.iconLabelRow}>
-              <AppIcon name="bell" size={iconSizes.sm} color="gold" />
-              <Text style={styles.label}>Notificações</Text>
-            </View>
+          <TouchableOpacity style={styles.row} onPress={handleToggleNotifications} activeOpacity={0.7}>
+            <View style={styles.labelRow}><AppIcon name="bell" size={16} color="gold" /><Text style={styles.label}>Notificações</Text></View>
             <View style={styles.valueRow}>
-              <Text style={styles.value}>
-                {token || permissionStatus?.granted ? 'Ativadas' : 'Desativadas'}
-              </Text>
-              <AppIcon name="chevron-right" size={iconSizes.sm} color="secondary" />
+              <Text style={styles.valueSm}>{token || permissionStatus?.granted ? 'Ativadas' : 'Desativadas'}</Text>
+              <AppIcon name="chevron-right" size={16} color="secondary" />
             </View>
           </TouchableOpacity>
         </View>
@@ -119,84 +89,34 @@ export default function AdminProfileScreen({ _navigation }: any) {
         <DangerButton title="Sair da conta" onPress={handleLogout} />
       </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.version}>AppManicure v1.0.0</Text>
-      </View>
+      <View style={styles.footer}><Text style={styles.version}>AppManicure v1.0.0</Text></View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  avatarRow: {
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { flexGrow: 1 },
+  identityBlock: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xxxxxxl,
-  },
-  identityText: {
-    flex: 1,
-  },
-  name: {
-    ...typography.title,
-    color: colors.textPrimary,
-    marginTop: spacing.xxxxxxl,
-  },
-  email: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  section: {
-    marginBottom: spacing.xxxxxxl,
+    gap: 14,
     paddingHorizontal: spacing.screenPadding,
+    marginBottom: 20,
   },
-  sectionTitle: {
-    ...typography.label,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    letterSpacing: 0.3,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    ...elevation.sm,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: spacing.xxxxxxl,
-  },
-  iconLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  valueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  label: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginLeft: spacing.xs,
-  },
-  value: {
-    ...typography.bodySmall,
-    color: colors.textPrimary,
-    fontWeight: '500',
-  },
-  footer: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxxxl,
-  },
-  version: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
+  identityText: { flex: 1 },
+  name: { fontSize: 18, fontWeight: '600', letterSpacing: -0.2, color: colors.textPrimary },
+  email: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  section: { marginBottom: 20, paddingHorizontal: spacing.screenPadding },
+  sectionTitle: { fontSize: 11, fontWeight: '500', letterSpacing: 0.3, textTransform: 'uppercase', color: colors.textSecondary, marginBottom: 8 },
+  card: { backgroundColor: colors.surface, borderRadius: radius.card, borderWidth: 1, borderColor: colors.border, overflow: 'hidden', ...elevation.sm },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, minHeight: 48 },
+  rowDivider: { height: 1, backgroundColor: colors.border, opacity: 0.6, marginHorizontal: 16 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  valueRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
+  label: { fontSize: 13, color: colors.textSecondary },
+  value: { fontSize: 13, fontWeight: '500', color: colors.textPrimary, flexShrink: 1, textAlign: 'right', maxWidth: 160 },
+  valueSm: { fontSize: 13, fontWeight: '500', color: colors.textPrimary },
+  footer: { alignItems: 'center', paddingVertical: 12 },
+  version: { fontSize: 11, color: colors.textSecondary },
 });

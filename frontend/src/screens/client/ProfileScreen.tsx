@@ -1,15 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import { useAuthContext } from '@hooks/AuthContext';
 import { useNotifications } from '@hooks';
-import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { colors, spacing, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import DangerButton from '@components/base/DangerButton';
-import Divider from '@components/base/Divider';
 import Avatar from '@components/base/Avatar';
 
 export default function ProfileScreen({ _navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { profile, signOut } = useAuthContext();
   const { permissionStatus, register, token } = useNotifications();
 
@@ -26,10 +27,7 @@ export default function ProfileScreen({ _navigation }: any) {
         if (status === 'granted') {
           await register();
         } else {
-          Alert.alert(
-            'Notificações',
-            'As notificações estão desativadas. Você pode habilitá-las nas configurações do aplicativo.'
-          );
+          Alert.alert('Notificações', 'As notificações estão desativadas. Você pode habilitá-las nas configurações do aplicativo.');
         }
       }
     } catch {
@@ -55,38 +53,42 @@ export default function ProfileScreen({ _navigation }: any) {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 8, paddingBottom: Math.max(insets.bottom, 16) + 72 }]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
-        <Avatar name={profile?.name} size={88} borderColor={colors.goldLight} />
-        <Text style={styles.name}>{profile?.name || '—'}</Text>
-        <Text style={styles.email}>{profile?.email || '—'}</Text>
+        <Avatar name={profile?.name} size={80} />
+        <Text style={styles.name} numberOfLines={1}>{profile?.name || '—'}</Text>
+        <Text style={styles.email} numberOfLines={1}>{profile?.email || '—'}</Text>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Informações pessoais</Text>
         <View style={styles.card}>
           <View style={styles.row}>
-            <View style={styles.iconLabelRow}>
-              <AppIcon name="person" size={iconSizes.sm} color="gold" />
+            <View style={styles.labelRow}>
+              <AppIcon name="person" size={16} color="gold" />
               <Text style={styles.label}>Nome</Text>
             </View>
-            <Text style={styles.value}>{profile?.name || '—'}</Text>
+            <Text style={styles.value} numberOfLines={1}>{profile?.name || '—'}</Text>
           </View>
-          <Divider gold />
+          <View style={styles.rowDivider} />
           <View style={styles.row}>
-            <View style={styles.iconLabelRow}>
-              <AppIcon name="mail" size={iconSizes.sm} color="gold" />
+            <View style={styles.labelRow}>
+              <AppIcon name="mail" size={16} color="gold" />
               <Text style={styles.label}>E-mail</Text>
             </View>
-            <Text style={styles.value}>{profile?.email || '—'}</Text>
+            <Text style={styles.value} numberOfLines={1}>{profile?.email || '—'}</Text>
           </View>
-          <Divider gold />
+          <View style={styles.rowDivider} />
           <View style={styles.row}>
-            <View style={styles.iconLabelRow}>
-              <AppIcon name="phone" size={iconSizes.sm} color="gold" />
+            <View style={styles.labelRow}>
+              <AppIcon name="phone" size={16} color="gold" />
               <Text style={styles.label}>Telefone</Text>
             </View>
-            <Text style={styles.value}>{profile?.phone || '—'}</Text>
+            <Text style={styles.value} numberOfLines={1}>{profile?.phone || '—'}</Text>
           </View>
         </View>
       </View>
@@ -94,16 +96,14 @@ export default function ProfileScreen({ _navigation }: any) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Preferências</Text>
         <View style={styles.card}>
-          <TouchableOpacity style={styles.row} onPress={handleToggleNotifications}>
-            <View style={styles.iconLabelRow}>
-              <AppIcon name="bell" size={iconSizes.sm} color="gold" />
+          <TouchableOpacity style={styles.row} onPress={handleToggleNotifications} activeOpacity={0.7}>
+            <View style={styles.labelRow}>
+              <AppIcon name="bell" size={16} color="gold" />
               <Text style={styles.label}>Notificações</Text>
             </View>
             <View style={styles.valueRow}>
-              <Text style={styles.value}>
-                {token || permissionStatus?.granted ? 'Ativadas' : 'Desativadas'}
-              </Text>
-              <AppIcon name="chevron-right" size={iconSizes.sm} color="secondary" />
+              <Text style={styles.valueSm}>{token || permissionStatus?.granted ? 'Ativadas' : 'Desativadas'}</Text>
+              <AppIcon name="chevron-right" size={16} color="secondary" />
             </View>
           </TouchableOpacity>
         </View>
@@ -121,35 +121,38 @@ export default function ProfileScreen({ _navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { flexGrow: 1 },
   header: {
     alignItems: 'center',
     paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.xxxl,
-    paddingBottom: spacing.xxl,
+    paddingBottom: 20,
   },
   name: {
-    ...typography.title,
+    fontSize: 20,
+    fontWeight: '600',
+    letterSpacing: -0.3,
     color: colors.textPrimary,
-    marginTop: spacing.xxl,
+    marginTop: 14,
+    textAlign: 'center',
   },
   email: {
-    ...typography.bodySmall,
+    fontSize: 13,
     color: colors.textSecondary,
-    marginTop: spacing.xs,
+    marginTop: 4,
+    textAlign: 'center',
   },
   section: {
-    marginBottom: spacing.xxl,
+    marginBottom: 20,
     paddingHorizontal: spacing.screenPadding,
   },
   sectionTitle: {
-    ...typography.label,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
+    fontSize: 11,
+    fontWeight: '500',
     letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    color: colors.textSecondary,
+    marginBottom: 8,
   },
   card: {
     backgroundColor: colors.surface,
@@ -163,33 +166,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.xxl,
-    minHeight: 52,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    minHeight: 48,
   },
-  iconLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  valueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  label: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginLeft: spacing.xs,
-  },
-  value: {
-    ...typography.bodySmall,
-    color: colors.textPrimary,
-    fontWeight: '500',
-  },
-  footer: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-  },
-  version: {
-    ...typography.caption,
-    color: colors.textSecondary,
-  },
+  rowDivider: { height: 1, backgroundColor: colors.border, opacity: 0.6, marginHorizontal: 16 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  valueRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
+  label: { fontSize: 13, color: colors.textSecondary },
+  value: { fontSize: 13, fontWeight: '500', color: colors.textPrimary, flexShrink: 1, textAlign: 'right', maxWidth: 160 },
+  valueSm: { fontSize: 13, fontWeight: '500', color: colors.textPrimary },
+  footer: { alignItems: 'center', paddingTop: 8, paddingBottom: 8 },
+  version: { fontSize: 11, color: colors.textSecondary },
 });

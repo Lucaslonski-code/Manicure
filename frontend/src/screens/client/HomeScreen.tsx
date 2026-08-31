@@ -1,18 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthContext } from '@hooks/AuthContext';
 import { useProfessionals, useMyAppointments, useServices } from '@hooks';
-import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { colors, spacing, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import Avatar from '@components/base/Avatar';
 import Button from '@components/base/Button';
-import SectionHeader from '@components/base/SectionHeader';
-import StatusBadge from '@components/base/StatusBadge';
 import type { Professional, Service } from '../../supabase/types';
 
-const LOGO = require('../../../assets/IconAppWhite.png');
-
 export default function HomeScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { profile } = useAuthContext();
   const { professionals } = useProfessionals();
   const { appointments } = useMyAppointments();
@@ -27,24 +25,18 @@ export default function HomeScreen({ navigation }: any) {
     .filter((a) => new Date(a.start_at) > now && a.status === 'confirmed')
     .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0];
 
-  const greeting = () => {
-    const hour = now.getHours();
-    if (hour < 12) return 'Bom dia';
-    if (hour < 18) return 'Boa tarde';
-    return 'Boa noite';
-  };
+  const firstName = profile?.name?.split(' ')[0] || 'cliente';
 
   const renderProfessional = ({ item }: { item: Professional }) => (
     <TouchableOpacity
-      style={styles.professionalCard}
+      style={styles.professionalItem}
       onPress={() => handleSelectProfessional(item)}
+      activeOpacity={0.7}
     >
-      <Avatar name={item.display_name} size={64} borderColor={colors.goldLight} />
-      <View style={styles.cardContent}>
-        <Text style={styles.name}>{item.display_name}</Text>
-        <Text style={styles.specialty}>Especialista</Text>
-      </View>
-      <AppIcon name="chevron-right" size={iconSizes.sm} color="secondary" />
+      <Avatar name={item.display_name} size={68} />
+      <Text style={styles.professionalName} numberOfLines={2}>
+        {item.display_name}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -55,76 +47,78 @@ export default function HomeScreen({ navigation }: any) {
         const prof = professionals[0];
         if (prof) navigation.navigate('ServiceSelection', { professionalId: prof.id });
       }}
+      activeOpacity={0.7}
     >
-      <View style={styles.serviceIconContainer}>
-        <AppIcon name="sparkles" size={iconSizes.md} color="gold" />
+      <View style={styles.serviceImageArea}>
+        <AppIcon name="sparkles" size={24} color="gold" />
       </View>
-      <Text style={styles.serviceName}>{item.name}</Text>
-      <Text style={styles.serviceDuration}>{item.default_duration_minutes} min</Text>
+      <View style={styles.serviceTextArea}>
+        <Text style={styles.serviceName} numberOfLines={2}>{item.name}</Text>
+        <Text style={styles.serviceDuration}>{item.default_duration_minutes} min</Text>
+      </View>
     </TouchableOpacity>
   );
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <View style={styles.brandRow}>
-          <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
-          <Text style={styles.brand}>AppManicure</Text>
-        </View>
-        <Text style={styles.greeting}>{greeting()}, {profile?.name?.split(' ')[0] || 'cliente'}</Text>
-        <Text style={styles.subtitle}>Seu momento de cuidado começa aqui</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 16) + 8 }]}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Saudação — spec: 24-26 / 600 #25221F left, subtitle 14 #6F6256 gap 6-8 */}
+      <View style={styles.greetingBlock}>
+        <Text style={styles.greeting}>Bem-vinda, {firstName}</Text>
+        <Text style={styles.subtitle}>Seu momento de autocuidado começa aqui</Text>
       </View>
 
-      {nextAppointment && (
-        <View style={styles.nextAppointment}>
-          <SectionHeader
-            title="Próximo agendamento"
-            subtitle="Não perca seu horário"
-            accent
-          />
+      {/* Card próximo horário — surface clara, border 1px #E3D5C6, radius 16, padding 16 */}
+      {nextAppointment ? (
+        <View style={styles.nextBlock}>
           <TouchableOpacity
-            style={styles.appointmentCard}
+            style={styles.nextCard}
             onPress={() => navigation.navigate('AppointmentDetails', { appointmentId: nextAppointment.id })}
+            activeOpacity={0.7}
           >
-            <View style={styles.appointmentLeft}>
-              <View style={styles.appointmentIconContainer}>
-                <AppIcon name="calendar" size={iconSizes.lg} color="gold" />
-              </View>
-              <View style={styles.appointmentInfo}>
-                <Text style={styles.appointmentProfessional}>
-                  {professionals.find((p) => p.id === nextAppointment.professional_id)?.display_name || 'Profissional'}
-                </Text>
-                <Text style={styles.appointmentDate}>
-                  {new Date(nextAppointment.start_at).toLocaleDateString('pt-BR', {
-                    weekday: 'long',
-                    day: '2-digit',
-                    month: 'long',
-                  })}
-                </Text>
-                <Text style={styles.appointmentTime}>
-                  {new Date(nextAppointment.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                </Text>
+            <View style={styles.nextTextArea}>
+              <Text style={styles.nextLabel}>Próximo horário</Text>
+              <Text style={styles.nextDateTime}>
+                {new Date(nextAppointment.start_at).toLocaleDateString('pt-BR', { weekday: 'long' })} ·{' '}
+                {new Date(nextAppointment.start_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+              <Text style={styles.nextProfessional} numberOfLines={1}>
+                {professionals.find((p) => p.id === nextAppointment.professional_id)?.display_name || 'Profissional'}
+              </Text>
+              <View style={styles.nextBadge}>
+                <Text style={styles.nextBadgeText}>Confirmado</Text>
               </View>
             </View>
-            <StatusBadge label="Confirmado" variant="gold" />
+            <View style={styles.nextImageArea}>
+              <AppIcon name="calendar" size={28} color="gold" />
+            </View>
           </TouchableOpacity>
         </View>
-      )}
+      ) : null}
 
-      <View style={styles.ctaSection}>
+      {/* CTA — bronze, 48-50, radius 12-14, 100% width */}
+      <View style={styles.ctaBlock}>
         <Button
-          title="Agendar horário"
+          title="Agendar novo horário"
           onPress={() => navigation.navigate('ServiceSelection', { professionalId: professionals[0]?.id || '' })}
           disabled={professionals.length === 0}
-          style={styles.ctaButton}
         />
       </View>
 
+      {/* Profissionais — header 16-18 600 #25221F + Ver todas 11-12 bronze, lista horizontal 64-72 circular */}
       {professionals.length > 0 && (
         <View style={styles.section}>
-          <SectionHeader title="Profissionais" subtitle="Conheça nossa equipe" />
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Profissionais</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('ServiceSelection', { professionalId: professionals[0]?.id || '' })}>
+              <Text style={styles.sectionLink}>Ver todas</Text>
+            </TouchableOpacity>
+          </View>
           <FlatList
-            data={professionals.slice(0, 4)}
+            data={professionals}
             keyExtractor={(item) => item.id}
             renderItem={renderProfessional}
             horizontal
@@ -134,11 +128,22 @@ export default function HomeScreen({ navigation }: any) {
         </View>
       )}
 
+      {/* Serviços — mesmo padrão header, cards horizontal image-first */}
       {services.length > 0 && (
         <View style={styles.section}>
-          <SectionHeader title="Serviços" subtitle="Tratamentos exclusivos" />
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Serviços em destaque</Text>
+            <TouchableOpacity
+              onPress={() => {
+                const prof = professionals[0];
+                if (prof) navigation.navigate('ServiceSelection', { professionalId: prof.id });
+              }}
+            >
+              <Text style={styles.sectionLink}>Ver todos</Text>
+            </TouchableOpacity>
+          </View>
           <FlatList
-            data={services.slice(0, 4)}
+            data={services}
             keyExtractor={(item) => item.id}
             renderItem={renderService}
             horizontal
@@ -148,25 +153,7 @@ export default function HomeScreen({ navigation }: any) {
         </View>
       )}
 
-      <View style={styles.shortcuts}>
-        <SectionHeader title="Atalhos" />
-        <View style={styles.shortcutsGrid}>
-          <TouchableOpacity style={styles.shortcut} onPress={() => navigation.navigate('MyAppointments')}>
-            <View style={styles.shortcutIconContainer}>
-              <AppIcon name="calendar" size={iconSizes.lg} color="gold" />
-            </View>
-            <Text style={styles.shortcutLabel}>Meus agendamentos</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.shortcut} onPress={() => navigation.navigate('Profile')}>
-            <View style={styles.shortcutIconContainer}>
-              <AppIcon name="user" size={iconSizes.lg} color="gold" />
-            </View>
-            <Text style={styles.shortcutLabel}>Perfil</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.spacer} />
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 }
@@ -176,186 +163,171 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  content: {
+    paddingBottom: 32,
+  },
+  // Saudação
+  greetingBlock: {
     paddingHorizontal: spacing.screenPadding,
-    paddingTop: spacing.xxxxxxxl,
-    paddingBottom: spacing.xxxxxxl,
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xxxxxxl,
-  },
-  logoImage: {
-    width: 28,
-    height: 19,
-    marginRight: spacing.sm,
-  },
-  brand: {
-    ...typography.section,
-    color: colors.textPrimary,
-    fontWeight: '600',
+    marginBottom: 20,
   },
   greeting: {
-    ...typography.title,
+    fontSize: 25,
+    fontWeight: '600',
+    lineHeight: 32,
+    letterSpacing: -0.3,
     color: colors.textPrimary,
-    marginBottom: spacing.sm,
+    marginBottom: 6,
   },
   subtitle: {
-    ...typography.subtitle,
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
     color: colors.textSecondary,
   },
-  nextAppointment: {
-    marginHorizontal: spacing.screenPadding,
-    marginBottom: spacing.xxxxxxl,
+  // Próximo horário
+  nextBlock: {
+    paddingHorizontal: spacing.screenPadding,
+    marginBottom: 16,
   },
-  appointmentCard: {
+  nextCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
-    padding: spacing.xxxxxxl,
     borderWidth: 1,
     borderColor: colors.border,
+    padding: 16,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     ...elevation.sm,
   },
-  appointmentLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+  nextTextArea: {
+    flex: 0.7,
+    paddingRight: 12,
   },
-  appointmentIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
+  nextLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 16,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    color: colors.textSecondary,
+    marginBottom: 6,
+  },
+  nextDateTime: {
+    fontSize: 15,
+    fontWeight: '600',
+    lineHeight: 20,
+    color: colors.textPrimary,
+    textTransform: 'capitalize',
+    marginBottom: 4,
+  },
+  nextProfessional: {
+    fontSize: 13,
+    fontWeight: '400',
+    lineHeight: 18,
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  nextBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(185,155,104,0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+  },
+  nextBadgeText: {
+    fontSize: 11,
+    fontWeight: '500',
+    letterSpacing: 0.3,
+    color: colors.gold,
+  },
+  nextImageArea: {
+    flex: 0.3,
+    aspectRatio: 1,
+    borderRadius: 12,
     backgroundColor: colors.goldOverlay,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.xxxxxxl,
+    overflow: 'hidden',
   },
-  appointmentInfo: {
-    flex: 1,
-  },
-  appointmentProfessional: {
-    ...typography.body,
-    color: colors.textPrimary,
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-  },
-  appointmentDate: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    textTransform: 'capitalize',
-  },
-  appointmentTime: {
-    ...typography.bodySmall,
-    color: colors.gold,
-    fontWeight: '600',
-    marginTop: spacing.xs,
-  },
-  ctaSection: {
+  // CTA
+  ctaBlock: {
     paddingHorizontal: spacing.screenPadding,
-    marginBottom: spacing.xxxxxxxl,
+    marginBottom: 28,
   },
-  ctaButton: {
-    ...elevation.sm,
-  },
+  // Seções
   section: {
-    marginBottom: spacing.xxxxxxxl,
+    marginBottom: 28,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.screenPadding,
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    lineHeight: 22,
+    letterSpacing: -0.1,
+    color: colors.textPrimary,
+  },
+  sectionLink: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.gold,
   },
   horizontalList: {
     paddingHorizontal: spacing.screenPadding,
+    gap: 16,
   },
-  professionalCard: {
-    flexDirection: 'row',
+  // Profissional item — circular 68, nome 11-12 centrado
+  professionalItem: {
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.card,
-    padding: spacing.xxxxxxl,
-    marginRight: spacing.xxxxxxl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    width: 200,
-    ...elevation.sm,
+    width: 72,
   },
-  cardContent: {
-    marginLeft: spacing.xxxxxxl,
-    flex: 1,
-  },
-  name: {
-    ...typography.body,
-    color: colors.textPrimary,
-    fontWeight: '600',
-  },
-  specialty: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  serviceCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.card,
-    padding: spacing.xxxxxxl,
-    marginRight: spacing.xxxxxxl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    width: 160,
-    ...elevation.sm,
-  },
-  serviceIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
-    backgroundColor: colors.goldOverlay,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  serviceName: {
-    ...typography.body,
-    color: colors.textPrimary,
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-  },
-  serviceDuration: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-  },
-  shortcuts: {
-    marginBottom: spacing.xxxxxxxl,
-  },
-  shortcutsGrid: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.screenPadding,
-    gap: spacing.xxxxxxl,
-  },
-  shortcut: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radius.card,
-    padding: spacing.xxxxxxl,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...elevation.sm,
-  },
-  shortcutIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.card,
-    backgroundColor: colors.goldOverlay,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  shortcutLabel: {
-    ...typography.bodySmall,
+  professionalName: {
+    fontSize: 11,
+    fontWeight: '500',
+    lineHeight: 14,
     color: colors.textPrimary,
     textAlign: 'center',
-    fontWeight: '500',
+    marginTop: 8,
   },
-  spacer: {
-    height: spacing.xxxxxl,
+  // Serviço card — image-first, radius 12-14, border 1px
+  serviceCard: {
+    width: 148,
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    ...elevation.sm,
+  },
+  serviceImageArea: {
+    height: 92,
+    backgroundColor: colors.goldOverlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  serviceTextArea: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  serviceName: {
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 16,
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  serviceDuration: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: colors.textSecondary,
+  },
+  bottomSpacer: {
+    height: 16,
   },
 });

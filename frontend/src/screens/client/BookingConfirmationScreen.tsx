@@ -1,30 +1,25 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, spacing, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
 import SecondaryButton from '@components/base/SecondaryButton';
 
 export default function BookingConfirmationScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.container}>
-      <View style={styles.iconContainer}>
-        <AppIcon name="check" size={iconSizes.xl} color="success" />
+    <View style={[styles.container, { paddingTop: insets.top + 32, paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
+      <View style={styles.iconWrap}>
+        <AppIcon name="check" size={32} color="gold" />
       </View>
-      <Text style={styles.title}>Agendamento confirmado!</Text>
-      <Text style={styles.text}>
-        Seu agendamento foi realizado com sucesso. Você receberá uma notificação antes do horário.
+      <Text style={styles.title}>Agendamento confirmado</Text>
+      <Text style={styles.body}>
+        Seu horário foi reservado com sucesso. Você receberá uma confirmação e um lembrete antes do atendimento.
       </Text>
       <View style={styles.actions}>
-        <Button
-          title="Ver meus agendamentos"
-          onPress={() => navigation.replace('MyAppointments')}
-          style={styles.primaryAction}
-        />
-        <SecondaryButton
-          title="Voltar para início"
-          onPress={() => navigation.replace('Home')}
-        />
+        <Button title="Ver meus agendamentos" onPress={() => navigation.replace('MyAppointments')} />
+        <SecondaryButton title="Voltar ao início" onPress={() => navigation.replace('Home')} />
       </View>
     </View>
   );
@@ -34,39 +29,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.screenPadding,
+    paddingHorizontal: spacing.screenPadding,
   },
-  iconContainer: {
-    width: 88,
-    height: 88,
-    borderRadius: radius.modal,
-    backgroundColor: 'rgba(74, 124, 89, 0.08)',
+  iconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: colors.goldOverlay,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xxxxl,
+    marginBottom: 20,
     ...elevation.sm,
   },
   title: {
-    ...typography.title,
+    fontSize: 22,
+    fontWeight: '600',
+    lineHeight: 28,
+    letterSpacing: -0.3,
     color: colors.textPrimary,
-    marginBottom: spacing.xxxxxxl,
     textAlign: 'center',
+    marginBottom: 10,
   },
-  text: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginBottom: spacing.xxxxxxl,
-    textAlign: 'center',
+  body: {
+    fontSize: 14,
+    fontWeight: '400',
     lineHeight: 22,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 28,
+    paddingHorizontal: 8,
   },
   actions: {
     width: '100%',
     maxWidth: 320,
-    gap: spacing.xxxxxxl,
-  },
-  primaryAction: {
-    ...elevation.sm,
+    gap: 12,
   },
 });

@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography, iconSizes, elevation } from '@theme';
+import { colors, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import HomeScreen from '@screens/client/HomeScreen';
 import MyAppointmentsScreen from '@screens/client/MyAppointmentsScreen';
@@ -13,12 +13,8 @@ const Tab = createBottomTabNavigator();
 
 function TabBarIcon({ name, focused }: { name: 'home' | 'calendar' | 'bell' | 'user'; focused: boolean }) {
   return (
-    <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
-      <AppIcon
-        name={name}
-        size={iconSizes.md}
-        color={focused ? 'gold' : 'secondary'}
-      />
+    <View style={[styles.iconWrap, focused && styles.iconWrapFocused]}>
+      <AppIcon name={name} size={20} color={focused ? 'gold' : 'secondary'} />
     </View>
   );
 }
@@ -31,71 +27,66 @@ export default function ClientTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ focused }) => {
-          const iconName = route.name === 'Home' ? 'home' : route.name === 'MyAppointments' ? 'calendar' : route.name === 'Notifications' ? 'bell' : 'user';
+          const iconName =
+            route.name === 'Home'
+              ? 'home'
+              : route.name === 'MyAppointments'
+                ? 'calendar'
+                : route.name === 'Notifications'
+                  ? 'bell'
+                  : 'user';
           return <TabBarIcon name={iconName} focused={focused} />;
         },
         tabBarLabel: ({ focused, children }) => (
-          <Text style={[styles.label, focused && styles.labelFocused]}>
-            {children}
-          </Text>
+          <Text style={[styles.label, focused && styles.labelFocused]}>{children}</Text>
         ),
         tabBarStyle: {
           backgroundColor: colors.surface,
-          borderTopColor: colors.border,
+          borderWidth: 1,
+          borderColor: colors.border,
           borderTopWidth: 1,
-          paddingBottom: Math.max(insets.bottom, spacing.sm),
-          height: 56 + Math.max(insets.bottom, spacing.sm),
+          borderRadius: 20,
+          marginHorizontal: 12,
+          marginBottom: 8,
+          height: 58 + Math.max(insets.bottom, 8),
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: 6,
           ...elevation.sm,
         },
         tabBarItemStyle: {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          paddingVertical: spacing.xs,
+          paddingVertical: 2,
         },
         tabBarLabelPosition: 'below-icon',
       })}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ tabBarLabel: 'Início' }}
-      />
-      <Tab.Screen
-        name="MyAppointments"
-        component={MyAppointmentsScreen}
-        options={{ tabBarLabel: 'Agenda' }}
-      />
-      <Tab.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{ tabBarLabel: 'Notificações' }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ tabBarLabel: 'Perfil' }}
-      />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Início' }} />
+      <Tab.Screen name="MyAppointments" component={MyAppointmentsScreen} options={{ tabBarLabel: 'Agenda' }} />
+      <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ tabBarLabel: 'Notificações' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Perfil' }} />
     </Tab.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
-  iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  iconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
   },
-  iconContainerFocused: {
+  iconWrapFocused: {
     backgroundColor: colors.goldOverlay,
   },
   label: {
-    ...typography.caption,
-    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '400',
+    lineHeight: 14,
     letterSpacing: 0.2,
+    color: colors.textSecondary,
   },
   labelFocused: {
     color: colors.gold,

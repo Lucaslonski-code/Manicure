@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointments, useProfessionals } from '@hooks';
-import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { colors, spacing, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
-import SectionHeader from '@components/base/SectionHeader';
 import StatusBadge from '@components/base/StatusBadge';
 import Button from '@components/base/Button';
 import LoadingState from '@components/base/LoadingState';
@@ -13,6 +13,7 @@ import EmptyState from '@components/base/EmptyState';
 import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function DashboardScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { appointments, loading, error, refetch } = useAppointments();
   const { professionals } = useProfessionals();
 
@@ -75,34 +76,30 @@ export default function DashboardScreen({ navigation }: any) {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <ScreenHeader title="Painel" />
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 16) + 16 }}
+      showsVerticalScrollIndicator={false}
+    >
+      <ScreenHeader title="Painel" subtitle="Visão do dia" />
       <View style={styles.statsGrid}>
-        <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
-          <View style={styles.statIconContainer}>
-            <AppIcon name="calendar" size={iconSizes.md} color="gold" />
-          </View>
+        <View style={styles.statCard}>
+          <View style={styles.statIconWrap}><AppIcon name="calendar" size={20} color="gold" /></View>
           <Text style={styles.statValue}>{todayAppointments.length}</Text>
           <Text style={styles.statLabel}>Hoje</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
-          <View style={styles.statIconContainer}>
-            <AppIcon name="check" size={iconSizes.md} color="success" />
-          </View>
+        <View style={styles.statCard}>
+          <View style={styles.statIconWrap}><AppIcon name="check" size={20} color="gold" /></View>
           <Text style={styles.statValue}>{confirmed}</Text>
           <Text style={styles.statLabel}>Confirmados</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
-          <View style={styles.statIconContainer}>
-            <AppIcon name="error" size={iconSizes.md} color="error" />
-          </View>
+        <View style={styles.statCard}>
+          <View style={[styles.statIconWrap, { backgroundColor: 'rgba(166,61,64,0.08)' }]}><AppIcon name="error" size={20} color="error" /></View>
           <Text style={styles.statValue}>{cancelled}</Text>
           <Text style={styles.statLabel}>Cancelados</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
-          <View style={styles.statIconContainer}>
-            <AppIcon name="time" size={iconSizes.md} color="warning" />
-          </View>
+        <View style={styles.statCard}>
+          <View style={styles.statIconWrap}><AppIcon name="time" size={20} color="gold" /></View>
           <Text style={styles.statValue}>{upcoming}</Text>
           <Text style={styles.statLabel}>Próximos</Text>
         </View>
@@ -110,38 +107,34 @@ export default function DashboardScreen({ navigation }: any) {
 
       {nextAppointment && (
         <View style={styles.section}>
-          <SectionHeader title="Próximo atendimento" subtitle="Não perca" accent />
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Próximo atendimento</Text>
+            <View style={styles.accentBar} />
+          </View>
           {renderAppointment({ item: nextAppointment })}
         </View>
       )}
 
       <View style={styles.section}>
-        <SectionHeader title="Agendamentos de hoje" />
+        <Text style={styles.sectionTitle}>Agendamentos de hoje</Text>
+        <View style={styles.sectionGap} />
         {todayAppointments.length === 0 ? (
-          <EmptyState title="Nenhum agendamento hoje" />
+          <EmptyState title="Nenhum agendamento hoje" description="A agenda de hoje está livre." />
         ) : (
-          <FlatList
-            data={todayAppointments}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }: { item: any }) => renderAppointment({ item })}
-            scrollEnabled={false}
-          />
+          <FlatList data={todayAppointments} keyExtractor={(item) => item.id} renderItem={({ item }: { item: any }) => renderAppointment({ item })} scrollEnabled={false} />
         )}
       </View>
 
       <View style={styles.section}>
-        <SectionHeader title="Gerenciar" />
+        <Text style={styles.sectionTitle}>Gerenciar</Text>
+        <View style={styles.sectionGap} />
         <View style={styles.actionsGrid}>
-          <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AdminProfessionals')}>
-            <View style={styles.actionIconContainer}>
-              <AppIcon name="people" size={iconSizes.md} color="gold" />
-            </View>
+          <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AdminProfessionals')} activeOpacity={0.7}>
+            <View style={styles.actionIconWrap}><AppIcon name="people" size={20} color="gold" /></View>
             <Text style={styles.actionLabel}>Profissionais</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AdminServices')}>
-            <View style={styles.actionIconContainer}>
-              <AppIcon name="sparkles" size={iconSizes.md} color="gold" />
-            </View>
+          <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AdminServices')} activeOpacity={0.7}>
+            <View style={styles.actionIconWrap}><AppIcon name="sparkles" size={20} color="gold" /></View>
             <Text style={styles.actionLabel}>Serviços</Text>
           </TouchableOpacity>
         </View>
@@ -151,112 +144,28 @@ export default function DashboardScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.xxxxxxl,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: spacing.screenPadding,
-    gap: spacing.xxxxxxl,
-    marginBottom: spacing.xxxxxxl,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.screenPadding },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.screenPadding, gap: 12, marginBottom: 24 },
   statCard: {
-    flex: 1,
-    minWidth: '45%',
-    borderRadius: radius.card,
-    padding: spacing.xxxxxxl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    ...elevation.sm,
+    flex: 1, minWidth: '44%', backgroundColor: colors.surface, borderRadius: radius.card, paddingVertical: 16, paddingHorizontal: 12,
+    borderWidth: 1, borderColor: colors.border, alignItems: 'center', ...elevation.sm,
   },
-  statIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.input,
-    backgroundColor: colors.goldOverlay,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  statValue: {
-    ...typography.title,
-    color: colors.textPrimary,
-  },
-  statLabel: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  section: {
-    marginBottom: spacing.xxxxxxl,
-    paddingHorizontal: spacing.screenPadding,
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    gap: spacing.xxxxxxl,
-  },
-  actionCard: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radius.card,
-    padding: spacing.xxxxxxl,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...elevation.sm,
-  },
-  actionIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.card,
-    backgroundColor: colors.goldOverlay,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  actionLabel: {
-    ...typography.bodySmall,
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.card,
-    padding: spacing.xxxxxxl,
-    marginBottom: spacing.xxxxxxl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    ...elevation.sm,
-  },
-  cardContent: {
-    flex: 1,
-  },
-  professional: {
-    ...typography.body,
-    color: colors.textPrimary,
-    fontWeight: '600',
-    flex: 1,
-  },
-  date: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-  },
-  errorText: {
-    ...typography.bodySmall,
-    color: colors.error,
-    textAlign: 'center',
-    marginBottom: spacing.xxxxxxl,
-  },
+  statIconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.goldOverlay, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  statValue: { fontSize: 24, fontWeight: '600', lineHeight: 30, color: colors.textPrimary },
+  statLabel: { fontSize: 11, fontWeight: '500', letterSpacing: 0.3, textTransform: 'uppercase', color: colors.textSecondary, marginTop: 2 },
+  section: { marginBottom: 24, paddingHorizontal: spacing.screenPadding },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  sectionTitle: { fontSize: 15, fontWeight: '600', letterSpacing: -0.1, color: colors.textPrimary },
+  accentBar: { width: 3, height: 14, borderRadius: 9999, backgroundColor: colors.gold },
+  sectionGap: { height: 12 },
+  actionsGrid: { flexDirection: 'row', gap: 12 },
+  actionCard: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.card, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.border, ...elevation.sm },
+  actionIconWrap: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.goldOverlay, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  actionLabel: { fontSize: 13, fontWeight: '500', color: colors.textPrimary, textAlign: 'center' },
+  card: { backgroundColor: colors.surface, borderRadius: radius.card, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', ...elevation.sm },
+  cardContent: { flex: 1 },
+  professional: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
+  date: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  errorText: { fontSize: 13, color: colors.error, textAlign: 'center', marginBottom: 16 },
 });

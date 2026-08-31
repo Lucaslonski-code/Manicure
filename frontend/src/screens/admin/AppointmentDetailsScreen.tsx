@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -13,6 +14,7 @@ import ConfirmationDialog from '@components/base/ConfirmationDialog';
 import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function AppointmentDetailsScreen({ route, navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { appointmentId } = route.params;
   const { appointment, loading } = useAppointment(appointmentId);
   const { professionals } = useProfessionals();
@@ -39,7 +41,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
 
   if (!appointment) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { paddingTop: insets.top + 24 }] }>
         <Text style={styles.errorText}>Agendamento não encontrado.</Text>
         <Button title="Voltar" onPress={() => navigation.goBack()} />
       </View>
@@ -54,7 +56,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
   const status = statusMap[appointment.status] || { label: appointment.status, variant: 'default' };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 16) + 16 }} showsVerticalScrollIndicator={false}>
       <ScreenHeader title="Detalhes do agendamento" />
       <View style={styles.card}>
         <View style={styles.row}>

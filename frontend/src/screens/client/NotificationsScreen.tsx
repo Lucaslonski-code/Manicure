@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -18,6 +19,7 @@ const typeLabels: Record<string, { label: string; color: string; icon: IconName 
 };
 
 export default function NotificationsScreen() {
+  const insets = useSafeAreaInsets();
   const { notifications, loading, error, refetch } = useNotificationsHistory();
 
   const renderItem = ({ item }: { item: any }) => {
@@ -57,7 +59,7 @@ export default function NotificationsScreen() {
 
   if (error) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { paddingTop: insets.top + 24 }] }>
         <ErrorState message={error} onRetry={refetch} />
       </View>
     );
@@ -65,7 +67,7 @@ export default function NotificationsScreen() {
 
   if (notifications.length === 0) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { paddingTop: insets.top + 24 }] }>
         <EmptyState
           title="Nenhuma notificação"
           description="Você não tem notificações no momento."
@@ -75,13 +77,13 @@ export default function NotificationsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }] }>
       <ScreenHeader title="Notificações" />
       <FlatList
         data={notifications}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
       />
     </View>
   );

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -12,6 +13,7 @@ import Button from '@components/base/Button';
 import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function GlobalAgendaScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { appointments, loading, error, refetch } = useAppointments();
   const { professionals } = useProfessionals();
 
@@ -52,7 +54,7 @@ export default function GlobalAgendaScreen({ navigation }: any) {
 
   if (error) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { paddingTop: insets.top + 24 }] }>
         <Text style={styles.errorText}>{error}</Text>
         <Button title="Tentar novamente" onPress={refetch} />
       </View>
@@ -60,7 +62,7 @@ export default function GlobalAgendaScreen({ navigation }: any) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }] }>
       <ScreenHeader
         title="Agenda Global"
         subtitle="Visão geral de todos os agendamentos"
@@ -72,7 +74,7 @@ export default function GlobalAgendaScreen({ navigation }: any) {
           data={appointments}
           keyExtractor={(item) => item.id}
           renderItem={renderAppointment}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
         />
       )}
     </View>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '../../supabase/client';
-import { colors, spacing, typography, radius, elevation } from '@theme';
+import { colors, spacing, elevation } from '@theme';
 import Button from '@components/base/Button';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
@@ -11,6 +12,7 @@ import ErrorState from '@components/base/ErrorState';
 import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function TimeSlotsScreen({ route, navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { professionalId, serviceId, date } = route.params;
   const [slots, setSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,14 +32,8 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
         p_service_id: serviceId,
         p_date: date,
       });
-
       if (error) throw error;
-
-      const availableTimes = (data || []).map((slot: any) => {
-        const start = parseISO(slot.start_at);
-        return format(start, 'HH:mm');
-      });
-
+      const availableTimes = (data || []).map((slot: any) => format(parseISO(slot.start_at), 'HH:mm'));
       setSlots(availableTimes);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar horários');
@@ -58,24 +54,21 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
       <TouchableOpacity
         style={[styles.slot, selected && styles.selected]}
         onPress={() => setSelectedTime(item)}
+        activeOpacity={0.7}
         accessibilityLabel={`Horário ${item}`}
         accessibilityRole="button"
         accessibilityState={{ selected }}
       >
-        <Text style={[styles.slotText, selected && styles.selectedText]}>
-          {item}
-        </Text>
+        <Text style={[styles.slotText, selected && styles.selectedText]}>{item}</Text>
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScreenHeader
         title="Horários disponíveis"
-        subtitle={
-          format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-        }
+        subtitle={format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
       />
       {loading ? (
         <LoadingState message="Buscando horários disponíveis..." />
@@ -99,8 +92,8 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
       )}
 
       {selectedTime && !loading && !error && (
-        <View style={styles.footer}>
-          <Button title="Continuar" onPress={handleContinue} style={styles.continueButton} />
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+          <Button title="Continuar" onPress={handleContinue} />
         </View>
       )}
     </View>
@@ -114,29 +107,28 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.xxxxl,
+    paddingBottom: 16,
   },
   slot: {
     flex: 1,
     aspectRatio: 1.8,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.card,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    margin: spacing.xs,
+    margin: 4,
     backgroundColor: colors.surface,
     ...elevation.sm,
   },
   selected: {
     backgroundColor: colors.gold,
     borderColor: colors.gold,
-    ...elevation.sm,
   },
   slotText: {
-    ...typography.bodySmall,
-    color: colors.textPrimary,
+    fontSize: 14,
     fontWeight: '500',
+    color: colors.textPrimary,
   },
   selectedText: {
     color: colors.surface,
@@ -144,9 +136,9 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.xxxxl,
-  },
-  continueButton: {
-    ...elevation.sm,
+    paddingTop: 12,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
 });

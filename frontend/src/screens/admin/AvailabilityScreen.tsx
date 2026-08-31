@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { useAvailability } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
@@ -11,6 +12,7 @@ import ScreenHeader from '@components/base/ScreenHeader';
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
 export default function AvailabilityScreen() {
+  const insets = useSafeAreaInsets();
   const { availability, loading, error, refetch } = useAvailability(null);
 
   const renderItem = ({ item }: { item: any }) => (
@@ -33,7 +35,7 @@ export default function AvailabilityScreen() {
 
   if (error) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { paddingTop: insets.top + 24 }] }>
         <Text style={styles.errorText}>{error}</Text>
         <Button title="Tentar novamente" onPress={refetch} />
       </View>
@@ -41,7 +43,7 @@ export default function AvailabilityScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }] }>
       <ScreenHeader title="Disponibilidade" subtitle="Jornada semanal" />
       {availability.length === 0 ? (
         <EmptyState title="Sem disponibilidade" description="Nenhuma disponibilidade cadastrada." />
@@ -50,7 +52,7 @@ export default function AvailabilityScreen() {
           data={availability}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
         />
       )}
     </View>

@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useMyAppointments, useProfessionals } from '@hooks';
 import type { Appointment } from '../../supabase/types';
-import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { colors, spacing, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import ScreenHeader from '@components/base/ScreenHeader';
 import StatusBadge from '@components/base/StatusBadge';
@@ -13,6 +14,7 @@ import EmptyState from '@components/base/EmptyState';
 import Button from '@components/base/Button';
 
 export default function MyAppointmentsScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { appointments, loading, error, refetch } = useMyAppointments();
   const { professionals } = useProfessionals();
 
@@ -24,65 +26,62 @@ export default function MyAppointmentsScreen({ navigation }: any) {
     const d = new Date(a.start_at);
     return d >= todayStart && d < todayEnd;
   });
-
   const upcoming = appointments.filter((a) => {
     const d = new Date(a.start_at);
     return d >= todayEnd && a.status !== 'cancelled';
   });
-
   const history = appointments.filter((a) => {
     const d = new Date(a.start_at);
     return d < todayStart || a.status === 'cancelled';
   });
 
-  const getProfessionalName = (professionalId: string) => {
-    return professionals.find((p) => p.id === professionalId)?.display_name || 'Profissional';
+  const getProfessionalName = (pid: string) => professionals.find((p) => p.id === pid)?.display_name || 'Profissional';
+
+  const statusMap: Record<string, { label: string; variant: 'gold' | 'error' | 'default' }> = {
+    confirmed: { label: 'Confirmado', variant: 'gold' },
+    cancelled: { label: 'Cancelado', variant: 'error' },
+    completed: { label: 'Concluído', variant: 'default' },
   };
 
   const renderAppointment = ({ item }: { item: Appointment }) => {
-    const statusMap: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'default' | 'gold' }> = {
-      confirmed: { label: 'Confirmado', variant: 'gold' as const },
-      cancelled: { label: 'Cancelado', variant: 'error' as const },
-      completed: { label: 'Concluído', variant: 'default' as const },
-    };
-    const status = statusMap[item.status] || { label: item.status, variant: 'default' as const };
-
+    const s = statusMap[item.status] || { label: item.status, variant: 'default' as const };
     return (
       <TouchableOpacity
         style={styles.card}
         onPress={() => navigation.navigate('AppointmentDetails', { appointmentId: item.id })}
+        activeOpacity={0.7}
       >
-        <View style={styles.cardIconContainer}>
-          <AppIcon name="calendar" size={iconSizes.md} color="gold" />
+        <View style={styles.cardIcon}>
+          <AppIcon name="calendar" size={20} color="gold" />
         </View>
         <View style={styles.cardContent}>
-          <Text style={styles.professional}>{getProfessionalName(item.professional_id)}</Text>
-          <Text style={styles.date}>
-            {format(parseISO(item.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-          </Text>
+          <Text style={styles.professional} numberOfLines={1}>{getProfessionalName(item.professional_id)}</Text>
+          <Text style={styles.date}>{format(parseISO(item.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</Text>
         </View>
-        <StatusBadge label={status.label} variant={status.variant} />
+        <StatusBadge label={s.label} variant={s.variant} />
       </TouchableOpacity>
     );
   };
 
-  const renderSection = (title: string, items: Appointment[]) => {
+  const renderSection = (title: string, items: Appointment[], accent?: boolean) => {
     if (items.length === 0) return null;
     return (
       <View style={styles.section}>
-        <ScreenHeader title={title} accent={title === 'Hoje'} />
-        {items.map((item) => renderAppointment({ item }))}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          {accent ? <View style={styles.accentDot} /> : null}
+        </View>
+        {items.map((item) => (
+          <View key={item.id}>{renderAppointment({ item } as any)}</View>
+        ))}
       </View>
     );
   };
 
-  if (loading) {
-    return <LoadingState message="Carregando agendamentos..." />;
-  }
-
+  if (loading) return <LoadingState message="Carregando agendamentos..." />;
   if (error) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { paddingTop: insets.top + 24 }]}>
         <Text style={styles.errorText}>{error}</Text>
         <Button title="Tentar novamente" onPress={refetch} />
       </View>
@@ -90,9 +89,8 @@ export default function MyAppointmentsScreen({ navigation }: any) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScreenHeader title="Meus agendamentos" />
-
       {appointments.length === 0 ? (
         <EmptyState
           title="Nenhum agendamento"
@@ -106,12 +104,12 @@ export default function MyAppointmentsScreen({ navigation }: any) {
           renderItem={() => null}
           ListHeaderComponent={
             <>
-              {renderSection('Hoje', today)}
+              {renderSection('Hoje', today, true)}
               {renderSection('Próximos', upcoming)}
               {renderSection('Histórico', history)}
             </>
           }
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: Math.max(insets.bottom, 16) + 72 }]}
         />
       )}
     </View>
@@ -119,61 +117,35 @@ export default function MyAppointmentsScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.xxxxxxl,
-  },
-  section: {
-    marginBottom: spacing.xxxxxxl,
-  },
-  list: {
-    paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.xxxxl,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.screenPadding },
+  list: { paddingHorizontal: spacing.screenPadding },
+  section: { marginBottom: 24 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  sectionTitle: { fontSize: 14, fontWeight: '600', letterSpacing: -0.1, color: colors.textPrimary },
+  accentDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.gold },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
-    padding: spacing.xxxxxxl,
-    marginBottom: spacing.xxxxxxl,
+    padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
     ...elevation.sm,
   },
-  cardIconContainer: {
+  cardIcon: {
     width: 40,
     height: 40,
-    borderRadius: radius.input,
+    borderRadius: 10,
     backgroundColor: colors.goldOverlay,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.xxxxxxl,
+    marginRight: 12,
   },
-  cardContent: {
-    flex: 1,
-  },
-  professional: {
-    ...typography.body,
-    color: colors.textPrimary,
-    fontWeight: '600',
-    flex: 1,
-  },
-  date: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  errorText: {
-    ...typography.bodySmall,
-    color: colors.error,
-    textAlign: 'center',
-    marginBottom: spacing.xxxxxxl,
-  },
+  cardContent: { flex: 1, marginRight: 8 },
+  professional: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
+  date: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  errorText: { fontSize: 13, color: colors.error, textAlign: 'center', marginBottom: 16 },
 });

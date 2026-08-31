@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { useProfessionals } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
@@ -10,6 +11,7 @@ import StatusBadge from '@components/base/StatusBadge';
 import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function AdminProfessionalsScreen() {
+  const insets = useSafeAreaInsets();
   const { professionals, loading, error, refetch } = useProfessionals();
 
   if (loading) {
@@ -18,14 +20,14 @@ export default function AdminProfessionalsScreen() {
 
   if (error) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { paddingTop: insets.top + 24 }] }>
         <ErrorState message={error} onRetry={refetch} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }] }>
       <ScreenHeader title="Profissionais" subtitle="Lista de profissionais cadastrados" />
       {professionals.length === 0 ? (
         <EmptyState title="Nenhum profissional" description="Não há profissionais cadastrados." />
@@ -44,7 +46,7 @@ export default function AdminProfessionalsScreen() {
               </View>
             </View>
           )}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
         />
       )}
     </View>

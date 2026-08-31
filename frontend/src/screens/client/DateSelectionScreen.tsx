@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, addDays, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAvailability, useBlockedTimes } from '@hooks';
-import { colors, spacing, typography, radius, elevation } from '@theme';
+import { colors, spacing, radius, elevation } from '@theme';
 import Button from '@components/base/Button';
 import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function DateSelectionScreen({ route, navigation }: any) {
+  const insets = useSafeAreaInsets();
   const { professionalId, serviceId } = route.params;
   const { availability } = useAvailability(professionalId);
   const { blockedTimes } = useBlockedTimes(professionalId);
@@ -18,14 +20,9 @@ export default function DateSelectionScreen({ route, navigation }: any) {
 
   const isDateAvailable = (date: Date) => {
     const weekday = date.getDay();
-    const hasAvailability = availability.some(a => a.weekday === weekday);
+    const hasAvailability = availability.some((a) => a.weekday === weekday);
     if (!hasAvailability) return false;
-
-    const hasBlock = blockedTimes.some(b => {
-      const blockDate = new Date(b.start_at);
-      return isSameDay(blockDate, date);
-    });
-
+    const hasBlock = blockedTimes.some((b) => isSameDay(new Date(b.start_at), date));
     return !hasBlock;
   };
 
@@ -35,13 +32,10 @@ export default function DateSelectionScreen({ route, navigation }: any) {
 
     return (
       <TouchableOpacity
-        style={[
-          styles.dateCard,
-          !available && styles.disabled,
-          selected && styles.selected,
-        ]}
+        style={[styles.dateCard, !available && styles.disabled, selected && styles.selected]}
         onPress={() => available && setSelectedDate(format(item, 'yyyy-MM-dd'))}
         disabled={!available}
+        activeOpacity={0.7}
         accessibilityLabel={`${format(item, 'EEEE', { locale: ptBR })} ${format(item, 'd')} de ${format(item, 'MMMM', { locale: ptBR })}`}
         accessibilityRole="button"
         accessibilityState={{ selected, disabled: !available }}
@@ -66,21 +60,18 @@ export default function DateSelectionScreen({ route, navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <ScreenHeader
-        title="Selecione a data"
-        subtitle="Escolha o melhor dia para o atendimento"
-      />
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <ScreenHeader title="Selecione a data" subtitle="Escolha o melhor dia para o atendimento" />
       <FlatList
         data={dates}
         keyExtractor={(item) => format(item, 'yyyy-MM-dd')}
         renderItem={renderDate}
         numColumns={3}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: 16 }]}
       />
       {selectedDate && (
-        <View style={styles.footer}>
-          <Button title="Continuar" onPress={handleContinue} style={styles.continueButton} />
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+          <Button title="Continuar" onPress={handleContinue} />
         </View>
       )}
     </View>
@@ -94,7 +85,6 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.xxxxl,
   },
   dateCard: {
     flex: 1,
@@ -104,33 +94,39 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     alignItems: 'center',
     justifyContent: 'center',
-    margin: spacing.xs,
+    margin: 4,
     backgroundColor: colors.surface,
     ...elevation.sm,
   },
   disabled: {
     backgroundColor: colors.disabledBackground,
+    borderColor: colors.disabledBackground,
     ...elevation.none,
   },
   selected: {
     backgroundColor: colors.gold,
     borderColor: colors.gold,
-    ...elevation.sm,
   },
   day: {
-    ...typography.caption,
-    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '500',
+    letterSpacing: 0.3,
     textTransform: 'uppercase',
+    color: colors.textSecondary,
   },
   number: {
-    ...typography.title,
+    fontSize: 22,
+    fontWeight: '600',
+    lineHeight: 28,
     color: colors.textPrimary,
-    marginVertical: spacing.xs,
+    marginVertical: 2,
   },
   month: {
-    ...typography.caption,
-    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '400',
+    letterSpacing: 0.2,
     textTransform: 'uppercase',
+    color: colors.textSecondary,
   },
   disabledText: {
     color: colors.disabled,
@@ -140,9 +136,9 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: spacing.screenPadding,
-    paddingBottom: spacing.xxxxl,
-  },
-  continueButton: {
-    ...elevation.sm,
+    paddingTop: 12,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
 });
