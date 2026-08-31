@@ -56,8 +56,14 @@ function getAuthError(message: string): string {
     return 'O link é inválido ou já foi utilizado. Solicite um novo.';
   }
 
-  // Rate limit
+  // Rate limit / ban
   if (lower.includes('rate limit') || lower.includes('too many requests') || lower.includes('email rate limit')) {
+    return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+  }
+  if (lower.includes('security purposes') || lower.includes('you can only request this after')) {
+    return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+  }
+  if (lower.includes('request limit') || lower.includes('over_request_rate_limit')) {
     return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
   }
 

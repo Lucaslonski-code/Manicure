@@ -77,8 +77,37 @@ export function useAuth(): AuthState & {
           setProfileError('');
         }
       } else {
-        console.warn('[USE_AUTH] loadProfile — profile NOT FOUND for userId=%s', userId);
-        setProfileError('Perfil não encontrado. Entre em contato com o suporte.');
+        console.warn('[USE_AUTH] loadProfile — profile NOT FOUND for userId=%s, attempting auto-create', userId);
+
+        const { data: { user: authUser } } = await authClient.getUser();
+        if (authUser) {
+          const name = (authUser.user_metadata?.name as string) || '';
+          const phone = (authUser.user_metadata?.phone as string) || '';
+
+          const { data: newProfile, error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: userId,
+              name,
+              phone,
+              email: authUser.email || '',
+              role: 'client',
+              is_active: true,
+            })
+            .select()
+            .single();
+
+          if (!insertError && newProfile) {
+            console.log('[USE_AUTH] loadProfile — auto-created profile for userId=%s', userId);
+            setProfile(newProfile as Profile);
+            setProfileError('');
+          } else {
+            console.warn('[USE_AUTH] loadProfile — auto-create failed:', insertError?.message);
+            setProfileError('Perfil não encontrado. Entre em contato com o suporte.');
+          }
+        } else {
+          setProfileError('Perfil não encontrado. Entre em contato com o suporte.');
+        }
       }
     } catch (err) {
       console.error('[USE_AUTH] loadProfile EXCEPTION:', err);
@@ -236,8 +265,14 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
     if (!result.success) {
       throw new Error(result.error);
     }
+
+    const { data: { session: freshSession } } = await authClient.getSession();
+    if (freshSession?.user) {
+      await loadProfile(freshSession.user.id);
+    }
+
     setRecoveryMode(false);
-  }, []);
+  }, [loadProfile]);
 
   const signOut = useCallback(async (): Promise<void> => {
     await unregisterNotification();
