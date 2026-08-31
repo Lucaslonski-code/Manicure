@@ -18,8 +18,8 @@ jest.mock('expo-splash-screen', () => ({
   hideAsync: jest.fn(() => Promise.resolve()),
 }));
 
-jest.mock('@hooks/useAuth', () => ({
-  useAuth: jest.fn(),
+jest.mock('@hooks/AuthContext', () => ({
+  useAuthContext: jest.fn(),
 }));
 
 jest.mock('@components/base/Input', () => (props: any) => {
@@ -54,9 +54,9 @@ jest.mock('@forms/schemas', () => ({
 }));
 
 import LoginScreen from '@screens/public/LoginScreen';
-import { useAuth } from '@hooks/useAuth';
+import { useAuthContext } from '@hooks/AuthContext';
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockUseAuth = useAuthContext as jest.MockedFunction<typeof useAuthContext>;
 
 const mockSignIn = jest.fn();
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView } from 'react-native';
-import { useAuth } from '@hooks/useAuth';
+import { useAuthContext } from '@hooks/AuthContext';
 import Button from '@components/base/Button';
 import Input from '@components/base/Input';
 import PasswordInput from '@components/base/PasswordInput';
@@ -12,7 +12,8 @@ import { colors, spacing, typography, radius, elevation } from '@theme';
 
 export default function SignUpScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { signUp, loading } = useAuth();
+  const { signUp, loading } = useAuthContext();
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');

@@ -18,7 +18,7 @@ jest.mock('@react-navigation/native-stack', () => ({
   },
 }));
 
-jest.mock('@hooks/useAuth', () => ({ useAuth: () => ({}) }));
+jest.mock('@hooks/AuthContext', () => ({ useAuthContext: () => ({}) }));
 
 jest.mock('@screens/public/SplashScreen', () => () => null);
 jest.mock('@navigation/stacks/PublicStack', () => () => null);

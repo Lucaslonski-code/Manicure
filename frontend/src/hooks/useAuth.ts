@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../supabase/client';
 import type { Profile, AuthState } from '../supabase/types';
 import type { AuthClient, Session, AuthChangeEvent, Subscription } from '../types/auth';
@@ -208,54 +208,56 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
     };
   }, [loadProfile]);
 
-  const signUp = async (name: string, email: string, phone: string, password: string): Promise<void> => {
+  const signUp = useCallback(async (name: string, email: string, phone: string, password: string): Promise<void> => {
     const result = await signUpService(name, email, phone, password);
     if (!result.success) {
       throw new Error(result.error);
     }
     setRecoveryMode(false);
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string): Promise<void> => {
+  const signIn = useCallback(async (email: string, password: string): Promise<void> => {
     const result = await signInService(email, password);
     if (!result.success) {
       throw new Error(result.error);
     }
     setRecoveryMode(false);
-  };
+  }, []);
 
-  const signOut = async (): Promise<void> => {
+  const signOut = useCallback(async (): Promise<void> => {
     await unregisterNotification();
     const result = await signOutService();
     if (!result.success) {
       throw new Error(result.error);
     }
-  };
+  }, [unregisterNotification]);
 
-  const resetPassword = async (email: string): Promise<void> => {
+  const resetPassword = useCallback(async (email: string): Promise<void> => {
     const result = await resetPasswordService(email);
     if (!result.success) {
       throw new Error(result.error);
     }
-  };
+  }, []);
 
-  const updatePassword = async (password: string): Promise<void> => {
+  const updatePassword = useCallback(async (password: string): Promise<void> => {
     const result = await updatePasswordService(password);
     if (!result.success) {
       throw new Error(result.error);
     }
-  };
+  }, []);
 
-  const resend = async (email: string): Promise<void> => {
+  const resend = useCallback(async (email: string): Promise<void> => {
     const result = await resendConfirmation(email);
     if (!result.success) {
       throw new Error(result.error);
     }
-  };
+  }, []);
 
   const isEmailVerified = !!session?.user?.email_confirmed_at;
 
-  const typedSession = session ? { user: session.user } : null;
+  const typedSession = useMemo(() => session ? { user: session.user } : null, [session]);
 
-  return { session: typedSession, profile, loading, isEmailVerified, recoveryMode, signUp, signIn, signOut, resetPassword, updatePassword, resend };
+  return useMemo(() => ({ session: typedSession, profile, loading, isEmailVerified, recoveryMode, signUp, signIn, signOut, resetPassword, updatePassword, resend }), [
+    typedSession, profile, loading, isEmailVerified, recoveryMode, signUp, signIn, signOut, resetPassword, updatePassword, resend
+  ]);
 }

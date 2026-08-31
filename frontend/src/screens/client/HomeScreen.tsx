@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, Image } from 'react-native';
-import { useAuth } from '@hooks/useAuth';
+import { useAuthContext } from '@hooks/AuthContext';
 import { useProfessionals, useMyAppointments, useServices } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
@@ -13,7 +13,7 @@ import type { Professional, Service } from '../../supabase/types';
 const LOGO = require('../../../assets/IconAppWhite.png');
 
 export default function HomeScreen({ navigation }: any) {
-  const { profile } = useAuth();
+  const { profile } = useAuthContext();
   const { professionals } = useProfessionals();
   const { appointments } = useMyAppointments();
   const { services } = useServices();

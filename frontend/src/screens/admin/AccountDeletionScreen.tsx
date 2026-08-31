@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
-import { useAuth } from '@hooks';
+import { useAuthContext } from '@hooks/AuthContext';
 import { deleteAccount } from '../../services/api';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
@@ -9,7 +9,7 @@ import ConfirmationDialog from '@components/base/ConfirmationDialog';
 import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function AccountDeletionScreen({ navigation }: any) {
-  const { signOut } = useAuth();
+  const { signOut } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
 

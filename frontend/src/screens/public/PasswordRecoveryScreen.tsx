@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@hooks/useAuth';
+import { useAuthContext } from '@hooks/AuthContext';
 import Button from '@components/base/Button';
 import Input from '@components/base/Input';
 import BrandLogo from '@components/base/BrandLogo';
@@ -10,7 +10,7 @@ import { colors, spacing, typography, radius, elevation } from '@theme';
 
 export default function PasswordRecoveryScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { resetPassword, loading } = useAuth();
+  const { resetPassword, loading } = useAuthContext();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);

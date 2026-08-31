@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { TextInput, View, Text, TextInputProps, StyleSheet, ViewStyle } from 'react-native';
 import { colors, spacing, radius, typography, elevation, componentSizes } from '@theme';
 
@@ -11,24 +11,8 @@ interface InputProps extends TextInputProps {
 
 export default function Input({ label, error, containerStyle, rightAccessory, ...props }: InputProps) {
   const [focused, setFocused] = useState(false);
-  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hasError = !!error;
-
-  const handleFocus = () => {
-    if (focusTimeoutRef.current) {
-      clearTimeout(focusTimeoutRef.current);
-      focusTimeoutRef.current = null;
-    }
-    setFocused(true);
-  };
-
-  const handleBlur = () => {
-    focusTimeoutRef.current = setTimeout(() => {
-      setFocused(false);
-      focusTimeoutRef.current = null;
-    }, 150);
-  };
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -44,8 +28,8 @@ export default function Input({ label, error, containerStyle, rightAccessory, ..
         <TextInput
           style={[styles.input, rightAccessory ? styles.inputWithAccessory : undefined]}
           placeholderTextColor={colors.disabled}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           {...props}
         />
         {rightAccessory ? <View style={styles.accessory}>{rightAccessory}</View> : null}
@@ -90,7 +74,6 @@ const styles = StyleSheet.create({
   inputFocused: {
     borderColor: colors.gold,
     borderWidth: 1.5,
-    ...elevation.sm,
   },
   inputErrorBox: {
     borderColor: colors.error,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@hooks/useAuth';
+import { useAuthContext } from '@hooks/AuthContext';
 import Button from '@components/base/Button';
 import PasswordInput from '@components/base/PasswordInput';
 import BrandLogo from '@components/base/BrandLogo';
@@ -10,7 +10,7 @@ import { colors, spacing, typography, radius, elevation } from '@theme';
 
 export default function NewPasswordScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { updatePassword, loading } = useAuth();
+  const { updatePassword, loading } = useAuthContext();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');

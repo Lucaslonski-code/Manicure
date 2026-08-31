@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@hooks/useAuth';
+import { useAuthContext } from '@hooks/AuthContext';
 import Button from '@components/base/Button';
 import BrandLogo from '@components/base/BrandLogo';
 import { colors, spacing, typography } from '@theme';
 
 export default function EmailConfirmationScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { resend, loading } = useAuth();
+  const { resend, loading } = useAuthContext();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const email = route?.params?.email || '';

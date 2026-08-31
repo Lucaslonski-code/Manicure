@@ -8,7 +8,7 @@ import EmailVerificationStack from './stacks/EmailVerificationStack';
 import RecoveryStack from './stacks/RecoveryStack';
 import ClientStack from './stacks/ClientStack';
 import AdminStack from './stacks/AdminStack';
-import { useAuth } from '@hooks/useAuth';
+import { useAuthContext } from '@hooks/AuthContext';
 import { colors, typography } from '@theme';
 import type { Profile } from '../supabase/types';
 
@@ -96,37 +96,7 @@ export function resolveRootState(s: {
   return 'Public';
 }
 
-type AuthSnapshot = {
-  loading: boolean;
-  session: { user: { id: string } } | null;
-  isEmailVerified: boolean;
-  profile: Profile | null;
-  recoveryMode: boolean;
-};
-
-export type RootNavigatorProps = {
-  // Quando fornecido, o RootNavigator consome o estado já resolvido pelo
-  // AppRoot (bootstrap único, sem re-disparar getSession/initialize).
-  authState?: AuthSnapshot;
-};
-
-export default function RootNavigator({ authState }: RootNavigatorProps) {
-  if (authState) {
-    return <RootNavigatorContent authState={authState} />;
-  }
-  return <RootNavigatorInternal />;
-}
-
-function RootNavigatorInternal() {
-  const { loading, session, isEmailVerified, profile, recoveryMode } = useAuth();
-  return (
-    <RootNavigatorContent
-      authState={{ loading, session, isEmailVerified, profile, recoveryMode }}
-    />
-  );
-}
-
-function RootContainer({ name, component }: { name: RootDecision; component: React.ComponentType<any> }) {
+const RootContainer = React.memo(function RootContainer({ name, component }: { name: RootDecision; component: React.ComponentType<any> }) {
   return (
     <NavigationContainer linking={linking}>
       <Stack.Navigator initialRouteName={name} screenOptions={{ headerShown: false }}>
@@ -134,7 +104,7 @@ function RootContainer({ name, component }: { name: RootDecision; component: Rea
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+});
 
 function renderRoot(decision: RootDecision) {
   switch (decision) {
@@ -152,8 +122,11 @@ function renderRoot(decision: RootDecision) {
   }
 }
 
-function RootNavigatorContent({ authState }: { authState: AuthSnapshot }) {
-  const { loading, session, isEmailVerified, profile, recoveryMode } = authState;
+const RootNavigatorContent = React.memo(function RootNavigatorContent() {
+  const authCtx = useAuthContext();
+  const { loading, session, isEmailVerified, profile, recoveryMode } = authCtx;
+
+  const decision = resolveRootState({ loading, session, isEmailVerified, profile, recoveryMode });
 
   // Estado 1: bootstrap de auth em andamento.
   // Não deve ser confundido com splash nativo — o splash já foi liberado.
@@ -161,6 +134,9 @@ function RootNavigatorContent({ authState }: { authState: AuthSnapshot }) {
     return <LoadingFallback />;
   }
 
-  const decision = resolveRootState({ loading, session, isEmailVerified, profile, recoveryMode });
   return renderRoot(decision);
+});
+
+export default function RootNavigator() {
+  return <RootNavigatorContent />;
 }

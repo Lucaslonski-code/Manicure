@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { useAuth } from '@hooks';
+import { useAuthContext } from '@hooks/AuthContext';
 import { useNotifications } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
@@ -11,7 +11,7 @@ import Avatar from '@components/base/Avatar';
 import ScreenHeader from '@components/base/ScreenHeader';
 
 export default function AdminProfileScreen({ _navigation }: any) {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut } = useAuthContext();
   const { permissionStatus, register, token } = useNotifications();
 
   const handleToggleNotifications = async () => {

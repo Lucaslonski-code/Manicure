@@ -16,14 +16,14 @@ describe('AppRoot intro orchestration', () => {
     expect(SOURCE).toContain('InitialScreen');
   });
 
-  it('should pass the resolved auth state to RootNavigator (single bootstrap, no double getSession)', () => {
-    expect(SOURCE).toContain('authState={authState}');
+  it('should wrap content in AuthProvider for single auth bootstrap', () => {
+    expect(SOURCE).toContain('AuthProvider');
   });
 
   // Removed the test for clearing the intro timer because we don't have timers in AppRoot anymore
 
-  it('should use useAuth once at the App Root level', () => {
-    expect(SOURCE).toContain("useAuth()");
+  it('should not call useAuth directly (consumed via AuthProvider context)', () => {
+    expect(SOURCE).not.toContain("useAuth()");
   });
 });
 
