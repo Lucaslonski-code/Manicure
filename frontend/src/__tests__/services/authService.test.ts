@@ -58,7 +58,7 @@ describe('authService', () => {
 
       const result = await signUp('Maria Silva', 'maria@example.com', '11999999999', 'senha123');
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Usuário já cadastrado');
+      expect(result.error).toBe('Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.');
     });
   });
 
@@ -81,7 +81,7 @@ describe('authService', () => {
 
       const result = await signIn('maria@example.com', 'senha-errada');
       expect(result.success).toBe(false);
-      expect(result.error).toBe('E-mail ou senha inválidos');
+      expect(result.error).toBe('E-mail ou senha incorretos.');
     });
   });
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView } from 'react-native';
 import { useAuthContext } from '@hooks/AuthContext';
@@ -20,15 +20,13 @@ export default function SignUpScreen({ navigation }: any) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const handleSignUp = async () => {
     try {
       setError('');
-      setSuccess('');
       signUpSchema.parse({ name, email, phone, password, confirmPassword });
       await signUp(name, email, phone, password);
-      setSuccess('Conta criada com sucesso. Enviamos um e-mail de confirmação para seu endereço.');
+      navigation.navigate('Login', { signupSuccess: true });
     } catch (err: any) {
       setError(err.message || 'Erro ao cadastrar');
     }
@@ -38,7 +36,8 @@ export default function SignUpScreen({ navigation }: any) {
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
         style={styles.keyboard}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
+        keyboardVerticalOffset={insets.top}
         enabled
       >
         <ScrollView
@@ -94,11 +93,10 @@ export default function SignUpScreen({ navigation }: any) {
                 confirmPassword={password}
               />
               {error ? <Text style={styles.error}>{error}</Text> : null}
-              {success ? <Text style={styles.success}>{success}</Text> : null}
               <Button
                 title="Cadastrar"
                 onPress={handleSignUp}
-                disabled={loading || !!success}
+                disabled={loading}
                 loading={loading}
                 style={styles.signupButton}
               />
@@ -166,12 +164,6 @@ const styles = StyleSheet.create({
   error: {
     ...typography.bodySmall,
     color: colors.error,
-    marginTop: spacing.sm,
-    textAlign: 'center',
-  },
-  success: {
-    ...typography.bodySmall,
-    color: colors.success,
     marginTop: spacing.sm,
     textAlign: 'center',
   },

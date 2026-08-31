@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native';
 import { useAuthContext } from '@hooks/AuthContext';
 import Button from '@components/base/Button';
 import Input from '@components/base/Input';
@@ -28,36 +29,51 @@ export default function PasswordRecoveryScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-      <View style={[styles.content, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}>
-        <View style={styles.brandContainer}>
-          <BrandLogo size={80} />
-        </View>
-        <Text style={styles.title}>Recuperar senha</Text>
-        <Text style={styles.text}>Enviaremos um link para redefinir sua senha.</Text>
+      <KeyboardAvoidingView
+        style={styles.keyboard}
+        behavior="padding"
+        keyboardVerticalOffset={insets.top}
+        enabled
+      >
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.lg },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.brandContainer}>
+            <BrandLogo size={80} />
+          </View>
+          <Text style={styles.title}>Recuperar senha</Text>
+          <Text style={styles.text}>Enviaremos um link para redefinir sua senha.</Text>
 
-        <View style={styles.formCard}>
-          <Input
-            label="E-mail"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            placeholder="seu@email.com"
-          />
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          {success ? <Text style={styles.success}>Link enviado! Verifique seu e-mail.</Text> : null}
-          <Button
-            title="Enviar link"
-            onPress={handleReset}
-            disabled={loading}
-            loading={loading}
-            style={styles.recoverButton}
-          />
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.link}>Voltar para login</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+          <View style={styles.formCard}>
+            <Input
+              label="E-mail"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              placeholder="seu@email.com"
+            />
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {success ? <Text style={styles.success}>Link enviado! Verifique seu e-mail.</Text> : null}
+            <Button
+              title="Enviar link"
+              onPress={handleReset}
+              disabled={loading}
+              loading={loading}
+              style={styles.recoverButton}
+            />
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.link}>Voltar para login</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -67,11 +83,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
+  keyboard: {
     flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.screenPadding,
+    paddingTop: spacing.xl,
   },
   brandContainer: {
     marginBottom: spacing.xl,

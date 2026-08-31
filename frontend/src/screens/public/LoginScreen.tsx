@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView } from 'react-native';
 import { useAuthContext } from '@hooks/AuthContext';
@@ -10,13 +10,17 @@ import BrandLogo from '@components/base/BrandLogo';
 import { loginSchema } from '@forms/schemas';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 
-export default function LoginScreen({ navigation }: any) {
+export default function LoginScreen({ navigation, route }: any) {
   const insets = useSafeAreaInsets();
   const { signIn, loading } = useAuthContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [success, setSuccess] = useState(
+    route?.params?.signupSuccess
+      ? 'Conta criada com sucesso. Confirme seu e-mail para poder entrar.'
+      : ''
+  );
 
   const handleLogin = async () => {
     try {
@@ -34,7 +38,8 @@ export default function LoginScreen({ navigation }: any) {
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
         style={styles.keyboard}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
+        keyboardVerticalOffset={insets.top}
         enabled
       >
         <ScrollView

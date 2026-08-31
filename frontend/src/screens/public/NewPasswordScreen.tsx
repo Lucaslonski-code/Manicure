@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native';
 import { useAuthContext } from '@hooks/AuthContext';
 import Button from '@components/base/Button';
 import PasswordInput from '@components/base/PasswordInput';
@@ -41,42 +42,57 @@ export default function NewPasswordScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-      <View style={[styles.content, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}>
-        <View style={styles.brandContainer}>
-          <BrandLogo size={80} />
-        </View>
-        <Text style={styles.title}>Nova senha</Text>
-        <Text style={styles.text}>Digite sua nova senha abaixo.</Text>
+      <KeyboardAvoidingView
+        style={styles.keyboard}
+        behavior="padding"
+        keyboardVerticalOffset={insets.top}
+        enabled
+      >
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.lg },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.brandContainer}>
+            <BrandLogo size={80} />
+          </View>
+          <Text style={styles.title}>Nova senha</Text>
+          <Text style={styles.text}>Digite sua nova senha abaixo.</Text>
 
-        <View style={styles.formCard}>
-          <PasswordInput
-            label="Senha"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Crie uma senha"
-            showRequirements
-          />
-          <PasswordInput
-            label="Confirmar senha"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Repita a senha"
-            confirmPassword={password}
-          />
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          {success ? <Text style={styles.success}>Senha atualizada!</Text> : null}
-          <Button
-            title="Atualizar senha"
-            onPress={handleUpdatePassword}
-            disabled={loading || success}
-            loading={loading}
-            style={styles.updateButton}
-          />
-          <TouchableOpacity onPress={() => navigation.replace('Login')}>
-            <Text style={styles.link}>Cancelar</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+          <View style={styles.formCard}>
+            <PasswordInput
+              label="Senha"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Crie uma senha"
+              showRequirements
+            />
+            <PasswordInput
+              label="Confirmar senha"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Repita a senha"
+              confirmPassword={password}
+            />
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {success ? <Text style={styles.success}>Senha atualizada!</Text> : null}
+            <Button
+              title="Atualizar senha"
+              onPress={handleUpdatePassword}
+              disabled={loading || success}
+              loading={loading}
+              style={styles.updateButton}
+            />
+            <TouchableOpacity onPress={() => navigation.replace('Login')}>
+              <Text style={styles.link}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -86,11 +102,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
+  keyboard: {
     flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  content: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.screenPadding,
+    paddingTop: spacing.xl,
   },
   brandContainer: {
     marginBottom: spacing.xl,
