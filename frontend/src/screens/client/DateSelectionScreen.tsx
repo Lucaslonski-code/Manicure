@@ -1,80 +1,94 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { format, addDays, isSameDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { useAvailability, useBlockedTimes } from '@hooks';
-import { colors, spacing, radius, elevation } from '@theme';
-import Button from '@components/base/Button';
+import { useAvailability, useProfessionalServices } from '@hooks';
+import { colors, spacing } from '@theme';
 import ScreenHeader from '@components/base/ScreenHeader';
+import Calendar from '@components/base/Calendar';
+import Button from '@components/base/Button';
+import LoadingState from '@components/base/LoadingState';
+import { isDateAvailable } from '@services/availabilityEngine';
+import { format } from 'date-fns';
 
 export default function DateSelectionScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { professionalId, serviceId } = route.params;
-  const { availability } = useAvailability(professionalId);
-  const { blockedTimes } = useBlockedTimes(professionalId);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
-  const today = new Date();
-  const dates = Array.from({ length: 14 }, (_, i) => addDays(today, i));
-
-  const isDateAvailable = (date: Date) => {
-    const weekday = date.getDay();
-    const hasAvailability = availability.some((a) => a.weekday === weekday);
-    if (!hasAvailability) return false;
-    const hasBlock = blockedTimes.some((b) => isSameDay(new Date(b.start_at), date));
-    return !hasBlock;
+  const { professionalId, serviceId } = route.params as {
+    professionalId: string;
+    serviceId: string;
   };
+  const { availability, loading: availabilityLoading } = useAvailability(professionalId);
+  const { items: professionalServices, loading: servicesLoading } = useProfessionalServices(professionalId);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  const renderDate = ({ item }: { item: Date }) => {
-    const available = isDateAvailable(item);
-    const selected = selectedDate === format(item, 'yyyy-MM-dd');
+  const hasService = useMemo(
+    () => professionalServices.some((ps) => ps.service_id === serviceId && ps.is_active),
+    [professionalServices, serviceId],
+  );
 
-    return (
-      <TouchableOpacity
-        style={[styles.dateCard, !available && styles.disabled, selected && styles.selected]}
-        onPress={() => available && setSelectedDate(format(item, 'yyyy-MM-dd'))}
-        disabled={!available}
-        activeOpacity={0.7}
-        accessibilityLabel={`${format(item, 'EEEE', { locale: ptBR })} ${format(item, 'd')} de ${format(item, 'MMMM', { locale: ptBR })}`}
-        accessibilityRole="button"
-        accessibilityState={{ selected, disabled: !available }}
-      >
-        <Text style={[styles.day, !available && styles.disabledText, selected && styles.selectedText]}>
-          {format(item, 'EEE', { locale: ptBR })}
-        </Text>
-        <Text style={[styles.number, !available && styles.disabledText, selected && styles.selectedText]}>
-          {format(item, 'd')}
-        </Text>
-        <Text style={[styles.month, !available && styles.disabledText, selected && styles.selectedText]}>
-          {format(item, 'MMM', { locale: ptBR })}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
+  const checkDateAvailable = useCallback(
+    (date: Date) => isDateAvailable(date, availability, hasService),
+    [availability, hasService],
+  );
+
+  const handleDateSelect = useCallback((date: Date) => {
+    setSelectedDate(date);
+  }, []);
 
   const handleContinue = () => {
     if (selectedDate) {
-      navigation.navigate('TimeSlots', { professionalId, serviceId, date: selectedDate });
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      navigation.navigate('TimeSlots', { professionalId, serviceId, date: dateStr });
     }
   };
 
+  if (availabilityLoading || servicesLoading) {
+    return <LoadingState message="Carregando calendário..." />;
+  }
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ScreenHeader title="Selecione a data" subtitle="Escolha o melhor dia para o atendimento" />
-      <FlatList
-        data={dates}
-        keyExtractor={(item) => format(item, 'yyyy-MM-dd')}
-        renderItem={renderDate}
-        numColumns={3}
-        contentContainerStyle={[styles.list, { paddingBottom: 16 }]}
+    <ScrollView
+      style={[styles.container, { paddingTop: insets.top }]}
+      contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
+      showsVerticalScrollIndicator={false}
+    >
+      <ScreenHeader
+        title="Selecione a data"
+        subtitle="Escolha o melhor dia para o atendimento"
       />
+
+      <View style={styles.calendarWrap}>
+        <Calendar
+          selectedDate={selectedDate}
+          onDateSelect={handleDateSelect}
+          isDateAvailable={checkDateAvailable}
+        />
+      </View>
+
+      <View style={styles.legendRow}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: colors.gold }]} />
+          <Text style={styles.legendLabel}>Disponível</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: colors.disabled }]} />
+          <Text style={styles.legendLabel}>Indisponível</Text>
+        </View>
+      </View>
+
       {selectedDate && (
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-          <Button title="Continuar" onPress={handleContinue} />
+        <View style={styles.selectedInfo}>
+          <Text style={styles.selectedText}>
+            {format(selectedDate, "EEEE, dd 'de' MMMM 'de' yyyy")}
+          </Text>
         </View>
       )}
-    </View>
+
+      {selectedDate && (
+        <View style={styles.footer}>
+          <Button title="Escolher horário" onPress={handleContinue} />
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
@@ -83,62 +97,44 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  list: {
+  content: {
     paddingHorizontal: spacing.screenPadding,
   },
-  dateCard: {
-    flex: 1,
-    aspectRatio: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.card,
-    alignItems: 'center',
+  calendarWrap: {
+    marginBottom: spacing.lg,
+  },
+  legendRow: {
+    flexDirection: 'row',
     justifyContent: 'center',
-    margin: 4,
-    backgroundColor: colors.surface,
-    ...elevation.sm,
+    gap: spacing.xl,
+    marginBottom: spacing.lg,
   },
-  disabled: {
-    backgroundColor: colors.disabledBackground,
-    borderColor: colors.disabledBackground,
-    ...elevation.none,
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
-  selected: {
-    backgroundColor: colors.gold,
-    borderColor: colors.gold,
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  day: {
-    fontSize: 11,
-    fontWeight: '500',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-    color: colors.textSecondary,
-  },
-  number: {
-    fontSize: 22,
-    fontWeight: '600',
-    lineHeight: 28,
-    color: colors.textPrimary,
-    marginVertical: 2,
-  },
-  month: {
-    fontSize: 11,
+  legendLabel: {
+    fontSize: 12,
     fontWeight: '400',
-    letterSpacing: 0.2,
-    textTransform: 'uppercase',
     color: colors.textSecondary,
   },
-  disabledText: {
-    color: colors.disabled,
+  selectedInfo: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
   },
   selectedText: {
-    color: colors.surface,
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.textPrimary,
+    textTransform: 'capitalize',
   },
   footer: {
-    paddingHorizontal: spacing.screenPadding,
-    paddingTop: 12,
-    backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    marginTop: spacing.sm,
   },
 });

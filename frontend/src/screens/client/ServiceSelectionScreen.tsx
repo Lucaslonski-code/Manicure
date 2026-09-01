@@ -5,40 +5,43 @@ import { useProfessionalServices, useProfessional } from '@hooks';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import ScreenHeader from '@components/base/ScreenHeader';
+import LoadingState from '@components/base/LoadingState';
 import type { Service } from '../../supabase/types';
 import Button from '@components/base/Button';
 
 export default function ServiceSelectionScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { professionalId } = route.params;
+  const { professionalId } = route.params as { professionalId: string };
   const { items, loading, error } = useProfessionalServices(professionalId);
   const { professional } = useProfessional(professionalId);
 
-  const services = items.map((item) => item.service);
-
-  const renderService = ({ item }: { item: Service }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation.navigate('DateSelection', { professionalId, serviceId: item.id })}
-      activeOpacity={0.7}
-    >
-      <View style={styles.serviceIcon}>
-        <AppIcon name="sparkles" size={20} color="gold" />
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.duration}>{item.default_duration_minutes} min</Text>
-      </View>
-      <AppIcon name="chevron-right" size={16} color="secondary" />
-    </TouchableOpacity>
-  );
+  const renderService = ({ item }: { item: Service & { duration_minutes?: number; price?: number } }) => {
+    const ps = items.find((i) => i.service_id === item.id);
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => navigation.navigate('DateSelection', { professionalId, serviceId: item.id })}
+        activeOpacity={0.7}
+      >
+        <View style={styles.serviceIcon}>
+          <AppIcon name="sparkles" size={20} color="gold" />
+        </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.duration}>{ps?.duration_minutes ?? item.default_duration_minutes} min</Text>
+            {ps?.price != null && (
+              <Text style={styles.price}>R$ {Number(ps.price).toFixed(2)}</Text>
+            )}
+          </View>
+        </View>
+        <AppIcon name="chevron-right" size={16} color="secondary" />
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
-    return (
-      <View style={[styles.center, { paddingTop: insets.top + 24 }]}>
-        <Text style={styles.loading}>Carregando serviços...</Text>
-      </View>
-    );
+    return <LoadingState message="Carregando serviços..." />;
   }
 
   if (error) {
@@ -62,7 +65,7 @@ export default function ServiceSelectionScreen({ route, navigation }: any) {
         </View>
       )}
       <FlatList
-        data={services}
+        data={items.map((i) => i.service)}
         keyExtractor={(item) => item.id}
         renderItem={renderService}
         contentContainerStyle={[styles.list, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}
@@ -139,16 +142,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 18,
     color: colors.textPrimary,
-    marginBottom: 2,
+    marginBottom: 4,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   duration: {
     fontSize: 12,
     fontWeight: '400',
     color: colors.textSecondary,
   },
-  loading: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
+  price: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.gold,
   },
   error: {
     ...typography.bodySmall,

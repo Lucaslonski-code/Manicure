@@ -24,7 +24,10 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
   const [error, setError] = useState<string | null>(null);
 
   const service = items.find((i) => i.service_id === serviceId);
-  const startAt = `${date}T${time}:00`;
+  // America/Sao_Paulo (UTC-3) — evita que "2026-09-02T09:00:00" seja interpretado como UTC e falhe em "Time outside availability"
+  const startAt = time.includes('T') || time.includes('Z') || time.includes('+') || time.includes('-03')
+    ? (time.includes('T') ? time : `${date}T${time}`)
+    : `${date}T${time}:00-03:00`;
 
   const handleConfirm = async () => {
     try {

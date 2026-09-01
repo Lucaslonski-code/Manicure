@@ -18,8 +18,8 @@ export default function BookingConfirmationScreen({ navigation }: any) {
         Seu horário foi reservado com sucesso. Você receberá uma confirmação e um lembrete antes do atendimento.
       </Text>
       <View style={styles.actions}>
-        <Button title="Ver meus agendamentos" onPress={() => navigation.replace('MyAppointments')} />
-        <SecondaryButton title="Voltar ao início" onPress={() => navigation.replace('Home')} />
+        <Button title="Ver meus agendamentos" onPress={() => navigation.navigate('ClientTabs', { screen: 'MyAppointments' })} />
+        <SecondaryButton title="Voltar ao início" onPress={() => navigation.navigate('ClientTabs', { screen: 'Home' })} />
       </View>
     </View>
   );

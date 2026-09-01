@@ -43,10 +43,7 @@ export default function HomeScreen({ navigation }: any) {
   const renderService = ({ item }: { item: Service }) => (
     <TouchableOpacity
       style={styles.serviceCard}
-      onPress={() => {
-        const prof = professionals[0];
-        if (prof) navigation.navigate('ServiceSelection', { professionalId: prof.id });
-      }}
+      onPress={() => navigation.navigate('ProfessionalSelection')}
       activeOpacity={0.7}
     >
       <View style={styles.serviceImageArea}>
@@ -103,7 +100,7 @@ export default function HomeScreen({ navigation }: any) {
       <View style={styles.ctaBlock}>
         <Button
           title="Agendar novo horário"
-          onPress={() => navigation.navigate('ServiceSelection', { professionalId: professionals[0]?.id || '' })}
+          onPress={() => navigation.navigate('ProfessionalSelection')}
           disabled={professionals.length === 0}
         />
       </View>
@@ -113,7 +110,7 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Profissionais</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('ServiceSelection', { professionalId: professionals[0]?.id || '' })}>
+            <TouchableOpacity onPress={() => navigation.navigate('ProfessionalSelection')}>
               <Text style={styles.sectionLink}>Ver todas</Text>
             </TouchableOpacity>
           </View>
@@ -133,12 +130,7 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Serviços em destaque</Text>
-            <TouchableOpacity
-              onPress={() => {
-                const prof = professionals[0];
-                if (prof) navigation.navigate('ServiceSelection', { professionalId: prof.id });
-              }}
-            >
+            <TouchableOpacity onPress={() => navigation.navigate('ProfessionalSelection')}>
               <Text style={styles.sectionLink}>Ver todos</Text>
             </TouchableOpacity>
           </View>

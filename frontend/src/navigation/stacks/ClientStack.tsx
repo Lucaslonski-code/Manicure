@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ClientTabs from '@navigation/tabs/ClientTabs';
 import AccountDeletionScreen from '@screens/client/AccountDeletionScreen';
+import ProfessionalSelectionScreen from '@screens/client/ProfessionalSelectionScreen';
 import ServiceSelectionScreen from '@screens/client/ServiceSelectionScreen';
 import DateSelectionScreen from '@screens/client/DateSelectionScreen';
 import TimeSlotsScreen from '@screens/client/TimeSlotsScreen';
@@ -14,6 +15,7 @@ export type ClientStackParamList = {
   ClientTabs: undefined;
   Notifications: undefined;
   AccountDeletion: undefined;
+  ProfessionalSelection: undefined;
   ServiceSelection: { professionalId: string };
   DateSelection: { professionalId: string; serviceId: string };
   TimeSlots: { professionalId: string; serviceId: string; date: string };
@@ -30,6 +32,7 @@ export default function ClientStack() {
       <Stack.Screen name="ClientTabs" component={ClientTabs} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="AccountDeletion" component={AccountDeletionScreen} />
+      <Stack.Screen name="ProfessionalSelection" component={ProfessionalSelectionScreen} />
       <Stack.Screen name="ServiceSelection" component={ServiceSelectionScreen} />
       <Stack.Screen name="DateSelection" component={DateSelectionScreen} />
       <Stack.Screen name="TimeSlots" component={TimeSlotsScreen} />
