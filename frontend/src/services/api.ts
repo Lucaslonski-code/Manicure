@@ -1,5 +1,5 @@
 import { supabase } from '../supabase/client';
-import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings, Notification, WorkSchedule, ScheduleOverride, EffectiveSchedule } from '../supabase/types';
+import type { Professional, Service, ProfessionalService, BlockedTime, Appointment, BusinessSettings, Notification, WorkWindow, ScheduleBreak, ScheduleOverride, EffectiveWindow, EffectiveBreak, WorkWindowInput, ProfessionalScheduleData } from '../supabase/types';
 
 async function sendPushNotification(appointmentId: string, event: 'confirmation' | 'cancellation' | 'reschedule'): Promise<void> {
   try {
@@ -100,21 +100,6 @@ export async function fetchProfessionalServices(professionalId: string): Promise
   return data || [];
 }
 
-export async function fetchAvailability(professionalId?: string | null): Promise<Availability[]> {
-  const query = supabase
-    .from('availability')
-    .select('*');
-
-  if (professionalId) {
-    query.eq('professional_id', professionalId);
-  }
-
-  const { data, error } = await query.order('weekday');
-
-  if (error) throw new Error(mapApiError(error));
-  return data || [];
-}
-
 export async function fetchBlockedTimes(professionalId?: string | null): Promise<BlockedTime[]> {
   const query = supabase
     .from('blocked_times')
@@ -130,6 +115,82 @@ export async function fetchBlockedTimes(professionalId?: string | null): Promise
 
   if (error) throw new Error(mapApiError(error));
   return data || [];
+}
+
+export async function fetchAllBlockedTimes(professionalId: string): Promise<BlockedTime[]> {
+  const { data, error } = await supabase
+    .from('blocked_times')
+    .select('*')
+    .eq('professional_id', professionalId)
+    .order('start_at', { ascending: false });
+
+  if (error) throw new Error(mapApiError(error));
+  return data || [];
+}
+
+export async function createBlockedTime(
+  professionalId: string,
+  startAt: string,
+  endAt: string,
+  reason?: string,
+): Promise<BlockedTime> {
+  const { data, error } = await supabase
+    .from('blocked_times')
+    .insert({
+      professional_id: professionalId,
+      start_at: startAt,
+      end_at: endAt,
+      reason: reason || null,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(mapApiError(error));
+  return data;
+}
+
+export async function updateBlockedTime(
+  id: string,
+  updates: { start_at?: string; end_at?: string; reason?: string },
+): Promise<void> {
+  const { error } = await supabase
+    .from('blocked_times')
+    .update(updates)
+    .eq('id', id);
+
+  if (error) throw new Error(mapApiError(error));
+}
+
+export async function deleteBlockedTime(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('blocked_times')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(mapApiError(error));
+}
+
+export async function checkBlockedTimeConflicts(
+  professionalId: string,
+  startAt: string,
+  endAt: string,
+  excludeId?: string,
+): Promise<boolean> {
+  let query = supabase
+    .from('blocked_times')
+    .select('id', { count: 'exact', head: true })
+    .eq('professional_id', professionalId)
+    .lt('start_at', endAt)
+    .gt('end_at', startAt);
+
+  if (excludeId) {
+    query = query.neq('id', excludeId);
+  }
+
+  const { count, error } = await query;
+
+  if (error) return false;
+  return (count ?? 0) > 0;
 }
 
 export async function fetchAppointments(): Promise<Appointment[]> {
@@ -333,34 +394,101 @@ export async function deleteCancelledAppointment(appointmentId: string): Promise
 }
 
 // ============================================================================
-// Work Schedules API
+// Work Windows API (multi-window, multi-break, vigência)
 // ============================================================================
 
-export async function fetchWorkSchedules(professionalId: string): Promise<WorkSchedule[]> {
+export async function fetchWorkWindows(professionalId: string): Promise<WorkWindow[]> {
   const { data, error } = await supabase
-    .from('work_schedules')
+    .from('work_windows')
     .select('*')
     .eq('professional_id', professionalId)
     .eq('is_active', true)
-    .order('weekday');
+    .order('weekday')
+    .order('sort_order')
+    .order('start_time');
 
   if (error) throw new Error(mapApiError(error));
   return data || [];
 }
 
-export async function upsertWorkSchedules(professionalId: string, schedules: Array<{
-  weekday: number;
-  start_time: string;
-  end_time: string;
-  lunch_start?: string | null;
-  lunch_end?: string | null;
-}>): Promise<void> {
-  const { error } = await supabase.rpc('upsert_work_schedules', {
+export async function fetchWindowBreaks(windowId: string): Promise<ScheduleBreak[]> {
+  const { data, error } = await supabase
+    .from('schedule_breaks')
+    .select('*')
+    .eq('work_window_id', windowId)
+    .order('sort_order')
+    .order('start_time');
+
+  if (error) throw new Error(mapApiError(error));
+  return data || [];
+}
+
+export async function fetchAllBreaksForProfessional(professionalId: string): Promise<ScheduleBreak[]> {
+  const windows = await fetchWorkWindows(professionalId);
+  if (windows.length === 0) return [];
+
+  const allBreaks: ScheduleBreak[] = [];
+  for (const win of windows) {
+    const breaks = await fetchWindowBreaks(win.id);
+    allBreaks.push(...breaks);
+  }
+  return allBreaks;
+}
+
+export async function fetchAllWorkWindows(): Promise<(WorkWindow & { professional_name?: string })[]> {
+  const { data, error } = await supabase
+    .from('work_windows')
+    .select('*, professionals(display_name)')
+    .eq('is_active', true)
+    .order('weekday')
+    .order('sort_order')
+    .order('start_time');
+
+  if (error) throw new Error(mapApiError(error));
+  return (data || []).map((row: any) => ({
+    ...row,
+    professional_name: row.professionals?.display_name,
+  }));
+}
+
+export async function upsertWorkWindows(professionalId: string, windows: WorkWindowInput[]): Promise<void> {
+  const { error } = await supabase.rpc('upsert_work_windows', {
     p_professional_id: professionalId,
-    p_schedules: JSON.stringify(schedules),
+    p_windows: JSON.stringify(windows),
   });
 
   if (error) throw new Error(mapApiError(error));
+}
+
+export async function fetchEffectiveWindows(professionalId: string, date: string): Promise<EffectiveWindow[]> {
+  const { data, error } = await supabase
+    .rpc('get_effective_windows', {
+      p_professional_id: professionalId,
+      p_date: date,
+    });
+
+  if (error) return [];
+  return (data as EffectiveWindow[]) || [];
+}
+
+export async function fetchEffectiveBreaks(windowId: string): Promise<EffectiveBreak[]> {
+  const { data, error } = await supabase
+    .rpc('get_window_breaks', {
+      p_window_id: windowId,
+    });
+
+  if (error) return [];
+  return (data as EffectiveBreak[]) || [];
+}
+
+export async function fetchProfessionalScheduleData(professionalId: string): Promise<ProfessionalScheduleData[]> {
+  const { data, error } = await supabase
+    .rpc('get_professional_schedule_data', {
+      p_professional_id: professionalId,
+    });
+
+  if (error) throw new Error(mapApiError(error));
+  return (data as ProfessionalScheduleData[]) || [];
 }
 
 export async function fetchScheduleOverrides(professionalId: string, startDate?: string, endDate?: string): Promise<ScheduleOverride[]> {
@@ -387,6 +515,9 @@ export async function upsertScheduleOverride(
     end_time?: string | null;
     lunch_start?: string | null;
     lunch_end?: string | null;
+    break_start?: string | null;
+    break_end?: string | null;
+    break_label?: string | null;
     reason?: string | null;
   } = {}
 ): Promise<void> {
@@ -398,6 +529,9 @@ export async function upsertScheduleOverride(
     p_end_time: options.end_time || null,
     p_lunch_start: options.lunch_start || null,
     p_lunch_end: options.lunch_end || null,
+    p_break_start: options.break_start || null,
+    p_break_end: options.break_end || null,
+    p_break_label: options.break_label || 'Pausa',
     p_reason: options.reason || null,
   });
 
@@ -411,19 +545,6 @@ export async function deleteScheduleOverride(professionalId: string, specificDat
   });
 
   if (error) throw new Error(mapApiError(error));
-}
-
-export async function fetchEffectiveSchedule(professionalId: string, date: string): Promise<EffectiveSchedule | null> {
-  const { data, error } = await supabase
-    .rpc('get_effective_schedule', {
-      p_professional_id: professionalId,
-      p_date: date,
-    })
-    .limit(1)
-    .single();
-
-  if (error) return null;
-  return data as EffectiveSchedule;
 }
 
 export async function fetchNotifications(): Promise<Notification[]> {

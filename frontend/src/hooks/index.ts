@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase/client';
-import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchAvailability, fetchBlockedTimes, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, fetchWorkSchedules, upsertWorkSchedules, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchEffectiveSchedule } from '../services/api';
-import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings, Notification } from '../supabase/types';
+import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows } from '../services/api';
+import type { Professional, Service, ProfessionalService, BlockedTime, Appointment, BusinessSettings, Notification, WorkWindow, WorkWindowInput, EffectiveWindow, ProfessionalScheduleData } from '../supabase/types';
 import { useNotifications } from './useNotifications';
 import { useAuth } from './useAuth';
 
@@ -147,31 +147,6 @@ export function useProfessionalServices(professionalId: string | null) {
   }, [professionalId]);
 
   return { items, loading, error };
-}
-
-export function useAvailability(professionalId?: string | null) {
-  const [availability, setAvailability] = useState<Availability[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchAvailability(professionalId);
-      setAvailability(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [professionalId]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  return { availability, loading, error, refetch: load };
 }
 
 export function useBlockedTimes(professionalId?: string | null) {
@@ -537,66 +512,8 @@ export function useUpdateProfileAvatar() {
 }
 
 // ============================================================================
-// Work Schedules Hooks
+// Schedule Overrides Hooks
 // ============================================================================
-
-export function useWorkSchedules(professionalId?: string | null) {
-  const [schedules, setSchedules] = useState<import('../supabase/types').WorkSchedule[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    if (!professionalId) {
-      setSchedules([]);
-      setLoading(false);
-      return;
-    }
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchWorkSchedules(professionalId);
-      setSchedules(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [professionalId]);
-
-  useEffect(() => {
-    let isMounted = true;
-    load().then(() => { if (!isMounted) setSchedules([]); });
-    return () => { isMounted = false; };
-  }, [load]);
-
-  return { schedules, loading, error, refetch: load };
-}
-
-export function useSaveWorkSchedules() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const save = useCallback(async (professionalId: string, schedules: Array<{
-    weekday: number;
-    start_time: string;
-    end_time: string;
-    lunch_start?: string | null;
-    lunch_end?: string | null;
-  }>) => {
-    try {
-      setLoading(true);
-      setError(null);
-      await upsertWorkSchedules(professionalId, schedules);
-    } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { save, loading, error };
-}
 
 export function useScheduleOverrides(professionalId?: string | null) {
   const [overrides, setOverrides] = useState<import('../supabase/types').ScheduleOverride[]>([]);
@@ -679,22 +596,26 @@ export function useDeleteScheduleOverride() {
   return { remove, loading, error };
 }
 
-export function useEffectiveSchedule(professionalId?: string | null) {
-  const [schedule, setSchedule] = useState<import('../supabase/types').EffectiveSchedule | null>(null);
+// ============================================================================
+// Work Windows Hooks (multi-window, multi-break, vigência)
+// ============================================================================
+
+export function useWorkWindows(professionalId?: string | null) {
+  const [windows, setWindows] = useState<WorkWindow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (date: string) => {
+  const load = useCallback(async () => {
     if (!professionalId) {
-      setSchedule(null);
+      setWindows([]);
       setLoading(false);
       return;
     }
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchEffectiveSchedule(professionalId, date);
-      setSchedule(data);
+      const data = await fetchWorkWindows(professionalId);
+      setWindows(data);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -702,5 +623,255 @@ export function useEffectiveSchedule(professionalId?: string | null) {
     }
   }, [professionalId]);
 
-  return { schedule, loading, error, load };
+  useEffect(() => {
+    let isMounted = true;
+    load().then(() => { if (!isMounted) setWindows([]); });
+    return () => { isMounted = false; };
+  }, [load]);
+
+  return { windows, loading, error, refetch: load };
+}
+
+export function useSaveWorkWindows() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = useCallback(async (professionalId: string, windows: WorkWindowInput[]) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await upsertWorkWindows(professionalId, windows);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { save, loading, error };
+}
+
+export function useEffectiveWindows(professionalId?: string | null) {
+  const [windows, setWindows] = useState<EffectiveWindow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (date: string) => {
+    if (!professionalId) {
+      setWindows([]);
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchEffectiveWindows(professionalId, date);
+      setWindows(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [professionalId]);
+
+  return { windows, loading, error, load };
+}
+
+export function useProfessionalScheduleData(professionalId?: string | null) {
+  const [data, setData] = useState<ProfessionalScheduleData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!professionalId) {
+      setData([]);
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await fetchProfessionalScheduleData(professionalId);
+      setData(result);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [professionalId]);
+
+  useEffect(() => {
+    let isMounted = true;
+    load().then(() => { if (!isMounted) setWindows([]); });
+    return () => { isMounted = false; };
+  }, [load]);
+
+  return { windows, loading, error, refetch: load };
+}
+
+// ============================================================================
+// Blocked Times Management Hooks
+// ============================================================================
+
+export function useAllBlockedTimes(professionalId?: string | null) {
+  const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!professionalId) {
+      setBlockedTimes([]);
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchAllBlockedTimes(professionalId);
+      setBlockedTimes(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [professionalId]);
+
+  useEffect(() => {
+    let isMounted = true;
+    load().then(() => { if (!isMounted) setBlockedTimes([]); });
+    return () => { isMounted = false; };
+  }, [load]);
+
+  return { blockedTimes, loading, error, refetch: load };
+}
+
+export function useCreateBlockedTime() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const create = useCallback(async (professionalId: string, startAt: string, endAt: string, reason?: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      return await createBlockedTime(professionalId, startAt, endAt, reason);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { create, loading, error };
+}
+
+export function useUpdateBlockedTime() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const update = useCallback(async (id: string, updates: { start_at?: string; end_at?: string; reason?: string }) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await updateBlockedTime(id, updates);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { update, loading, error };
+}
+
+export function useDeleteBlockedTime() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const remove = useCallback(async (id: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await deleteBlockedTime(id);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { remove, loading, error };
+}
+
+// ============================================================================
+// Professional ID Hook (for admin screens that need the current professional's ID)
+// ============================================================================
+
+export function useMyProfessionalId() {
+  const [professionalId, setProfessionalId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+      const userId = session?.user?.id;
+      if (!userId) {
+        setProfessionalId(null);
+        setLoading(false);
+        return;
+      }
+
+      supabase
+        .from('professionals')
+        .select('id')
+        .eq('user_id', userId)
+        .single()
+        .then(({ data, error }) => {
+          if (!isMounted) return;
+          setProfessionalId(data?.id ?? null);
+          setLoading(false);
+        });
+    });
+
+    return () => { isMounted = false; };
+  }, []);
+
+  return { professionalId, loading };
+}
+
+// ============================================================================
+// All Work Windows (admin view — all professionals)
+// ============================================================================
+
+export function useAllWorkWindows() {
+  const [windows, setWindows] = useState<(WorkWindow & { professional_name?: string })[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchAllWorkWindows();
+      setWindows(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    load().then(() => { if (!isMounted) setWindows([]); });
+    return () => { isMounted = false; };
+  }, [load]);
+
+  return { windows, loading, error, refetch: load };
 }

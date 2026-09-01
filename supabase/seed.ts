@@ -3,11 +3,11 @@
 /**
  * Idempotent seed script for AppManicure test data.
  *
+ * Uses the NEW architecture: work_windows + schedule_breaks + schedule_overrides.
+ * Also seeds legacy availability for backward compatibility.
+ *
  * Usage:
  *   npx ts-node supabase/seed.ts
- *
- * Requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY env vars,
- * or falls back to the hardcoded test project values.
  *
  * Running twice creates NO duplicates.
  */
@@ -102,6 +102,124 @@ async function upsertProfessionalService(professionalId: string, serviceId: stri
   return data.id;
 }
 
+// ============================================================================
+// NEW: Work Windows + Breaks
+// ============================================================================
+
+async function upsertWorkWindow(
+  professionalId: string,
+  weekday: number,
+  startTime: string,
+  endTime: string,
+  sortOrder: number = 0,
+): Promise<string | null> {
+  const { data: existing } = await sb.from('work_windows')
+    .select('id')
+    .eq('professional_id', professionalId)
+    .eq('weekday', weekday)
+    .eq('start_time', startTime)
+    .eq('end_time', endTime)
+    .maybeSingle();
+  if (existing) {
+    console.log(`  work_window weekday=${weekday} ${startTime}-${endTime} already exists`);
+    return existing.id;
+  }
+  const { data, error } = await sb.from('work_windows').insert({
+    professional_id: professionalId,
+    weekday,
+    start_time: startTime,
+    end_time: endTime,
+    sort_order: sortOrder,
+    is_active: true,
+    effective_from: '2026-01-01',
+  }).select('id').single();
+  if (error) {
+    console.error(`  work_window error weekday=${weekday}:`, error.message);
+    return null;
+  }
+  console.log(`  created work_window weekday=${weekday} ${startTime}-${endTime}`);
+  return data.id;
+}
+
+async function upsertScheduleBreak(
+  workWindowId: string,
+  startTime: string,
+  endTime: string,
+  label: string,
+  sortOrder: number = 0,
+) {
+  const { data: existing } = await sb.from('schedule_breaks')
+    .select('id')
+    .eq('work_window_id', workWindowId)
+    .eq('start_time', startTime)
+    .eq('end_time', endTime)
+    .maybeSingle();
+  if (existing) {
+    console.log(`  schedule_break ${startTime}-${endTime} already exists`);
+    return;
+  }
+  const { error } = await sb.from('schedule_breaks').insert({
+    work_window_id: workWindowId,
+    start_time: startTime,
+    end_time: endTime,
+    label,
+    sort_order: sortOrder,
+  });
+  if (error) {
+    console.error(`  schedule_break error:`, error.message);
+    return;
+  }
+  console.log(`  created schedule_break ${label} ${startTime}-${endTime}`);
+}
+
+// ============================================================================
+// Schedule Override
+// ============================================================================
+
+async function upsertScheduleOverride(
+  professionalId: string,
+  specificDate: string,
+  options: {
+    is_off?: boolean;
+    start_time?: string;
+    end_time?: string;
+    break_start?: string;
+    break_end?: string;
+    break_label?: string;
+    reason?: string;
+  },
+) {
+  const { data: existing } = await sb.from('schedule_overrides')
+    .select('id')
+    .eq('professional_id', professionalId)
+    .eq('specific_date', specificDate)
+    .maybeSingle();
+  if (existing) {
+    console.log(`  schedule_override for ${specificDate} already exists`);
+    return;
+  }
+  const { error } = await sb.from('schedule_overrides').insert({
+    professional_id: professionalId,
+    specific_date: specificDate,
+    is_off: options.is_off ?? false,
+    start_time: options.start_time || null,
+    end_time: options.end_time || null,
+    break_start: options.break_start || null,
+    break_end: options.break_end || null,
+    break_label: options.break_label || null,
+    reason: options.reason || null,
+  });
+  if (error) {
+    console.error(`  schedule_override error for ${specificDate}:`, error.message);
+    return;
+  }
+  console.log(`  created schedule_override for ${specificDate}`);
+}
+
+// ============================================================================
+// Legacy: Availability (kept for backward compatibility)
+// ============================================================================
+
 async function upsertAvailability(professionalId: string, weekday: number, startTime: string, endTime: string) {
   const { data: existing } = await sb.from('availability')
     .select('id')
@@ -111,7 +229,6 @@ async function upsertAvailability(professionalId: string, weekday: number, start
     .eq('end_time', endTime)
     .maybeSingle();
   if (existing) {
-    console.log(`  availability weekday=${weekday} ${startTime}-${endTime} already exists`);
     return;
   }
   const { error } = await sb.from('availability').insert({
@@ -122,9 +239,7 @@ async function upsertAvailability(professionalId: string, weekday: number, start
   });
   if (error) {
     console.error(`  availability error weekday=${weekday}:`, error.message);
-    return;
   }
-  console.log(`  created availability weekday=${weekday} ${startTime}-${endTime}`);
 }
 
 async function upsertBlockedTime(professionalId: string, startAt: string, endAt: string, reason: string) {
@@ -155,18 +270,18 @@ async function main() {
   console.log('=== AppManicure Seed (idempotent) ===\n');
 
   // 1. Users
-  console.log('[1/5] Users');
+  console.log('[1/6] Users');
   const profUserId = await upsertUser('profissional1@appmanicure.test', 'Profissional1', 'admin');
   const adminUserId = await upsertUser('adminteste@appmanicure.test', 'AdminTeste', 'admin');
   const client1UserId = await upsertUser('cliente1@appmanicure.test', 'Cliente1', 'client');
   const client2UserId = await upsertUser('cliente2@appmanicure.test', 'Cliente2', 'client');
 
   // 2. Professionals
-  console.log('\n[2/5] Professionals');
+  console.log('\n[2/6] Professionals');
   const profId = profUserId ? await upsertProfessional(profUserId, 'Profissional1') : null;
 
   // 3. Services
-  console.log('\n[3/5] Services');
+  console.log('\n[3/6] Services');
   const svcTraditional = await upsertService('Manicure tradicional', 'Cuidado clássico das unhas', 45);
   const svcGel = await upsertService('Manicure em gel', 'Unhas em gel com acabamento premium', 60);
   const svcFrench = await upsertService('Francesinha', 'Francesinha clássica ou moderna', 60);
@@ -175,7 +290,7 @@ async function main() {
   const svcExtension = await upsertService('Alongamento', 'Alongamento de unhas profissional', 120);
 
   // 4. Professional Services (link)
-  console.log('\n[4/5] Professional Services');
+  console.log('\n[4/6] Professional Services');
   if (profId) {
     await upsertProfessionalService(profId, svcTraditional!, 45, 45);
     await upsertProfessionalService(profId, svcGel!, 60, 80);
@@ -185,11 +300,21 @@ async function main() {
     await upsertProfessionalService(profId, svcExtension!, 120, 120);
   }
 
-  // 5. Availability (recurring weekly rules)
-  console.log('\n[5/5] Availability');
+  // 5. Work Windows + Breaks (NEW architecture)
+  console.log('\n[5/6] Work Windows + Breaks');
   if (profId) {
-    // Monday-Friday: morning 09:00-12:00, afternoon 13:00-18:00
-    // Friday afternoon ends at 17:00
+    // Monday-Friday: 09:00-18:00 with lunch 12:00-13:00
+    // Friday ends at 17:00
+    for (let weekday = 1; weekday <= 5; weekday++) {
+      const endTime = weekday === 5 ? '17:00' : '18:00';
+      const windowId = await upsertWorkWindow(profId, weekday, '09:00', endTime, 0);
+      if (windowId) {
+        await upsertScheduleBreak(windowId, '12:00', '13:00', 'Almoço', 0);
+      }
+    }
+
+    // Legacy availability (for backward compatibility)
+    console.log('\n  [bonus] Legacy availability');
     for (let weekday = 1; weekday <= 5; weekday++) {
       await upsertAvailability(profId, weekday, '09:00', '12:00');
       if (weekday <= 4) {
@@ -198,8 +323,37 @@ async function main() {
         await upsertAvailability(profId, weekday, '13:00', '17:00');
       }
     }
+  }
 
-    // Test blocked times: lunch break for next 10 weekdays
+  // 6. Overrides, Blocked Times, Test Appointments
+  console.log('\n[6/6] Overrides + Blocked Times + Test Data');
+  if (profId) {
+    // Override: Saturday 19/09/2026 — exceptional work day 09:00-13:00
+    await upsertScheduleOverride(profId, '2026-09-19', {
+      is_off: false,
+      start_time: '09:00',
+      end_time: '13:00',
+      reason: 'Sábado excepcional',
+    });
+
+    // Override: Sunday 20/09/2026 — exceptional work day 09:00-13:00
+    await upsertScheduleOverride(profId, '2026-09-20', {
+      is_off: false,
+      start_time: '09:00',
+      end_time: '13:00',
+      reason: 'Domingo excepcional',
+    });
+
+    // Override: Wednesday 23/09/2026 — day off
+    await upsertScheduleOverride(profId, '2026-09-23', {
+      is_off: true,
+      reason: 'Folga',
+    });
+
+    // Blocked time: 16/09 15:00-16:30
+    await upsertBlockedTime(profId, '2026-09-16T15:00:00', '2026-09-16T16:30:00', 'Emergência');
+
+    // Blocked times: lunch for next 10 weekdays
     console.log('\n  [bonus] Test blocked times');
     const now = new Date();
     let blockedCount = 0;
@@ -209,13 +363,36 @@ async function main() {
       const wd = d.getDay();
       if (wd >= 1 && wd <= 5) {
         const dateStr = d.toISOString().split('T')[0];
-        await upsertBlockedTime(
-          profId,
-          `${dateStr}T12:00:00`,
-          `${dateStr}T13:00:00`,
-          'Intervalo de almoço (teste)',
-        );
+        await upsertBlockedTime(profId, `${dateStr}T12:00:00`, `${dateStr}T13:00:00`, 'Intervalo de almoço (teste)');
         blockedCount++;
+      }
+    }
+
+    // Test appointment: 17/09 14:00-15:00
+    if (client1UserId) {
+      const { data: existingAppt } = await sb.from('appointments')
+        .select('id')
+        .eq('professional_id', profId)
+        .eq('client_user_id', client1UserId)
+        .gte('start_at', '2026-09-17T14:00:00')
+        .lte('start_at', '2026-09-17T15:00:00')
+        .maybeSingle();
+      if (!existingAppt) {
+        const { error } = await sb.from('appointments').insert({
+          client_user_id: client1UserId,
+          professional_id: profId,
+          service_id: svcGel!,
+          start_at: '2026-09-17T14:00:00',
+          end_at: '2026-09-17T15:00:00',
+          status: 'confirmed',
+        });
+        if (error) {
+          console.error(`  test appointment error:`, error.message);
+        } else {
+          console.log(`  created test appointment 17/09 14:00-15:00`);
+        }
+      } else {
+        console.log(`  test appointment already exists`);
       }
     }
   }

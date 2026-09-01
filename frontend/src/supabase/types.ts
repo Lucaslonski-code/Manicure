@@ -60,29 +60,38 @@ export interface Appointment {
   cancellation_reason?: string;
 }
 
-export interface Availability {
-  id: string;
-  professional_id: string;
-  weekday: number;
-  start_time: string;
-  end_time: string;
-  created_at: string;
-  updated_at: string;
-}
+// ============================================================================
+// NEW TYPES — Schedule Reformulation
+// ============================================================================
 
-export interface WorkSchedule {
+/** A single work window (one row per window per weekday) */
+export interface WorkWindow {
   id: string;
   professional_id: string;
   weekday: number;
   start_time: string;
   end_time: string;
-  lunch_start?: string;
-  lunch_end?: string;
+  sort_order: number;
   is_active: boolean;
+  effective_from: string;
+  effective_until?: string;
   created_at: string;
   updated_at: string;
 }
 
+/** A break within a work window */
+export interface ScheduleBreak {
+  id: string;
+  work_window_id: string;
+  start_time: string;
+  end_time: string;
+  label: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Schedule override for a specific date */
 export interface ScheduleOverride {
   id: string;
   professional_id: string;
@@ -92,17 +101,64 @@ export interface ScheduleOverride {
   end_time?: string;
   lunch_start?: string;
   lunch_end?: string;
+  break_start?: string;
+  break_end?: string;
+  break_label?: string;
   reason?: string;
   created_at: string;
   updated_at: string;
 }
 
-export interface EffectiveSchedule {
+/** Effective window returned by get_effective_windows RPC */
+export interface EffectiveWindow {
+  window_id: string | null;
   start_time: string;
   end_time: string;
-  lunch_start?: string;
-  lunch_end?: string;
   is_off: boolean;
+  source: 'override' | 'work_window';
+}
+
+/** Break returned by get_window_breaks RPC */
+export interface EffectiveBreak {
+  break_id: string;
+  start_time: string;
+  end_time: string;
+  label: string;
+}
+
+/** Window input for upsert_work_windows RPC */
+export interface WorkWindowInput {
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  sort_order?: number;
+  effective_from?: string;
+  effective_until?: string;
+  breaks?: ScheduleBreakInput[];
+}
+
+/** Break input nested in WorkWindowInput */
+export interface ScheduleBreakInput {
+  start_time: string;
+  end_time: string;
+  label?: string;
+  sort_order?: number;
+}
+
+/** Complete schedule data returned by get_professional_schedule_data RPC */
+export interface ProfessionalScheduleData {
+  window_id: string;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  sort_order: number;
+  is_active: boolean;
+  effective_from: string;
+  effective_until?: string;
+  break_id?: string;
+  break_start?: string;
+  break_end?: string;
+  break_label?: string;
 }
 
 export interface BlockedTime {
