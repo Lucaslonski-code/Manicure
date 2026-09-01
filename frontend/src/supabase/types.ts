@@ -70,6 +70,41 @@ export interface Availability {
   updated_at: string;
 }
 
+export interface WorkSchedule {
+  id: string;
+  professional_id: string;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  lunch_start?: string;
+  lunch_end?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScheduleOverride {
+  id: string;
+  professional_id: string;
+  specific_date: string;
+  is_off: boolean;
+  start_time?: string;
+  end_time?: string;
+  lunch_start?: string;
+  lunch_end?: string;
+  reason?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EffectiveSchedule {
+  start_time: string;
+  end_time: string;
+  lunch_start?: string;
+  lunch_end?: string;
+  is_off: boolean;
+}
+
 export interface BlockedTime {
   id: string;
   professional_id: string;

@@ -1,4 +1,4 @@
-import type { Availability, BlockedTime, Appointment } from '../supabase/types';
+import type { Availability, BlockedTime, Appointment, WorkSchedule, EffectiveSchedule } from '../supabase/types';
 
 const SLOT_INTERVAL_MINUTES = 30;
 
@@ -8,6 +8,13 @@ export interface TimeSlot {
   startAt: string;
   endAt: string;
   available: boolean;
+}
+
+export interface WorkWindow {
+  startMinutes: number;
+  endMinutes: number;
+  lunchStart?: number;
+  lunchEnd?: number;
 }
 
 function timeToMinutes(time: string): number {
@@ -28,12 +35,21 @@ function intervalsOverlap(
   return aStart < bEnd && bStart < aEnd;
 }
 
-function fitsInAnyWindow(
+function fitsInWindow(
   startMinutes: number,
   endMinutes: number,
-  windows: Array<{ startMinutes: number; endMinutes: number }>,
+  window: WorkWindow,
 ): boolean {
-  return windows.some((w) => startMinutes >= w.startMinutes && endMinutes <= w.endMinutes);
+  return startMinutes >= window.startMinutes && endMinutes <= window.endMinutes;
+}
+
+function overlapsLunch(
+  startMinutes: number,
+  endMinutes: number,
+  window: WorkWindow,
+): boolean {
+  if (window.lunchStart == null || window.lunchEnd == null) return false;
+  return intervalsOverlap(startMinutes, endMinutes, window.lunchStart, window.lunchEnd);
 }
 
 function hasOverlap(
@@ -58,10 +74,46 @@ function parseTimestampToMinutes(ts: string, dateStr: string): number {
   return d.getHours() * 60 + d.getMinutes();
 }
 
-function getWindowsForWeekday(
+// ============================================================================
+// NEW: Build work windows from WorkSchedule[] (new system)
+// ============================================================================
+function buildWindowsFromWorkSchedules(
+  schedules: WorkSchedule[],
+  weekday: number,
+): WorkWindow[] {
+  return schedules
+    .filter((ws) => ws.weekday === weekday && ws.is_active)
+    .map((ws) => ({
+      startMinutes: timeToMinutes(ws.start_time),
+      endMinutes: timeToMinutes(ws.end_time),
+      lunchStart: ws.lunch_start ? timeToMinutes(ws.lunch_start) : undefined,
+      lunchEnd: ws.lunch_end ? timeToMinutes(ws.lunch_end) : undefined,
+    }))
+    .sort((a, b) => a.startMinutes - b.startMinutes);
+}
+
+// ============================================================================
+// NEW: Build work window from EffectiveSchedule (new system, single day)
+// ============================================================================
+function buildWindowFromEffectiveSchedule(
+  effective: EffectiveSchedule,
+): WorkWindow | null {
+  if (effective.is_off || !effective.start_time || !effective.end_time) return null;
+  return {
+    startMinutes: timeToMinutes(effective.start_time),
+    endMinutes: timeToMinutes(effective.end_time),
+    lunchStart: effective.lunch_start ? timeToMinutes(effective.lunch_start) : undefined,
+    lunchEnd: effective.lunch_end ? timeToMinutes(effective.lunch_end) : undefined,
+  };
+}
+
+// ============================================================================
+// LEGACY: Build work windows from Availability[] (old system)
+// ============================================================================
+function buildWindowsFromAvailability(
   availability: Availability[],
   weekday: number,
-): Array<{ startMinutes: number; endMinutes: number }> {
+): WorkWindow[] {
   return availability
     .filter((a) => a.weekday === weekday)
     .map((a) => ({
@@ -87,7 +139,7 @@ function getBusyForDay(
   }
 
   for (const ap of appointments) {
-    if (ap.status !== 'confirmed') continue;
+    if (ap.status !== 'confirmed' && ap.status !== 'completed') continue;
     const s = parseTimestampToMinutes(ap.start_at, dateStr);
     const e = parseTimestampToMinutes(ap.end_at, dateStr);
     if (s >= 0 && e >= 0) {
@@ -98,61 +150,101 @@ function getBusyForDay(
   return busy;
 }
 
+// ============================================================================
+// isDateAvailable — supports both old (Availability) and new (WorkSchedule) systems
+// ============================================================================
 export function isDateAvailable(
   date: Date,
-  availability: Availability[],
+  availabilityOrSchedules: Availability[] | WorkSchedule[],
   professionalServiceExists: boolean,
+  effectiveSchedule?: EffectiveSchedule | null,
 ): boolean {
   if (!professionalServiceExists) return false;
   const weekday = date.getDay();
-  const windows = getWindowsForWeekday(availability, weekday);
+
+  // New system: use effectiveSchedule if provided
+  if (effectiveSchedule !== undefined) {
+    if (effectiveSchedule?.is_off || !effectiveSchedule) return false;
+    return !!effectiveSchedule.start_time && !!effectiveSchedule.end_time;
+  }
+
+  // New system: WorkSchedule[]
+  if (availabilityOrSchedules.length > 0 && 'lunch_start' in availabilityOrSchedules[0]) {
+    const windows = buildWindowsFromWorkSchedules(availabilityOrSchedules as WorkSchedule[], weekday);
+    return windows.length > 0;
+  }
+
+  // Legacy: Availability[]
+  const windows = buildWindowsFromAvailability(availabilityOrSchedules as Availability[], weekday);
   return windows.length > 0;
 }
 
+// ============================================================================
+// getAvailableSlots — supports both systems
+// ============================================================================
 export function getAvailableSlots(
   date: Date,
   durationMinutes: number,
-  availability: Availability[],
+  availabilityOrSchedules: Availability[] | WorkSchedule[],
   blockedTimes: BlockedTime[],
   appointments: Appointment[],
   now?: Date,
+  effectiveSchedule?: EffectiveSchedule | null,
 ): TimeSlot[] {
   const weekday = date.getDay();
-  const windows = getWindowsForWeekday(availability, weekday);
+  const dateStr = getDateStr(date);
+  let windows: WorkWindow[] = [];
+
+  // New system: use effectiveSchedule if provided
+  if (effectiveSchedule !== undefined) {
+    if (effectiveSchedule) {
+      const w = buildWindowFromEffectiveSchedule(effectiveSchedule);
+      if (w) windows = [w];
+    }
+  } else if (availabilityOrSchedules.length > 0 && 'lunch_start' in availabilityOrSchedules[0]) {
+    // New system: WorkSchedule[]
+    windows = buildWindowsFromWorkSchedules(availabilityOrSchedules as WorkSchedule[], weekday);
+  } else {
+    // Legacy: Availability[]
+    windows = buildWindowsFromAvailability(availabilityOrSchedules as Availability[], weekday);
+  }
 
   if (windows.length === 0) return [];
 
-  const dateStr = getDateStr(date);
   const busy = getBusyForDay(blockedTimes, appointments, dateStr);
 
   const slots: TimeSlot[] = [];
-  const earliestStart = Math.min(...windows.map((w) => w.startMinutes));
-  const latestEnd = Math.max(...windows.map((w) => w.endMinutes));
 
-  for (let startMin = earliestStart; startMin + durationMinutes <= latestEnd; startMin += SLOT_INTERVAL_MINUTES) {
-    const endMin = startMin + durationMinutes;
+  for (const window of windows) {
+    for (let startMin = window.startMinutes; startMin + durationMinutes <= window.endMinutes; startMin += SLOT_INTERVAL_MINUTES) {
+      const endMin = startMin + durationMinutes;
 
-    if (!fitsInAnyWindow(startMin, endMin, windows)) continue;
-    if (hasOverlap(startMin, endMin, busy)) continue;
+      if (!fitsInWindow(startMin, endMin, window)) continue;
+      if (overlapsLunch(startMin, endMin, window)) continue;
+      if (hasOverlap(startMin, endMin, busy)) continue;
 
-    if (now) {
-      const nowDate = getDateStr(now);
-      if (dateStr === nowDate) {
-        const nowMinutes = now.getHours() * 60 + now.getMinutes();
-        if (startMin <= nowMinutes) continue;
+      if (now) {
+        const nowDate = getDateStr(now);
+        if (dateStr === nowDate) {
+          const nowMinutes = now.getHours() * 60 + now.getMinutes();
+          if (startMin <= nowMinutes) continue;
+        }
       }
-    }
 
-    slots.push({
-      startMinutes: startMin,
-      endMinutes: endMin,
-      startAt: `${dateStr}T${minutesToTime(startMin)}`,
-      endAt: `${dateStr}T${minutesToTime(endMin)}`,
-      available: true,
-    });
+      // Avoid duplicate slots across windows
+      if (slots.some((s) => s.startMinutes === startMin)) continue;
+
+      slots.push({
+        startMinutes: startMin,
+        endMinutes: endMin,
+        startAt: `${dateStr}T${minutesToTime(startMin)}`,
+        endAt: `${dateStr}T${minutesToTime(endMin)}`,
+        available: true,
+      });
+    }
   }
 
-  return slots;
+  return slots.sort((a, b) => a.startMinutes - b.startMinutes);
 }
 
 export function formatSlotTime(minutes: number): string {

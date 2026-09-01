@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAvailability, useProfessionalServices } from '@hooks';
+import { useWorkSchedules, useProfessionalServices } from '@hooks';
 import { colors, spacing } from '@theme';
 import ScreenHeader from '@components/base/ScreenHeader';
 import Calendar from '@components/base/Calendar';
@@ -17,7 +17,7 @@ export default function DateSelectionScreen({ route, navigation }: any) {
     serviceId: string;
     editAppointmentId?: string;
   };
-  const { availability, loading: availabilityLoading } = useAvailability(professionalId);
+  const { schedules, loading: schedulesLoading } = useWorkSchedules(professionalId);
   const { items: professionalServices, loading: servicesLoading } = useProfessionalServices(professionalId);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -27,8 +27,8 @@ export default function DateSelectionScreen({ route, navigation }: any) {
   );
 
   const checkDateAvailable = useCallback(
-    (date: Date) => isDateAvailable(date, availability, hasService),
-    [availability, hasService],
+    (date: Date) => isDateAvailable(date, schedules, hasService),
+    [schedules, hasService],
   );
 
   const handleDateSelect = useCallback((date: Date) => {
@@ -42,7 +42,7 @@ export default function DateSelectionScreen({ route, navigation }: any) {
     }
   };
 
-  if (availabilityLoading || servicesLoading) {
+  if (schedulesLoading || servicesLoading) {
     return <LoadingState message="Carregando calendário..." />;
   }
 

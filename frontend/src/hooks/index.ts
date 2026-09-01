@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase/client';
-import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchAvailability, fetchBlockedTimes, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, rescheduleAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment } from '../services/api';
+import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchAvailability, fetchBlockedTimes, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, fetchWorkSchedules, upsertWorkSchedules, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchEffectiveSchedule } from '../services/api';
 import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings, Notification } from '../supabase/types';
 import { useNotifications } from './useNotifications';
 import { useAuth } from './useAuth';
@@ -470,15 +470,21 @@ export function useNotificationsHistory() {
   return { notifications, loading, error, refetch: load };
 }
 
-export function useRescheduleByClient() {
+export function useEditAppointment() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const reschedule = useCallback(async (appointmentId: string, newStartAt: string) => {
+  const edit = useCallback(async (
+    appointmentId: string,
+    professionalId: string,
+    serviceId: string,
+    startAt: string,
+    clientNote?: string,
+  ) => {
     try {
       setLoading(true);
       setError(null);
-      await rescheduleAppointmentByClient(appointmentId, newStartAt);
+      await editAppointmentByClient(appointmentId, professionalId, serviceId, startAt, clientNote);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -487,7 +493,7 @@ export function useRescheduleByClient() {
     }
   }, []);
 
-  return { reschedule, loading, error };
+  return { edit, loading, error };
 }
 
 export function useDeleteCancelledAppointment() {
@@ -528,4 +534,173 @@ export function useUpdateProfileAvatar() {
   }, []);
 
   return { updateAvatar, loading, error };
+}
+
+// ============================================================================
+// Work Schedules Hooks
+// ============================================================================
+
+export function useWorkSchedules(professionalId?: string | null) {
+  const [schedules, setSchedules] = useState<import('../supabase/types').WorkSchedule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!professionalId) {
+      setSchedules([]);
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchWorkSchedules(professionalId);
+      setSchedules(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [professionalId]);
+
+  useEffect(() => {
+    let isMounted = true;
+    load().then(() => { if (!isMounted) setSchedules([]); });
+    return () => { isMounted = false; };
+  }, [load]);
+
+  return { schedules, loading, error, refetch: load };
+}
+
+export function useSaveWorkSchedules() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = useCallback(async (professionalId: string, schedules: Array<{
+    weekday: number;
+    start_time: string;
+    end_time: string;
+    lunch_start?: string | null;
+    lunch_end?: string | null;
+  }>) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await upsertWorkSchedules(professionalId, schedules);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { save, loading, error };
+}
+
+export function useScheduleOverrides(professionalId?: string | null) {
+  const [overrides, setOverrides] = useState<import('../supabase/types').ScheduleOverride[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (startDate?: string, endDate?: string) => {
+    if (!professionalId) {
+      setOverrides([]);
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchScheduleOverrides(professionalId, startDate, endDate);
+      setOverrides(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [professionalId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { overrides, loading, error, refetch: load };
+}
+
+export function useSaveScheduleOverride() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = useCallback(async (
+    professionalId: string,
+    specificDate: string,
+    options: {
+      is_off?: boolean;
+      start_time?: string | null;
+      end_time?: string | null;
+      lunch_start?: string | null;
+      lunch_end?: string | null;
+      reason?: string | null;
+    } = {},
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await upsertScheduleOverride(professionalId, specificDate, options);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { save, loading, error };
+}
+
+export function useDeleteScheduleOverride() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const remove = useCallback(async (professionalId: string, specificDate: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await deleteScheduleOverride(professionalId, specificDate);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { remove, loading, error };
+}
+
+export function useEffectiveSchedule(professionalId?: string | null) {
+  const [schedule, setSchedule] = useState<import('../supabase/types').EffectiveSchedule | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (date: string) => {
+    if (!professionalId) {
+      setSchedule(null);
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchEffectiveSchedule(professionalId, date);
+      setSchedule(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [professionalId]);
+
+  return { schedule, loading, error, load };
 }

@@ -1,5 +1,5 @@
 import { supabase } from '../supabase/client';
-import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings, Notification } from '../supabase/types';
+import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings, Notification, WorkSchedule, ScheduleOverride, EffectiveSchedule } from '../supabase/types';
 
 async function sendPushNotification(appointmentId: string, event: 'confirmation' | 'cancellation' | 'reschedule'): Promise<void> {
   try {
@@ -257,10 +257,19 @@ export async function fetchBusinessSettings(): Promise<BusinessSettings | null> 
   return data;
 }
 
-export async function rescheduleAppointmentByClient(appointmentId: string, newStartAt: string): Promise<void> {
-  const { error } = await supabase.rpc('reschedule_appointment_by_client', {
+export async function editAppointmentByClient(
+  appointmentId: string,
+  newProfessionalId: string,
+  newServiceId: string,
+  newStartAt: string,
+  clientNote?: string
+): Promise<void> {
+  const { error } = await supabase.rpc('edit_appointment_by_client', {
     p_appointment_id: appointmentId,
+    p_new_professional_id: newProfessionalId,
+    p_new_service_id: newServiceId,
     p_new_start_at: newStartAt,
+    p_client_note: clientNote || null,
   });
 
   if (error) throw new Error(mapApiError(error));
@@ -269,7 +278,8 @@ export async function rescheduleAppointmentByClient(appointmentId: string, newSt
 }
 
 export async function updateProfileAvatar(userId: string, imageUri: string): Promise<string> {
-  const fileName = `${userId}/${Date.now()}.jpg`;
+  const ext = imageUri.split('.').pop() || 'jpg';
+  const fileName = `${userId}/${Date.now()}.${ext}`;
 
   const response = await fetch(imageUri);
   const blob = await response.blob();
@@ -277,11 +287,11 @@ export async function updateProfileAvatar(userId: string, imageUri: string): Pro
   const { error: uploadError } = await supabase.storage
     .from('avatars')
     .upload(fileName, blob, {
-      contentType: 'image/jpeg',
+      contentType: blob.type || 'image/jpeg',
       upsert: true,
     });
 
-  if (uploadError) throw new Error('Erro ao enviar imagem');
+  if (uploadError) throw new Error('Erro ao enviar imagem: ' + (uploadError.message || uploadError.name));
 
   const { data: urlData } = supabase.storage
     .from('avatars')
@@ -320,6 +330,100 @@ export async function deleteCancelledAppointment(appointmentId: string): Promise
     .eq('id', appointmentId);
 
   if (error) throw new Error(mapApiError(error));
+}
+
+// ============================================================================
+// Work Schedules API
+// ============================================================================
+
+export async function fetchWorkSchedules(professionalId: string): Promise<WorkSchedule[]> {
+  const { data, error } = await supabase
+    .from('work_schedules')
+    .select('*')
+    .eq('professional_id', professionalId)
+    .eq('is_active', true)
+    .order('weekday');
+
+  if (error) throw new Error(mapApiError(error));
+  return data || [];
+}
+
+export async function upsertWorkSchedules(professionalId: string, schedules: Array<{
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  lunch_start?: string | null;
+  lunch_end?: string | null;
+}>): Promise<void> {
+  const { error } = await supabase.rpc('upsert_work_schedules', {
+    p_professional_id: professionalId,
+    p_schedules: JSON.stringify(schedules),
+  });
+
+  if (error) throw new Error(mapApiError(error));
+}
+
+export async function fetchScheduleOverrides(professionalId: string, startDate?: string, endDate?: string): Promise<ScheduleOverride[]> {
+  let query = supabase
+    .from('schedule_overrides')
+    .select('*')
+    .eq('professional_id', professionalId)
+    .order('specific_date');
+
+  if (startDate) query = query.gte('specific_date', startDate);
+  if (endDate) query = query.lte('specific_date', endDate);
+
+  const { data, error } = await query;
+  if (error) throw new Error(mapApiError(error));
+  return data || [];
+}
+
+export async function upsertScheduleOverride(
+  professionalId: string,
+  specificDate: string,
+  options: {
+    is_off?: boolean;
+    start_time?: string | null;
+    end_time?: string | null;
+    lunch_start?: string | null;
+    lunch_end?: string | null;
+    reason?: string | null;
+  } = {}
+): Promise<void> {
+  const { error } = await supabase.rpc('upsert_schedule_override', {
+    p_professional_id: professionalId,
+    p_specific_date: specificDate,
+    p_is_off: options.is_off ?? false,
+    p_start_time: options.start_time || null,
+    p_end_time: options.end_time || null,
+    p_lunch_start: options.lunch_start || null,
+    p_lunch_end: options.lunch_end || null,
+    p_reason: options.reason || null,
+  });
+
+  if (error) throw new Error(mapApiError(error));
+}
+
+export async function deleteScheduleOverride(professionalId: string, specificDate: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_schedule_override', {
+    p_professional_id: professionalId,
+    p_specific_date: specificDate,
+  });
+
+  if (error) throw new Error(mapApiError(error));
+}
+
+export async function fetchEffectiveSchedule(professionalId: string, date: string): Promise<EffectiveSchedule | null> {
+  const { data, error } = await supabase
+    .rpc('get_effective_schedule', {
+      p_professional_id: professionalId,
+      p_date: date,
+    })
+    .limit(1)
+    .single();
+
+  if (error) return null;
+  return data as EffectiveSchedule;
 }
 
 export async function fetchNotifications(): Promise<Notification[]> {

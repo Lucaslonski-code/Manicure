@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, ScrollView, KeyboardAvoidingView, Pl
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useProfessionalServices, useProfessional, useBooking } from '@hooks';
+import { useProfessionalServices, useProfessional, useBooking, useEditAppointment } from '@hooks';
 import { colors, spacing, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
@@ -19,26 +19,30 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
   const { professionalId, serviceId, date, time, editAppointmentId } = route.params;
   const { items, loading: servicesLoading } = useProfessionalServices(professionalId);
   const { professional, loading: professionalLoading } = useProfessional(professionalId);
-  const { book, cancel, loading: bookingLoading } = useBooking();
+  const { book, loading: bookingLoading } = useBooking();
+  const { edit, loading: editLoading } = useEditAppointment();
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const service = items.find((i) => i.service_id === serviceId);
-  // America/Sao_Paulo (UTC-3) — evita que "2026-09-02T09:00:00" seja interpretado como UTC e falhe em "Time outside availability"
+  // America/Sao_Paulo (UTC-3)
   const startAt = time.includes('T') || time.includes('Z') || time.includes('+') || time.includes('-03')
     ? (time.includes('T') ? time : `${date}T${time}`)
     : `${date}T${time}:00-03:00`;
+
+  const isLoading = editAppointmentId ? editLoading : bookingLoading;
 
   const handleConfirm = async () => {
     try {
       setError(null);
       if (editAppointmentId) {
-        await cancel(editAppointmentId);
+        await edit(editAppointmentId, professionalId, serviceId, startAt, note || undefined);
+      } else {
+        await book(professionalId, serviceId, startAt, note || undefined);
       }
-      await book(professionalId, serviceId, startAt, note || undefined);
       navigation.replace('BookingConfirmation');
     } catch (err: any) {
-      setError(err.message || 'Erro ao criar agendamento');
+      setError(err.message || 'Erro ao processar agendamento');
     }
   };
 
@@ -119,10 +123,10 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
 
         <View style={styles.footer}>
           <Button
-            title={bookingLoading ? 'Salvando...' : editAppointmentId ? 'Confirmar edição' : 'Confirmar agendamento'}
+            title={isLoading ? 'Salvando...' : editAppointmentId ? 'Confirmar edição' : 'Confirmar agendamento'}
             onPress={handleConfirm}
-            disabled={bookingLoading}
-            loading={bookingLoading}
+            disabled={isLoading}
+            loading={isLoading}
           />
         </View>
       </ScrollView>
