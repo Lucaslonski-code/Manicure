@@ -16,10 +16,10 @@ function SummaryDivider() {
 
 export default function BookingSummaryScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { professionalId, serviceId, date, time } = route.params;
+  const { professionalId, serviceId, date, time, editAppointmentId } = route.params;
   const { items, loading: servicesLoading } = useProfessionalServices(professionalId);
   const { professional, loading: professionalLoading } = useProfessional(professionalId);
-  const { book, loading: bookingLoading } = useBooking();
+  const { book, cancel, loading: bookingLoading } = useBooking();
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -32,6 +32,9 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
   const handleConfirm = async () => {
     try {
       setError(null);
+      if (editAppointmentId) {
+        await cancel(editAppointmentId);
+      }
       await book(professionalId, serviceId, startAt, note || undefined);
       navigation.replace('BookingConfirmation');
     } catch (err: any) {
@@ -55,7 +58,7 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <ScreenHeader title="Resumo do agendamento" />
+        <ScreenHeader title={editAppointmentId ? "Confirmar edição" : "Resumo do agendamento"} />
 
         <View style={styles.cardWrap}>
           <View style={styles.card}>
@@ -116,7 +119,7 @@ export default function BookingSummaryScreen({ route, navigation }: any) {
 
         <View style={styles.footer}>
           <Button
-            title={bookingLoading ? 'Agendando...' : 'Confirmar agendamento'}
+            title={bookingLoading ? 'Salvando...' : editAppointmentId ? 'Confirmar edição' : 'Confirmar agendamento'}
             onPress={handleConfirm}
             disabled={bookingLoading}
             loading={bookingLoading}

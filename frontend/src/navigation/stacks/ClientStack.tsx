@@ -16,10 +16,10 @@ export type ClientStackParamList = {
   Notifications: undefined;
   AccountDeletion: undefined;
   ProfessionalSelection: undefined;
-  ServiceSelection: { professionalId: string };
-  DateSelection: { professionalId: string; serviceId: string };
-  TimeSlots: { professionalId: string; serviceId: string; date: string };
-  BookingSummary: { professionalId: string; serviceId: string; date: string; time: string };
+  ServiceSelection: { professionalId: string; editAppointmentId?: string };
+  DateSelection: { professionalId: string; serviceId: string; editAppointmentId?: string };
+  TimeSlots: { professionalId: string; serviceId: string; date: string; editAppointmentId?: string };
+  BookingSummary: { professionalId: string; serviceId: string; date: string; time: string; editAppointmentId?: string };
   BookingConfirmation: undefined;
   AppointmentDetails: { appointmentId: string };
 };

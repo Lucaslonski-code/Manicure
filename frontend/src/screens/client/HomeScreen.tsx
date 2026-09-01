@@ -59,16 +59,33 @@ export default function HomeScreen({ navigation }: any) {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 16) + 8 }]}
+      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 16) }]}
       showsVerticalScrollIndicator={false}
     >
-      {/* Saudação — spec: 24-26 / 600 #25221F left, subtitle 14 #6F6256 gap 6-8 */}
+      {/* Header — logo + avatar */}
+      <View style={styles.header}>
+        <View style={styles.logoRow}>
+          <View style={styles.logoIcon}>
+            <AppIcon name="sparkles" size={20} color="gold" />
+          </View>
+          <Text style={styles.logoText}>AppManicure</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Profile')}
+          activeOpacity={0.7}
+          style={styles.avatarButton}
+        >
+          <Avatar name={profile?.name} source={profile?.avatar_url ? { uri: profile.avatar_url } : undefined} size={40} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Saudação */}
       <View style={styles.greetingBlock}>
         <Text style={styles.greeting}>Bem-vinda, {firstName}</Text>
         <Text style={styles.subtitle}>Seu momento de autocuidado começa aqui</Text>
       </View>
 
-      {/* Card próximo horário — surface clara, border 1px #E3D5C6, radius 16, padding 16 */}
+      {/* Card próximo horário */}
       {nextAppointment ? (
         <View style={styles.nextBlock}>
           <TouchableOpacity
@@ -96,7 +113,7 @@ export default function HomeScreen({ navigation }: any) {
         </View>
       ) : null}
 
-      {/* CTA — bronze, 48-50, radius 12-14, 100% width */}
+      {/* CTA */}
       <View style={styles.ctaBlock}>
         <Button
           title="Agendar novo horário"
@@ -105,7 +122,7 @@ export default function HomeScreen({ navigation }: any) {
         />
       </View>
 
-      {/* Profissionais — header 16-18 600 #25221F + Ver todas 11-12 bronze, lista horizontal 64-72 circular */}
+      {/* Profissionais */}
       {professionals.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -125,7 +142,7 @@ export default function HomeScreen({ navigation }: any) {
         </View>
       )}
 
-      {/* Serviços — mesmo padrão header, cards horizontal image-first */}
+      {/* Serviços */}
       {services.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -158,7 +175,35 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 32,
   },
-  // Saudação
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.screenPadding,
+    paddingBottom: 16,
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    backgroundColor: colors.goldOverlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: {
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+    color: colors.textPrimary,
+  },
+  avatarButton: {
+    ...elevation.sm,
+  },
   greetingBlock: {
     paddingHorizontal: spacing.screenPadding,
     marginBottom: 20,
@@ -177,7 +222,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: colors.textSecondary,
   },
-  // Próximo horário
   nextBlock: {
     paddingHorizontal: spacing.screenPadding,
     marginBottom: 16,
@@ -242,12 +286,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  // CTA
   ctaBlock: {
     paddingHorizontal: spacing.screenPadding,
     marginBottom: 28,
   },
-  // Seções
   section: {
     marginBottom: 28,
   },
@@ -274,7 +316,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.screenPadding,
     gap: 16,
   },
-  // Profissional item — circular 68, nome 11-12 centrado
   professionalItem: {
     alignItems: 'center',
     width: 72,
@@ -287,7 +328,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
-  // Serviço card — image-first, radius 12-14, border 1px
   serviceCard: {
     width: 148,
     backgroundColor: colors.surface,

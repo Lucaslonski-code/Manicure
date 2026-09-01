@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase/client';
-import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchAvailability, fetchBlockedTimes, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications } from '../services/api';
+import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchAvailability, fetchBlockedTimes, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, rescheduleAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment } from '../services/api';
 import type { Professional, Service, ProfessionalService, Availability, BlockedTime, Appointment, BusinessSettings, Notification } from '../supabase/types';
 import { useNotifications } from './useNotifications';
 import { useAuth } from './useAuth';
@@ -266,32 +266,36 @@ export function useAppointment(id: string | null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!id) {
       setAppointment(null);
       setLoading(false);
       return;
     }
 
-    let isMounted = true;
-    setLoading(true);
-
-    fetchAppointmentById(id).then((data) => {
-      if (!isMounted) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchAppointmentById(id);
       setAppointment(data);
-      setLoading(false);
-    }).catch((err) => {
-      if (!isMounted) return;
+    } catch (err: any) {
       setError(err.message);
+    } finally {
       setLoading(false);
-    });
+    }
+  }, [id]);
 
+  useEffect(() => {
+    let isMounted = true;
+    load().then(() => {
+      if (!isMounted) setAppointment(null);
+    });
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [load]);
 
-  return { appointment, loading, error };
+  return { appointment, loading, error, refetch: load };
 }
 
 export function useBooking() {
@@ -464,4 +468,64 @@ export function useNotificationsHistory() {
   }, [load]);
 
   return { notifications, loading, error, refetch: load };
+}
+
+export function useRescheduleByClient() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const reschedule = useCallback(async (appointmentId: string, newStartAt: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await rescheduleAppointmentByClient(appointmentId, newStartAt);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { reschedule, loading, error };
+}
+
+export function useDeleteCancelledAppointment() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const remove = useCallback(async (appointmentId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await deleteCancelledAppointment(appointmentId);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { remove, loading, error };
+}
+
+export function useUpdateProfileAvatar() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const updateAvatar = useCallback(async (userId: string, imageUri: string): Promise<string> => {
+    try {
+      setLoading(true);
+      setError(null);
+      return await updateProfileAvatar(userId, imageUri);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { updateAvatar, loading, error };
 }

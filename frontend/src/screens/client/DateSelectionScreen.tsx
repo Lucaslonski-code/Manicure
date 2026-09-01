@@ -12,9 +12,10 @@ import { format } from 'date-fns';
 
 export default function DateSelectionScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { professionalId, serviceId } = route.params as {
+  const { professionalId, serviceId, editAppointmentId } = route.params as {
     professionalId: string;
     serviceId: string;
+    editAppointmentId?: string;
   };
   const { availability, loading: availabilityLoading } = useAvailability(professionalId);
   const { items: professionalServices, loading: servicesLoading } = useProfessionalServices(professionalId);
@@ -37,7 +38,7 @@ export default function DateSelectionScreen({ route, navigation }: any) {
   const handleContinue = () => {
     if (selectedDate) {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      navigation.navigate('TimeSlots', { professionalId, serviceId, date: dateStr });
+      navigation.navigate('TimeSlots', { professionalId, serviceId, date: dateStr, editAppointmentId });
     }
   };
 

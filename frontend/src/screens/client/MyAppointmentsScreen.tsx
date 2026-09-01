@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useMyAppointments, useProfessionals } from '@hooks';
+import { useMyAppointments, useProfessionals, useDeleteCancelledAppointment } from '@hooks';
 import type { Appointment } from '../../supabase/types';
 import { colors, spacing, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
@@ -12,11 +12,14 @@ import StatusBadge from '@components/base/StatusBadge';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
 import Button from '@components/base/Button';
+import ConfirmationDialog from '@components/base/ConfirmationDialog';
 
 export default function MyAppointmentsScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const { appointments, loading, error, refetch } = useMyAppointments();
   const { professionals } = useProfessionals();
+  const { remove } = useDeleteCancelledAppointment();
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -24,7 +27,7 @@ export default function MyAppointmentsScreen({ navigation }: any) {
 
   const today = appointments.filter((a) => {
     const d = new Date(a.start_at);
-    return d >= todayStart && d < todayEnd;
+    return d >= todayStart && d < todayEnd && a.status !== 'cancelled';
   });
   const upcoming = appointments.filter((a) => {
     const d = new Date(a.start_at);
@@ -43,8 +46,20 @@ export default function MyAppointmentsScreen({ navigation }: any) {
     completed: { label: 'Concluído', variant: 'default' },
   };
 
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await remove(deleteTarget);
+      setDeleteTarget(null);
+      refetch();
+    } catch {
+      setDeleteTarget(null);
+    }
+  };
+
   const renderAppointment = ({ item }: { item: Appointment }) => {
     const s = statusMap[item.status] || { label: item.status, variant: 'default' as const };
+    const isCancelled = item.status === 'cancelled';
     return (
       <TouchableOpacity
         style={styles.card}
@@ -52,13 +67,25 @@ export default function MyAppointmentsScreen({ navigation }: any) {
         activeOpacity={0.7}
       >
         <View style={styles.cardIcon}>
-          <AppIcon name="calendar" size={20} color="gold" />
+          <AppIcon name={isCancelled ? 'close' : 'calendar'} size={20} color={isCancelled ? 'error' : 'gold'} />
         </View>
         <View style={styles.cardContent}>
           <Text style={styles.professional} numberOfLines={1}>{getProfessionalName(item.professional_id)}</Text>
           <Text style={styles.date}>{format(parseISO(item.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</Text>
         </View>
-        <StatusBadge label={s.label} variant={s.variant} />
+        <View style={styles.cardActions}>
+          <StatusBadge label={s.label} variant={s.variant} />
+          {isCancelled && (
+            <TouchableOpacity
+              style={styles.trashButton}
+              onPress={() => setDeleteTarget(item.id)}
+              activeOpacity={0.6}
+              accessibilityLabel="Excluir agendamento cancelado"
+            >
+              <AppIcon name="delete" size={18} color="error" />
+            </TouchableOpacity>
+          )}
+        </View>
       </TouchableOpacity>
     );
   };
@@ -112,6 +139,16 @@ export default function MyAppointmentsScreen({ navigation }: any) {
           contentContainerStyle={[styles.list, { paddingBottom: Math.max(insets.bottom, 16) + 72 }]}
         />
       )}
+
+      <ConfirmationDialog
+        visible={!!deleteTarget}
+        title="Excluir agendamento"
+        message="Tem certeza que deseja excluir este agendamento cancelado? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+        destructive
+      />
     </View>
   );
 }
@@ -145,6 +182,19 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   cardContent: { flex: 1, marginRight: 8 },
+  cardActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  trashButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: 'rgba(166, 61, 64, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   professional: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
   date: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   errorText: { fontSize: 13, color: colors.error, textAlign: 'center', marginBottom: 16 },

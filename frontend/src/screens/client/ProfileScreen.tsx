@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuthContext } from '@hooks/AuthContext';
-import { useNotifications } from '@hooks';
+import { useNotifications, useUpdateProfileAvatar } from '@hooks';
 import { colors, spacing, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import DangerButton from '@components/base/DangerButton';
@@ -13,6 +14,8 @@ export default function ProfileScreen({ _navigation }: any) {
   const insets = useSafeAreaInsets();
   const { profile, signOut } = useAuthContext();
   const { permissionStatus, register, token } = useNotifications();
+  const { updateAvatar, loading: avatarLoading } = useUpdateProfileAvatar();
+  const [avatarUri, setAvatarUri] = useState<string | undefined>(profile?.avatar_url || undefined);
 
   const handleToggleNotifications = async () => {
     try {
@@ -32,6 +35,31 @@ export default function ProfileScreen({ _navigation }: any) {
       }
     } catch {
       Alert.alert('Erro', 'Não foi possível gerenciar notificações. Tente novamente.');
+    }
+  };
+
+  const handlePickAvatar = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Permita o acesso à galeria para alterar a foto de perfil.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled && result.assets[0] && profile?.id) {
+      try {
+        const newUrl = await updateAvatar(profile.id, result.assets[0].uri);
+        setAvatarUri(newUrl);
+        Alert.alert('Sucesso', 'Foto de perfil atualizada!');
+      } catch {
+        Alert.alert('Erro', 'Não foi possível atualizar a foto. Tente novamente.');
+      }
     }
   };
 
@@ -59,7 +87,13 @@ export default function ProfileScreen({ _navigation }: any) {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Avatar name={profile?.name} size={80} />
+        <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.7} style={styles.avatarTouchable}>
+          <Avatar name={profile?.name} source={avatarUri ? { uri: avatarUri } : undefined} size={80} />
+          <View style={styles.avatarBadge}>
+            <AppIcon name="edit" size={14} color="gold" />
+          </View>
+          {avatarLoading && <View style={styles.avatarLoadingOverlay} />}
+        </TouchableOpacity>
         <Text style={styles.name} numberOfLines={1}>{profile?.name || '—'}</Text>
         <Text style={styles.email} numberOfLines={1}>{profile?.email || '—'}</Text>
       </View>
@@ -110,7 +144,11 @@ export default function ProfileScreen({ _navigation }: any) {
       </View>
 
       <View style={styles.section}>
-        <DangerButton title="Sair da conta" onPress={handleLogout} />
+        <DangerButton
+          title="Sair da conta"
+          onPress={handleLogout}
+          style={styles.logoutButton}
+        />
       </View>
 
       <View style={styles.footer}>
@@ -127,6 +165,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.screenPadding,
     paddingBottom: 20,
+  },
+  avatarTouchable: {
+    position: 'relative',
+  },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...elevation.sm,
+  },
+  avatarLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: 40,
   },
   name: {
     fontSize: 20,
@@ -176,6 +236,10 @@ const styles = StyleSheet.create({
   label: { fontSize: 13, color: colors.textSecondary },
   value: { fontSize: 13, fontWeight: '500', color: colors.textPrimary, flexShrink: 1, textAlign: 'right', maxWidth: 160 },
   valueSm: { fontSize: 13, fontWeight: '500', color: colors.textPrimary },
+  logoutButton: {
+    minHeight: 40,
+    paddingVertical: spacing.sm,
+  },
   footer: { alignItems: 'center', paddingTop: 8, paddingBottom: 8 },
   version: { fontSize: 11, color: colors.textSecondary },
 });

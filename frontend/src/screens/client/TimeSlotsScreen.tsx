@@ -15,10 +15,11 @@ import type { Appointment } from '../../supabase/types';
 
 export default function TimeSlotsScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { professionalId, serviceId, date } = route.params as {
+  const { professionalId, serviceId, date, editAppointmentId } = route.params as {
     professionalId: string;
     serviceId: string;
     date: string;
+    editAppointmentId?: string;
   };
 
   const { availability } = useAvailability(professionalId);
@@ -92,6 +93,7 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
         serviceId,
         date,
         time: selectedTime,
+        editAppointmentId,
       });
     }
   };

@@ -94,7 +94,7 @@ export async function fetchProfessionalServices(professionalId: string): Promise
     .select('*, service:services(*)')
     .eq('professional_id', professionalId)
     .eq('is_active', true)
-    .order('service:services(name)');
+    ;
 
   if (error) throw new Error(mapApiError(error));
   return data || [];
@@ -255,6 +255,71 @@ export async function fetchBusinessSettings(): Promise<BusinessSettings | null> 
 
   if (error) return null;
   return data;
+}
+
+export async function rescheduleAppointmentByClient(appointmentId: string, newStartAt: string): Promise<void> {
+  const { error } = await supabase.rpc('reschedule_appointment_by_client', {
+    p_appointment_id: appointmentId,
+    p_new_start_at: newStartAt,
+  });
+
+  if (error) throw new Error(mapApiError(error));
+
+  sendPushNotification(appointmentId, 'reschedule');
+}
+
+export async function updateProfileAvatar(userId: string, imageUri: string): Promise<string> {
+  const fileName = `${userId}/${Date.now()}.jpg`;
+
+  const response = await fetch(imageUri);
+  const blob = await response.blob();
+
+  const { error: uploadError } = await supabase.storage
+    .from('avatars')
+    .upload(fileName, blob, {
+      contentType: 'image/jpeg',
+      upsert: true,
+    });
+
+  if (uploadError) throw new Error('Erro ao enviar imagem');
+
+  const { data: urlData } = supabase.storage
+    .from('avatars')
+    .getPublicUrl(fileName);
+
+  const publicUrl = urlData.publicUrl;
+
+  const { error: updateError } = await supabase
+    .from('users')
+    .update({ avatar_url: publicUrl })
+    .eq('id', userId);
+
+  if (updateError) throw new Error(mapApiError(updateError));
+
+  return publicUrl;
+}
+
+export async function deleteCancelledAppointment(appointmentId: string): Promise<void> {
+  const session = await supabase.auth.getSession();
+  const userId = session.data.session?.user.id;
+  if (!userId) throw new Error('Não autenticado');
+
+  const { data: appointment, error: fetchError } = await supabase
+    .from('appointments')
+    .select('status, client_user_id')
+    .eq('id', appointmentId)
+    .single();
+
+  if (fetchError || !appointment) throw new Error('Agendamento não encontrado');
+  if (appointment.client_user_id !== userId) throw new Error('Acesso negado');
+  if (appointment.status !== 'cancelled') throw new Error('Somente agendamentos cancelados podem ser excluídos');
+
+  const { error } = await supabase
+    .from('appointments')
+    .delete()
+    .eq('id', appointmentId);
+
+  if (error) throw new Error(mapApiError(error));
 }
 
 export async function fetchNotifications(): Promise<Notification[]> {

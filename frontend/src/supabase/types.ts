@@ -10,6 +10,7 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   deleted_at?: string;
+  avatar_url?: string;
 }
 
 export interface Professional {
