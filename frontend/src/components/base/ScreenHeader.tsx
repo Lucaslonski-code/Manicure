@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, TouchableOpacity } from 'react-native';
 import { colors, spacing, typography, radius } from '@theme';
 
 interface ScreenHeaderProps {
@@ -7,11 +7,23 @@ interface ScreenHeaderProps {
   subtitle?: string;
   style?: ViewStyle;
   accent?: boolean;
+  onBack?: () => void;
 }
 
-export default function ScreenHeader({ title, subtitle, style, accent }: ScreenHeaderProps) {
+export default function ScreenHeader({ title, subtitle, style, accent, onBack }: ScreenHeaderProps) {
   return (
     <View style={[styles.container, style]}>
+      {onBack && (
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={onBack}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityLabel="Voltar"
+          accessibilityRole="button"
+        >
+          <Text style={styles.backArrow}>‹</Text>
+        </TouchableOpacity>
+      )}
       <View style={styles.textContainer}>
         <View style={[styles.titleRow, accent && styles.titleRowAccent]}>
           {accent && (
@@ -30,6 +42,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.screenPadding,
     paddingTop: spacing.xxxxxxl,
     paddingBottom: spacing.xxxxxxl,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+    marginTop: -spacing.xs,
+  },
+  backArrow: {
+    fontSize: 24,
+    fontWeight: '300',
+    color: colors.textPrimary,
+    lineHeight: 28,
   },
   textContainer: {
     flex: 1,

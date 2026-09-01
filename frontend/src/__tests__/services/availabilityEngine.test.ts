@@ -254,9 +254,9 @@ describe('availabilityEngine', () => {
       expect(getTimes(slots)).toContain('09:00');
     });
 
-    it('16:30 is NOT available (16:30+90=18:00 fits exactly)', () => {
+    it('16:30 IS available (16:30+90=18:00 fits exactly at window close)', () => {
       const slots = getAvailableSlots(date, 90, windows, [], []);
-      expect(getTimes(slots)).not.toContain('16:30');
+      expect(getTimes(slots)).toContain('16:30');
     });
 
     it('17:00 is NOT available (17:00+90=18:30 exceeds)', () => {
@@ -531,15 +531,20 @@ describe('availabilityEngine', () => {
     });
   });
 
-  describe('appointment: adjacent appointments do not conflict', () => {
+  describe('appointment: adjacent appointments block consecutive slots', () => {
     const windows = [makeWorkWindow({ weekday: 1, start_time: '09:00', end_time: '18:00' })];
     const appt1 = makeAppointment({ id: 'ap1', start_at: '2026-09-07T09:00:00', end_at: '2026-09-07T10:00:00' });
     const appt2 = makeAppointment({ id: 'ap2', start_at: '2026-09-07T10:00:00', end_at: '2026-09-07T11:00:00' });
     const date = monday(2026, 9, 7);
 
-    it('10:00 is available (adjacent, no overlap)', () => {
+    it('10:00 is NOT available (overlaps appt2 10:00-11:00)', () => {
       const slots = getAvailableSlots(date, 60, windows, [], [appt1, appt2]);
-      expect(getTimes(slots)).toContain('10:00');
+      expect(getTimes(slots)).not.toContain('10:00');
+    });
+
+    it('11:00 IS available (after both appointments)', () => {
+      const slots = getAvailableSlots(date, 60, windows, [], [appt1, appt2]);
+      expect(getTimes(slots)).toContain('11:00');
     });
   });
 

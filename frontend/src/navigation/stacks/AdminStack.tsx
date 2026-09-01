@@ -9,6 +9,10 @@ import BlockedTimesScreen from '@screens/admin/BlockedTimesScreen';
 import AppointmentDetailsScreen from '@screens/admin/AppointmentDetailsScreen';
 import AdminProfessionalsScreen from '@screens/admin/AdminProfessionalsScreen';
 import AdminServicesScreen from '@screens/admin/AdminServicesScreen';
+import ScheduleCustomizationScreen from '@screens/admin/ScheduleCustomizationScreen';
+import WeeklyScheduleScreen from '@screens/admin/WeeklyScheduleScreen';
+import SpecificDatesScreen from '@screens/admin/SpecificDatesScreen';
+import BlockedTimesAdminScreen from '@screens/admin/BlockedTimesAdminScreen';
 
 export type AdminStackParamList = {
   Dashboard: undefined;
@@ -20,6 +24,10 @@ export type AdminStackParamList = {
   AppointmentDetails: { appointmentId: string };
   AdminProfessionals: undefined;
   AdminServices: undefined;
+  ScheduleCustomization: undefined;
+  WeeklySchedule: undefined;
+  SpecificDates: undefined;
+  BlockedTimesAdmin: undefined;
 };
 
 const Stack = createNativeStackNavigator<AdminStackParamList>();
@@ -36,6 +44,10 @@ export default function AdminStack() {
       <Stack.Screen name="AppointmentDetails" component={AppointmentDetailsScreen} />
       <Stack.Screen name="AdminProfessionals" component={AdminProfessionalsScreen} />
       <Stack.Screen name="AdminServices" component={AdminServicesScreen} />
+      <Stack.Screen name="ScheduleCustomization" component={ScheduleCustomizationScreen} />
+      <Stack.Screen name="WeeklySchedule" component={WeeklyScheduleScreen} />
+      <Stack.Screen name="SpecificDates" component={SpecificDatesScreen} />
+      <Stack.Screen name="BlockedTimesAdmin" component={BlockedTimesAdminScreen} />
     </Stack.Navigator>
   );
 }

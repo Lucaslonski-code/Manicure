@@ -52,7 +52,7 @@ export default function ScheduleCustomizationScreen({ navigation }: any) {
               <Text style={styles.cardTitle}>{section.title}</Text>
               <Text style={styles.cardDescription}>{section.description}</Text>
             </View>
-            <AppIcon name="arrow" size={iconSizes.sm} color="textSecondary" />
+            <AppIcon name="chevron-right" size={iconSizes.sm} color="secondary" />
           </TouchableOpacity>
         ))}
       </View>

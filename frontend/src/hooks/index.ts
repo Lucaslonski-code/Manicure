@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase/client';
-import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows } from '../services/api';
-import type { Professional, Service, ProfessionalService, BlockedTime, Appointment, BusinessSettings, Notification, WorkWindow, WorkWindowInput, EffectiveWindow, ProfessionalScheduleData } from '../supabase/types';
+import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows, fetchAllBreaksForProfessional } from '../services/api';
+import type { Professional, Service, ProfessionalService, BlockedTime, Appointment, BusinessSettings, Notification, WorkWindow, WorkWindowInput, EffectiveWindow, ProfessionalScheduleData, ScheduleBreak } from '../supabase/types';
 import { useNotifications } from './useNotifications';
 import { useAuth } from './useAuth';
 
@@ -703,11 +703,47 @@ export function useProfessionalScheduleData(professionalId?: string | null) {
 
   useEffect(() => {
     let isMounted = true;
-    load().then(() => { if (!isMounted) setWindows([]); });
+    load().then(() => { if (!isMounted) setData([]); });
     return () => { isMounted = false; };
   }, [load]);
 
-  return { windows, loading, error, refetch: load };
+  return { data, loading, error, refetch: load };
+}
+
+// ============================================================================
+// Schedule Breaks Hook
+// ============================================================================
+
+export function useScheduleBreaks(professionalId?: string | null) {
+  const [breaks, setBreaks] = useState<ScheduleBreak[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!professionalId) {
+      setBreaks([]);
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchAllBreaksForProfessional(professionalId);
+      setBreaks(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [professionalId]);
+
+  useEffect(() => {
+    let isMounted = true;
+    load().then(() => { if (!isMounted) setBreaks([]); });
+    return () => { isMounted = false; };
+  }, [load]);
+
+  return { breaks, loading, error, refetch: load };
 }
 
 // ============================================================================
@@ -813,10 +849,12 @@ export function useDeleteBlockedTime() {
 export function useMyProfessionalId() {
   const [professionalId, setProfessionalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setError(null);
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!isMounted) return;
@@ -832,17 +870,26 @@ export function useMyProfessionalId() {
         .select('id')
         .eq('user_id', userId)
         .single()
-        .then(({ data, error }) => {
+        .then(({ data, error: queryError }) => {
           if (!isMounted) return;
-          setProfessionalId(data?.id ?? null);
+          if (queryError) {
+            setError('Erro ao carregar dados do profissional.');
+            setProfessionalId(null);
+          } else {
+            setProfessionalId(data?.id ?? null);
+          }
           setLoading(false);
         });
+    }).catch(() => {
+      if (!isMounted) return;
+      setError('Erro ao verificar sessão.');
+      setLoading(false);
     });
 
     return () => { isMounted = false; };
   }, []);
 
-  return { professionalId, loading };
+  return { professionalId, loading, error };
 }
 
 // ============================================================================

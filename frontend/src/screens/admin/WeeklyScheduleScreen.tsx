@@ -98,7 +98,7 @@ function buildWindowsFromDB(windows: WorkWindow[], breaks: any[]): DayConfig[] {
   return result;
 }
 
-function buildInput(dayConfigs: DayConfig[]): WorkWindowInput[] {
+function buildInput(dayConfigs: DayConfig[], effectiveFrom?: string): WorkWindowInput[] {
   const inputs: WorkWindowInput[] = [];
   dayConfigs.forEach((day, dayIdx) => {
     if (!day.active) return;
@@ -109,6 +109,7 @@ function buildInput(dayConfigs: DayConfig[]): WorkWindowInput[] {
         start_time: win.start_time,
         end_time: win.end_time,
         sort_order: winIdx,
+        effective_from: effectiveFrom || undefined,
         breaks: win.breaks.map((brk, brkIdx) => ({
           start_time: brk.start_time,
           end_time: brk.end_time,
@@ -134,14 +135,11 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
   const [errors, setErrors] = useState<string[]>([]);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
 
-  const [allBreaks, setAllBreaks] = useState<any[]>([]);
-
   useEffect(() => {
     if (!windowsLoading && dbWindows.length >= 0) {
       import('../../services/api').then(({ fetchAllBreaksForProfessional }) => {
         if (professionalId) {
           fetchAllBreaksForProfessional(professionalId).then((brks) => {
-            setAllBreaks(brks);
             setDayConfigs(buildWindowsFromDB(dbWindows, brks));
           }).catch(() => {
             setDayConfigs(buildWindowsFromDB(dbWindows, []));
@@ -257,11 +255,11 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
           for (let j = i + 1; j < win.breaks.length; j++) {
             const a = win.breaks[i];
             const b = win.breaks[j];
-            const [aS] = a.start_time.split(':').map(Number);
-            const [aE] = a.end_time.split(':').map(Number);
-            const [bS] = b.start_time.split(':').map(Number);
-            const [bE] = b.end_time.split(':').map(Number);
-            if (aS * 60 < bE * 60 && bS * 60 < aE * 60) {
+            const [aSH, aSM] = a.start_time.split(':').map(Number);
+            const [aEH, aEM] = a.end_time.split(':').map(Number);
+            const [bSH, bSM] = b.start_time.split(':').map(Number);
+            const [bEH, bEM] = b.end_time.split(':').map(Number);
+            if (aSH * 60 + aSM < bEH * 60 + bEM && bSH * 60 + bSM < aEH * 60 + aEM) {
               errs.push(`${dayName}: pausas sobrepostas`);
             }
           }
@@ -280,7 +278,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
     if (!professionalId) return;
 
     setErrors([]);
-    const windowsInput = buildInput(dayConfigs);
+    const windowsInput = buildInput(dayConfigs, effectiveFrom || undefined);
     try {
       await save(professionalId, windowsInput);
       setHasChanges(false);
@@ -372,7 +370,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
                       {day.windows.length} {day.windows.length === 1 ? 'janela' : 'janelas'}
                     </Text>
                   )}
-                  <AppIcon name={isExpanded ? 'arrow' : 'arrow'} size={iconSizes.sm} color="textSecondary" />
+                  <AppIcon name={isExpanded ? 'chevron-right' : 'chevron-right'} size={iconSizes.sm} color="secondary" />
                 </View>
               </TouchableOpacity>
 
@@ -390,7 +388,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
                       </View>
 
                       <View style={styles.timeRow}>
-                        <View style={styles.timeInput-wrap}>
+                        <View style={styles.timeInputWrap}>
                           <Text style={styles.timeInputLabel}>Início</Text>
                           <TextInput
                             style={styles.timeInput}
@@ -402,7 +400,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
                           />
                         </View>
                         <Text style={styles.timeSeparator}>—</Text>
-                        <View style={styles.timeInput-wrap}>
+                        <View style={styles.timeInputWrap}>
                           <Text style={styles.timeInputLabel}>Fim</Text>
                           <TextInput
                             style={styles.timeInput}
@@ -430,7 +428,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
                             </TouchableOpacity>
                           </View>
                           <View style={styles.timeRow}>
-                            <View style={styles.timeInput-wrap}>
+                            <View style={styles.timeInputWrap}>
                               <TextInput
                                 style={styles.timeInput}
                                 value={brk.start_time}
@@ -441,7 +439,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
                               />
                             </View>
                             <Text style={styles.timeSeparator}>—</Text>
-                            <View style={styles.timeInput-wrap}>
+                            <View style={styles.timeInputWrap}>
                               <TextInput
                                 style={styles.timeInput}
                                 value={brk.end_time}
@@ -519,7 +517,7 @@ const styles = StyleSheet.create({
   windowHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
   windowLabel: { ...typography.bodySmall, fontWeight: '600', color: colors.textPrimary },
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  timeInput-wrap: { flex: 1 },
+  timeInputWrap: { flex: 1 },
   timeInputLabel: { ...typography.caption, color: colors.textSecondary, marginBottom: spacing.xs },
   timeInput: { height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radius.input, backgroundColor: colors.surface, paddingHorizontal: spacing.md, ...typography.input, color: colors.textPrimary, textAlign: 'center' },
   timeSeparator: { ...typography.body, color: colors.textSecondary, marginTop: spacing.lg },

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useWorkWindows, useBlockedTimes, useProfessionalServices } from '@hooks';
+import { useWorkWindows, useBlockedTimes, useProfessionalServices, useScheduleBreaks } from '@hooks';
 import { supabase } from '../../supabase/client';
 import { colors, spacing, radius, elevation } from '@theme';
 import Button from '@components/base/Button';
@@ -25,6 +25,7 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
   const { windows } = useWorkWindows(professionalId);
   const { blockedTimes } = useBlockedTimes(professionalId);
   const { items: professionalServices } = useProfessionalServices(professionalId);
+  const { breaks } = useScheduleBreaks(professionalId);
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,8 +79,9 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
   const slots = useMemo(() => {
     const targetDate = parseISO(date);
     const now = new Date();
-    return getAvailableSlots(targetDate, durationMinutes, windows, blockedTimes, appointments, now);
-  }, [date, durationMinutes, windows, blockedTimes, appointments]);
+    const windowIds = windows.map(w => w.id);
+    return getAvailableSlots(targetDate, durationMinutes, windows, blockedTimes, appointments, now, undefined, breaks, windowIds);
+  }, [date, durationMinutes, windows, blockedTimes, appointments, breaks]);
 
   const slotTimeStrings = useMemo(
     () => slots.map((s) => formatSlotTime(s.startMinutes)),

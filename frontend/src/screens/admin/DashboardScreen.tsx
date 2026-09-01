@@ -129,6 +129,10 @@ export default function DashboardScreen({ navigation }: any) {
         <Text style={styles.sectionTitle}>Gerenciar</Text>
         <View style={styles.sectionGap} />
         <View style={styles.actionsGrid}>
+          <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('ScheduleCustomization')} activeOpacity={0.7}>
+            <View style={styles.actionIconWrap}><AppIcon name="settings" size={20} color="gold" /></View>
+            <Text style={styles.actionLabel}>Personalizar{'\n'}agenda</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AdminProfessionals')} activeOpacity={0.7}>
             <View style={styles.actionIconWrap}><AppIcon name="people" size={20} color="gold" /></View>
             <Text style={styles.actionLabel}>Profissionais</Text>
