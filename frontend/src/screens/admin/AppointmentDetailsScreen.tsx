@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointment, useProfessionals, useMyProfessional, useBooking } from '@hooks';
@@ -16,11 +16,12 @@ import ScreenHeader from '@components/base/ScreenHeader';
 export default function AppointmentDetailsScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
   const { appointmentId } = route.params;
-  const { appointment, loading } = useAppointment(appointmentId);
+  const { appointment, loading, refetch } = useAppointment(appointmentId);
   const { professionals } = useProfessionals();
   const { professional: myProfessional } = useMyProfessional();
-  const { cancelByAdmin, loading: cancelLoading } = useBooking();
+  const { cancelByAdmin, loading: cancelLoading, removeCancelledByAdmin, loading: deleteLoading } = useBooking();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const professional = appointment ? professionals.find((p) => p.id === appointment.professional_id) : null;
   const isOwner = myProfessional?.id === appointment?.professional_id;
@@ -29,9 +30,21 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
     try {
       await cancelByAdmin(appointmentId);
       setShowCancelDialog(false);
-      navigation.goBack();
-    } catch {
+      await refetch();
+    } catch (err: any) {
       setShowCancelDialog(false);
+      Alert.alert('Erro ao cancelar', err?.message || 'Não foi possível cancelar este agendamento.');
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await removeCancelledByAdmin(appointmentId);
+      setShowDeleteDialog(false);
+      navigation.goBack();
+    } catch (err: any) {
+      setShowDeleteDialog(false);
+      Alert.alert('Erro ao excluir', err?.message || 'Não foi possível excluir este agendamento.');
     }
   };
 
@@ -41,7 +54,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
 
   if (!appointment) {
     return (
-      <View style={[styles.center, { paddingTop: insets.top + 24 }] }>
+      <View style={[styles.center, { paddingTop: insets.top + 24 }]}>
         <Text style={styles.errorText}>Agendamento não encontrado.</Text>
         <Button title="Voltar" onPress={() => navigation.goBack()} />
       </View>
@@ -57,7 +70,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 16) + 16 }} showsVerticalScrollIndicator={false}>
-      <ScreenHeader title="Detalhes do agendamento" />
+      <ScreenHeader title="Detalhes do agendamento" onBack={() => navigation.goBack()} />
       <View style={styles.card}>
         <View style={styles.row}>
           <Text style={styles.label}>Profissional</Text>
@@ -95,23 +108,35 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
         )}
       </View>
 
-      {isOwner ? (
-        appointment.status === 'confirmed' ? (
-          <View style={styles.actions}>
-            <DangerButton
-              title="Cancelar agendamento"
-              onPress={() => setShowCancelDialog(true)}
-              disabled={cancelLoading}
-            />
-          </View>
-        ) : (
-          <View style={styles.readOnlyNotice}>
-            <Text style={styles.readOnlyText}>Somente leitura — agendamento {status.label.toLowerCase()}</Text>
-          </View>
-        )
-      ) : (
+      {isOwner && appointment.status === 'confirmed' && (
+        <View style={styles.actions}>
+          <DangerButton
+            title="Cancelar agendamento"
+            onPress={() => setShowCancelDialog(true)}
+            disabled={cancelLoading}
+          />
+        </View>
+      )}
+
+      {isOwner && appointment.status === 'cancelled' && (
+        <View style={styles.actions}>
+          <DangerButton
+            title="Excluir agendamento"
+            onPress={() => setShowDeleteDialog(true)}
+            disabled={deleteLoading}
+          />
+        </View>
+      )}
+
+      {!isOwner && (
         <View style={styles.readOnlyNotice}>
           <Text style={styles.readOnlyText}>Somente leitura — responsável: {professional?.display_name || 'outro profissional'}</Text>
+        </View>
+      )}
+
+      {isOwner && appointment.status === 'completed' && (
+        <View style={styles.readOnlyNotice}>
+          <Text style={styles.readOnlyText}>Somente leitura — agendamento concluído</Text>
         </View>
       )}
 
@@ -122,6 +147,16 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
         confirmLabel="Cancelar agendamento"
         onConfirm={handleCancel}
         onCancel={() => setShowCancelDialog(false)}
+        destructive
+      />
+
+      <ConfirmationDialog
+        visible={showDeleteDialog}
+        title="Excluir agendamento"
+        message="Tem certeza que deseja excluir permanentemente este agendamento cancelado? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteDialog(false)}
         destructive
       />
     </ScrollView>

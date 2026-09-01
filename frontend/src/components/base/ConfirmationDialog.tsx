@@ -61,18 +61,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(37, 34, 31, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xxxxxxl,
+    padding: spacing.screenPadding,
   },
   wrapper: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
     padding: spacing.xxxxxxl,
     width: '100%',
+    maxWidth: 400,
+    alignSelf: 'center',
   },
   title: {
     ...typography.section,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
+    flexShrink: 1,
   },
   titleDestructive: {
     color: colors.error,
@@ -81,14 +84,16 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
     marginVertical: spacing.xxxxxxl,
+    flexShrink: 1,
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.xxxxxxl,
+    justifyContent: 'flex-end',
+    gap: spacing.md,
+    marginTop: spacing.sm,
   },
   actionButton: {
-    flex: 1,
+    flexShrink: 1,
   },
   destructiveButton: {
     backgroundColor: colors.error,

@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAppointments, useProfessionals } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
@@ -16,6 +17,12 @@ export default function GlobalAgendaScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const { appointments, loading, error, refetch } = useAppointments();
   const { professionals } = useProfessionals();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   const getProfessionalName = (professionalId: string) => {
     return professionals.find((p) => p.id === professionalId)?.display_name || 'Profissional';

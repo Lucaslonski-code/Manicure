@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useFocusEffect } from '@react-navigation/native';
 import { useMyAppointments, useProfessionals, useDeleteCancelledAppointment } from '@hooks';
 import type { Appointment } from '../../supabase/types';
 import { colors, spacing, radius, elevation } from '@theme';
@@ -20,6 +21,12 @@ export default function MyAppointmentsScreen({ navigation }: any) {
   const { professionals } = useProfessionals();
   const { remove } = useDeleteCancelledAppointment();
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -52,8 +59,9 @@ export default function MyAppointmentsScreen({ navigation }: any) {
       await remove(deleteTarget);
       setDeleteTarget(null);
       refetch();
-    } catch {
+    } catch (err: any) {
       setDeleteTarget(null);
+      Alert.alert('Erro ao excluir', err?.message || 'Não foi possível excluir este agendamento.');
     }
   };
 

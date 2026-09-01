@@ -49,6 +49,8 @@ export function useAuth(): AuthState & {
   const [loading, setLoading] = useState(true);
   const [recoveryMode, setRecoveryMode] = useState(false);
   const [profileError, setProfileError] = useState('');
+  const [isProfessional, setIsProfessional] = useState(false);
+  const [professionalId, setProfessionalId] = useState<string | null>(null);
   const { register: registerNotification, unregister: unregisterNotification } = useNotifications();
 
   const PROFILE_TIMEOUT_MS = 10000;
@@ -79,10 +81,32 @@ export function useAuth(): AuthState & {
           await authClient.signOut();
           setProfile(null);
           setSession(null);
+          setIsProfessional(false);
+          setProfessionalId(null);
           setProfileError('Sua conta foi desativada. Entre em contato com o suporte.');
         } else {
           setProfile(profileData);
           setProfileError('');
+          // Check if this user is also a professional
+          try {
+            const { data: profData } = await supabase
+              .from('professionals')
+              .select('id')
+              .eq('user_id', userId)
+              .eq('is_active', true)
+              .maybeSingle();
+            if (profData) {
+              setIsProfessional(true);
+              setProfessionalId(profData.id);
+              console.log('[USE_AUTH] loadProfile — user IS a professional, professionalId=%s', profData.id);
+            } else {
+              setIsProfessional(false);
+              setProfessionalId(null);
+            }
+          } catch {
+            setIsProfessional(false);
+            setProfessionalId(null);
+          }
         }
       } else {
         console.warn('[USE_AUTH] loadProfile — profile NOT FOUND for userId=%s, attempting auto-create', userId);
@@ -118,6 +142,25 @@ export function useAuth(): AuthState & {
             console.log('[USE_AUTH] loadProfile — auto-created profile for userId=%s', userId);
             setProfile(newProfile as Profile);
             setProfileError('');
+            // Check if this user is also a professional
+            try {
+              const { data: profData } = await supabase
+                .from('professionals')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('is_active', true)
+                .maybeSingle();
+              if (profData) {
+                setIsProfessional(true);
+                setProfessionalId(profData.id);
+              } else {
+                setIsProfessional(false);
+                setProfessionalId(null);
+              }
+            } catch {
+              setIsProfessional(false);
+              setProfessionalId(null);
+            }
           } else {
             console.warn('[USE_AUTH] loadProfile — auto-create failed:', insertError?.message);
             setProfileError('Perfil não encontrado. Entre em contato com o suporte.');
@@ -214,12 +257,16 @@ const { data } = await Promise.race([sessionPromise, sessionTimeoutPromise]);
             if (isMounted) {
               setSession(null);
               setProfile(null);
+              setIsProfessional(false);
+              setProfessionalId(null);
               setLoading(false);
             }
           }
         } else {
           setSession(null);
           setProfile(null);
+          setIsProfessional(false);
+          setProfessionalId(null);
           setLoading(false);
         }
       } catch (err) {
@@ -227,6 +274,8 @@ const { data } = await Promise.race([sessionPromise, sessionTimeoutPromise]);
         if (!isMounted) return;
         setSession(null);
         setProfile(null);
+        setIsProfessional(false);
+        setProfessionalId(null);
         setLoading(false);
       }
     };
@@ -247,6 +296,8 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
             loadProfile(session.user.id);
          } else {
            setProfile(null);
+           setIsProfessional(false);
+           setProfessionalId(null);
            setLoading(false);
          }
        }
@@ -315,7 +366,7 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
 
   const typedSession = useMemo(() => session ? { user: session.user } : null, [session]);
 
-  return useMemo(() => ({ session: typedSession, profile, loading, isEmailVerified, recoveryMode, profileError, signUp, signIn, signOut, resetPassword, updatePassword, resend }), [
-    typedSession, profile, loading, isEmailVerified, recoveryMode, profileError, signUp, signIn, signOut, resetPassword, updatePassword, resend
+  return useMemo(() => ({ session: typedSession, profile, loading, isEmailVerified, recoveryMode, profileError, isProfessional, professionalId, signUp, signIn, signOut, resetPassword, updatePassword, resend }), [
+    typedSession, profile, loading, isEmailVerified, recoveryMode, profileError, isProfessional, professionalId, signUp, signIn, signOut, resetPassword, updatePassword, resend
   ]);
 }

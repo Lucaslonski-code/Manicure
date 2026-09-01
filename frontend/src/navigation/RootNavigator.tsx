@@ -77,6 +77,7 @@ export function resolveRootState(s: {
   isEmailVerified: boolean;
   profile: Profile | null;
   recoveryMode: boolean;
+  isProfessional: boolean;
 }): RootDecision {
   if (!s.session) {
     return 'Public';
@@ -87,7 +88,7 @@ export function resolveRootState(s: {
   if (s.recoveryMode) {
     return 'Recovery';
   }
-  if (s.profile?.role === 'admin') {
+  if (s.profile?.role === 'admin' || s.isProfessional) {
     return 'Admin';
   }
   if (s.profile?.role === 'client') {
@@ -124,9 +125,9 @@ function renderRoot(decision: RootDecision) {
 
 const RootNavigatorContent = React.memo(function RootNavigatorContent() {
   const authCtx = useAuthContext();
-  const { loading, session, isEmailVerified, profile, recoveryMode } = authCtx;
+  const { loading, session, isEmailVerified, profile, recoveryMode, isProfessional } = authCtx;
 
-  const decision = resolveRootState({ loading, session, isEmailVerified, profile, recoveryMode });
+  const decision = resolveRootState({ loading, session, isEmailVerified, profile, recoveryMode, isProfessional });
 
   // Estado 1: bootstrap de auth em andamento.
   // Não deve ser confundido com splash nativo — o splash já foi liberado.

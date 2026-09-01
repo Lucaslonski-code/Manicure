@@ -44,26 +44,30 @@ const baseProfile: Profile = {
 
 describe('resolveRootState (auth -> destination)', () => {
   it('no session -> Public (Login)', () => {
-    expect(resolveRootState({ loading: false, session: null, isEmailVerified: false, profile: null, recoveryMode: false })).toBe('Public');
+    expect(resolveRootState({ loading: false, session: null, isEmailVerified: false, profile: null, recoveryMode: false, isProfessional: false })).toBe('Public');
   });
 
   it('client autenticado -> Client (Home)', () => {
-    expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: baseProfile, recoveryMode: false })).toBe('Client');
+    expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: baseProfile, recoveryMode: false, isProfessional: false })).toBe('Client');
   });
 
   it('admin autenticado -> Admin', () => {
-    expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: { ...baseProfile, role: 'admin' }, recoveryMode: false })).toBe('Admin');
+    expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: { ...baseProfile, role: 'admin' }, recoveryMode: false, isProfessional: false })).toBe('Admin');
   });
 
   it('e-mail não verificado -> EmailVerification', () => {
-    expect(resolveRootState({ loading: false, session, isEmailVerified: false, profile: baseProfile, recoveryMode: false })).toBe('EmailVerification');
+    expect(resolveRootState({ loading: false, session, isEmailVerified: false, profile: baseProfile, recoveryMode: false, isProfessional: false })).toBe('EmailVerification');
   });
 
   it('recovery ativo -> Recovery', () => {
-    expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: baseProfile, recoveryMode: true })).toBe('Recovery');
+    expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: baseProfile, recoveryMode: true, isProfessional: false })).toBe('Recovery');
   });
 
   it('profile com role inválido -> Public (fallback seguro)', () => {
-    expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: { ...baseProfile, role: 'invalid' as any }, recoveryMode: false })).toBe('Public');
+    expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: { ...baseProfile, role: 'invalid' as any }, recoveryMode: false, isProfessional: false })).toBe('Public');
+  });
+
+  it('professional with client role -> Admin (via isProfessional)', () => {
+    expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: baseProfile, recoveryMode: false, isProfessional: true })).toBe('Admin');
   });
 });

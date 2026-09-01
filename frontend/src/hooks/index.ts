@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase/client';
-import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows, fetchAllBreaksForProfessional } from '../services/api';
+import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, deleteCancelledAppointmentAdmin, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows, fetchAllBreaksForProfessional } from '../services/api';
 import type { Professional, Service, ProfessionalService, BlockedTime, Appointment, BusinessSettings, Notification, WorkWindow, WorkWindowInput, EffectiveWindow, ProfessionalScheduleData, ScheduleBreak } from '../supabase/types';
 import { useNotifications } from './useNotifications';
 import { useAuth } from './useAuth';
@@ -347,7 +347,20 @@ export function useBooking() {
     }
   }, []);
 
-  return { loading, error, book, cancel, reschedule, cancelByAdmin, remove };
+  const removeCancelledByAdmin = useCallback(async (appointmentId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await deleteCancelledAppointmentAdmin(appointmentId);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { loading, error, book, cancel, reschedule, cancelByAdmin, remove, removeCancelledByAdmin };
 }
 
 export function useMyProfessional() {

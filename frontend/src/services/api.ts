@@ -393,6 +393,24 @@ export async function deleteCancelledAppointment(appointmentId: string): Promise
   if (error) throw new Error(mapApiError(error));
 }
 
+export async function deleteCancelledAppointmentAdmin(appointmentId: string): Promise<void> {
+  const { data: appointment, error: fetchError } = await supabase
+    .from('appointments')
+    .select('status')
+    .eq('id', appointmentId)
+    .single();
+
+  if (fetchError || !appointment) throw new Error('Agendamento não encontrado');
+  if (appointment.status !== 'cancelled') throw new Error('Somente agendamentos cancelados podem ser excluídos');
+
+  const { error } = await supabase
+    .from('appointments')
+    .delete()
+    .eq('id', appointmentId);
+
+  if (error) throw new Error(mapApiError(error));
+}
+
 // ============================================================================
 // Work Windows API (multi-window, multi-break, vigência)
 // ============================================================================

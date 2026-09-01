@@ -206,4 +206,6 @@ export interface AuthState {
   profile: Profile | null;
   loading: boolean;
   isEmailVerified: boolean;
+  isProfessional: boolean;
+  professionalId: string | null;
 }
