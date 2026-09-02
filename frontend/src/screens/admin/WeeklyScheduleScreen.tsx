@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Switch, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
+import { colors, spacing, typography, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
 import SecondaryButton from '@components/base/SecondaryButton';
 import LoadingState from '@components/base/LoadingState';
-import ScreenHeader from '@components/base/ScreenHeader';
 import ConfirmationDialog from '@components/base/ConfirmationDialog';
 import { useMyProfessionalId, useWorkWindows, useSaveWorkWindows } from '@hooks';
+import { fetchAllBreaksForProfessional } from '../../services/api';
 import type { WorkWindow, WorkWindowInput } from '../../supabase/types';
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado'];
@@ -121,36 +121,61 @@ function buildInput(dayConfigs: DayConfig[]): WorkWindowInput[] {
   return inputs;
 }
 
-function StableTimeInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+function TimeInput({ label, value, onChange }: { label?: string; value: string; onChange: (v: string) => void }) {
   const [local, setLocal] = useState(value);
-  const lastExternalRef = useRef(value);
+  const lastSyncedRef = useRef(value);
 
   useEffect(() => {
-    if (value !== lastExternalRef.current) {
-      lastExternalRef.current = value;
+    if (value !== lastSyncedRef.current) {
+      lastSyncedRef.current = value;
       setLocal(value);
     }
   }, [value]);
 
-  const handleBlur = useCallback(() => {
-    if (local !== lastExternalRef.current) {
-      lastExternalRef.current = local;
-      onChange(local);
-    }
-  }, [local, onChange]);
+  const syncToParent = useCallback((text: string) => {
+    lastSyncedRef.current = text;
+    onChange(text);
+  }, [onChange]);
 
   return (
-    <TextInput
-      style={styles.timeInput}
-      value={local}
-      onChangeText={setLocal}
-      onBlur={handleBlur}
-      placeholder={placeholder || 'HH:MM'}
-      placeholderTextColor={colors.disabled}
-      keyboardType="numbers-and-punctuation"
-    />
+    <View style={localStyles.timeWrap}>
+      {label && <Text style={localStyles.timeLabel}>{label}</Text>}
+      <TextInput
+        style={localStyles.timeInput}
+        value={local}
+        onChangeText={(text) => {
+          setLocal(text);
+        }}
+        onBlur={() => syncToParent(local)}
+        onFocus={() => {
+          if (local === lastSyncedRef.current) {
+            setLocal(local);
+          }
+        }}
+        placeholder="HH:MM"
+        placeholderTextColor={colors.disabled}
+        keyboardType="numbers-and-punctuation"
+        maxLength={5}
+      />
+    </View>
   );
 }
+
+const localStyles = StyleSheet.create({
+  timeWrap: { flex: 1 },
+  timeLabel: { ...typography.caption, color: colors.textSecondary, marginBottom: 4 },
+  timeInput: {
+    height: 44,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.input,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+    ...typography.input,
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+});
 
 export default function WeeklyScheduleScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
@@ -165,16 +190,12 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!windowsLoading && dbWindows.length >= 0) {
-      import('../../services/api').then(({ fetchAllBreaksForProfessional }) => {
-        if (professionalId) {
-          fetchAllBreaksForProfessional(professionalId).then((brks) => {
-            setDayConfigs(buildWindowsFromDB(dbWindows, brks));
-          }).catch(() => {
-            setDayConfigs(buildWindowsFromDB(dbWindows, []));
-          });
-        }
-      });
+    if (!windowsLoading && professionalId) {
+      fetchAllBreaksForProfessional(professionalId)
+        .then((brks) => setDayConfigs(buildWindowsFromDB(dbWindows, brks)))
+        .catch(() => setDayConfigs(buildWindowsFromDB(dbWindows, [])));
+    } else if (!windowsLoading) {
+      setDayConfigs(buildWindowsFromDB(dbWindows, []));
     }
   }, [windowsLoading, dbWindows, professionalId]);
 
@@ -194,7 +215,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
     markChanged();
   }, [markChanged]);
 
-  const updateWindow = useCallback((dayIdx: number, winIdx: number, field: keyof WindowData, value: string) => {
+  const updateWindow = useCallback((dayIdx: number, winIdx: number, field: 'start_time' | 'end_time', value: string) => {
     setDayConfigs((prev) => {
       const next = [...prev];
       const day = { ...next[dayIdx], windows: [...next[dayIdx].windows] };
@@ -220,9 +241,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
       const next = [...prev];
       const day = { ...next[dayIdx], windows: [...next[dayIdx].windows] };
       day.windows.splice(winIdx, 1);
-      if (day.windows.length === 0) {
-        day.active = false;
-      }
+      if (day.windows.length === 0) day.active = false;
       next[dayIdx] = day;
       return next;
     });
@@ -241,7 +260,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
     markChanged();
   }, [markChanged]);
 
-  const updateBreak = useCallback((dayIdx: number, winIdx: number, brkIdx: number, field: keyof BreakData, value: string) => {
+  const updateBreakField = useCallback((dayIdx: number, winIdx: number, brkIdx: number, field: 'start_time' | 'end_time' | 'label', value: string) => {
     setDayConfigs((prev) => {
       const next = [...prev];
       const day = { ...next[dayIdx], windows: [...next[dayIdx].windows] };
@@ -313,8 +332,8 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
       setHasChanges(false);
       await refetch();
       Alert.alert('Sucesso', 'Jornada atualizada com sucesso.');
-    } catch {
-      setErrors(['Nao foi possivel salvar a jornada. Verifique os horarios e tente novamente.']);
+    } catch (err: any) {
+      setErrors([err?.message || 'Nao foi possivel salvar a jornada. Verifique os horarios e tente novamente.']);
     }
   }, [dayConfigs, professionalId, validate, save, refetch]);
 
@@ -343,190 +362,193 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ScreenHeader title="Jornada semanal" subtitle="Configure seus dias de trabalho" onBack={handleBack} />
-
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 80 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {errors.length > 0 && (
-          <View style={styles.errorContainer}>
-            {errors.map((err, i) => (
-              <Text key={i} style={styles.errorItem}>{err}</Text>
-            ))}
+    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.headerBar}>
+          <TouchableOpacity onPress={handleBack} style={styles.headerBack}>
+            <AppIcon name="chevron-left" size={20} color="secondary" />
+          </TouchableOpacity>
+          <View style={styles.headerTitleWrap}>
+            <Text style={styles.headerTitle}>Jornada semanal</Text>
+            <Text style={styles.headerSub}>Configure seus dias de trabalho</Text>
           </View>
-        )}
-
-        <View style={styles.infoBanner}>
-          <AppIcon name="warning" size={iconSizes.sm} color="gold" />
-          <Text style={styles.infoBannerText}>A jornada salva passa a valer imediatamente.</Text>
+          <View style={{ width: 36 }} />
         </View>
 
-        {WEEKDAY_INDICES.map((weekday, dayIdx) => {
-          const day = dayConfigs[dayIdx];
-          const isExpanded = expandedDay === dayIdx;
-          return (
-            <View key={weekday} style={styles.dayCard}>
-              <TouchableOpacity
-                style={styles.dayHeader}
-                onPress={() => setExpandedDay(isExpanded ? null : dayIdx)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.dayHeaderLeft}>
-                  <Switch
-                    value={day.active}
-                    onValueChange={() => toggleDay(dayIdx)}
-                    trackColor={{ false: colors.border, true: colors.goldOverlay }}
-                    thumbColor={day.active ? colors.gold : colors.disabled}
-                  />
-                  <Text style={[styles.dayName, !day.active && styles.dayNameInactive]}>
-                    {WEEKDAYS[weekday]}
-                  </Text>
-                </View>
-                <View style={styles.dayHeaderRight}>
-                  {day.active && (
-                    <Text style={styles.windowCount}>
-                      {day.windows.length} {day.windows.length === 1 ? 'janela' : 'janelas'}
-                    </Text>
-                  )}
-                  <AppIcon name="chevron-right" size={iconSizes.sm} color="secondary" />
-                </View>
-              </TouchableOpacity>
-
-              {isExpanded && day.active && (
-                <View style={styles.dayContent}>
-                  {day.windows.map((win, winIdx) => (
-                    <View key={winIdx} style={styles.windowCard}>
-                      <View style={styles.windowHeader}>
-                        <Text style={styles.windowLabel}>Janela {winIdx + 1}</Text>
-                        {day.windows.length > 1 && (
-                          <TouchableOpacity onPress={() => removeWindow(dayIdx, winIdx)}>
-                            <AppIcon name="delete" size={iconSizes.sm} color="error" />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-
-                      <View style={styles.timeRow}>
-                        <View style={styles.timeInputWrap}>
-                          <Text style={styles.timeInputLabel}>Inicio</Text>
-                          <StableTimeInput
-                            value={win.start_time}
-                            onChange={(v) => updateWindow(dayIdx, winIdx, 'start_time', v)}
-                          />
-                        </View>
-                        <Text style={styles.timeSeparator}>-</Text>
-                        <View style={styles.timeInputWrap}>
-                          <Text style={styles.timeInputLabel}>Fim</Text>
-                          <StableTimeInput
-                            value={win.end_time}
-                            onChange={(v) => updateWindow(dayIdx, winIdx, 'end_time', v)}
-                          />
-                        </View>
-                      </View>
-
-                      {win.breaks.map((brk, brkIdx) => (
-                        <View key={brkIdx} style={styles.breakCard}>
-                          <View style={styles.breakHeader}>
-                            <TextInput
-                              style={styles.breakLabelInput}
-                              value={brk.label}
-                              onChangeText={(v) => updateBreak(dayIdx, winIdx, brkIdx, 'label', v)}
-                              placeholder="Pausa"
-                              placeholderTextColor={colors.disabled}
-                            />
-                            <TouchableOpacity onPress={() => removeBreak(dayIdx, winIdx, brkIdx)}>
-                              <AppIcon name="delete" size={iconSizes.sm} color="error" />
-                            </TouchableOpacity>
-                          </View>
-                          <View style={styles.timeRow}>
-                            <View style={styles.timeInputWrap}>
-                              <StableTimeInput
-                                value={brk.start_time}
-                                onChange={(v) => updateBreak(dayIdx, winIdx, brkIdx, 'start_time', v)}
-                              />
-                            </View>
-                            <Text style={styles.timeSeparator}>-</Text>
-                            <View style={styles.timeInputWrap}>
-                              <StableTimeInput
-                                value={brk.end_time}
-                                onChange={(v) => updateBreak(dayIdx, winIdx, brkIdx, 'end_time', v)}
-                              />
-                            </View>
-                          </View>
-                        </View>
-                      ))}
-
-                      <TouchableOpacity style={styles.addBreakBtn} onPress={() => addBreak(dayIdx, winIdx)}>
-                        <AppIcon name="add" size={iconSizes.sm} color="gold" />
-                        <Text style={styles.addBreakText}>Adicionar pausa</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-
-                  <SecondaryButton
-                    title="+ Adicionar janela"
-                    onPress={() => addWindow(dayIdx)}
-                    style={styles.addWindowBtn}
-                  />
-                </View>
-              )}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 80 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {errors.length > 0 && (
+            <View style={styles.errorContainer}>
+              {errors.map((err, i) => (
+                <Text key={i} style={styles.errorItem}>{err}</Text>
+              ))}
             </View>
-          );
-        })}
-      </ScrollView>
+          )}
 
-      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        <Button
-          title={saving ? 'Salvando...' : 'Salvar jornada'}
-          onPress={handleSave}
-          disabled={saving || !hasChanges}
-          loading={saving}
+          <View style={styles.infoBanner}>
+            <AppIcon name="warning" size={16} color="gold" />
+            <Text style={styles.infoBannerText}>A jornada salva passa a valer imediatamente.</Text>
+          </View>
+
+          {WEEKDAY_INDICES.map((weekday, dayIdx) => {
+            const day = dayConfigs[dayIdx];
+            const isExpanded = expandedDay === dayIdx;
+            return (
+              <View key={weekday} style={styles.dayCard}>
+                <TouchableOpacity
+                  style={styles.dayHeader}
+                  onPress={() => setExpandedDay(isExpanded ? null : dayIdx)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.dayHeaderLeft}>
+                    <Switch
+                      value={day.active}
+                      onValueChange={() => toggleDay(dayIdx)}
+                      trackColor={{ false: colors.border, true: colors.goldOverlay }}
+                      thumbColor={day.active ? colors.gold : colors.disabled}
+                    />
+                    <Text style={[styles.dayName, !day.active && styles.dayNameInactive]}>
+                      {WEEKDAYS[weekday]}
+                    </Text>
+                  </View>
+                  <View style={styles.dayHeaderRight}>
+                    {day.active && (
+                      <Text style={styles.windowCount}>
+                        {day.windows.length} {day.windows.length === 1 ? 'janela' : 'janelas'}
+                      </Text>
+                    )}
+                    <AppIcon name="chevron-right" size={16} color="secondary" />
+                  </View>
+                </TouchableOpacity>
+
+                {isExpanded && day.active && (
+                  <View style={styles.dayContent}>
+                    {day.windows.map((win, winIdx) => (
+                      <View key={winIdx} style={styles.windowCard}>
+                        <View style={styles.windowHeader}>
+                          <Text style={styles.windowLabel}>Janela {winIdx + 1}</Text>
+                          {day.windows.length > 1 && (
+                            <TouchableOpacity onPress={() => removeWindow(dayIdx, winIdx)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                              <AppIcon name="delete" size={16} color="error" />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+
+                        <View style={styles.timeRow}>
+                          <TimeInput label="Inicio" value={win.start_time} onChange={(v) => updateWindow(dayIdx, winIdx, 'start_time', v)} />
+                          <View style={{ width: 12 }} />
+                          <TimeInput label="Fim" value={win.end_time} onChange={(v) => updateWindow(dayIdx, winIdx, 'end_time', v)} />
+                        </View>
+
+                        {win.breaks.length > 0 && (
+                          <Text style={styles.breakSectionLabel}>Pausas</Text>
+                        )}
+
+                        {win.breaks.map((brk, brkIdx) => (
+                          <View key={brkIdx} style={styles.breakCard}>
+                            <View style={styles.breakHeader}>
+                              <Text style={styles.breakTitle}>Pausa {brkIdx + 1}</Text>
+                              <TouchableOpacity onPress={() => removeBreak(dayIdx, winIdx, brkIdx)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                                <AppIcon name="delete" size={16} color="error" />
+                              </TouchableOpacity>
+                            </View>
+                            <View style={styles.breakField}>
+                              <Text style={styles.breakFieldLabel}>Nome</Text>
+                              <TextInput
+                                style={styles.breakLabelInput}
+                                value={brk.label}
+                                onChangeText={(v) => updateBreakField(dayIdx, winIdx, brkIdx, 'label', v)}
+                                placeholder="Pausa"
+                                placeholderTextColor={colors.disabled}
+                              />
+                            </View>
+                            <View style={styles.timeRow}>
+                              <TimeInput label="Inicio" value={brk.start_time} onChange={(v) => updateBreakField(dayIdx, winIdx, brkIdx, 'start_time', v)} />
+                              <View style={{ width: 12 }} />
+                              <TimeInput label="Fim" value={brk.end_time} onChange={(v) => updateBreakField(dayIdx, winIdx, brkIdx, 'end_time', v)} />
+                            </View>
+                          </View>
+                        ))}
+
+                        <TouchableOpacity style={styles.addBreakBtn} onPress={() => addBreak(dayIdx, winIdx)} activeOpacity={0.7}>
+                          <AppIcon name="add" size={16} color="gold" />
+                          <Text style={styles.addBreakText}>Adicionar pausa</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+
+                    <SecondaryButton title="+ Adicionar janela" onPress={() => addWindow(dayIdx)} style={styles.addWindowBtn} />
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </ScrollView>
+
+        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+          <Button title={saving ? 'Salvando...' : 'Salvar jornada'} onPress={handleSave} disabled={saving || !hasChanges} loading={saving} />
+        </View>
+
+        <ConfirmationDialog
+          visible={confirmVisible}
+          title="Alteracoes nao salvas"
+          message="Voce tem alteracoes nao salvas. Deseja sair sem salvar?"
+          confirmLabel="Sair"
+          cancelLabel="Ficar"
+          onConfirm={() => { setConfirmVisible(false); navigation.goBack(); }}
+          onCancel={() => setConfirmVisible(false)}
+          destructive
         />
       </View>
-
-      <ConfirmationDialog
-        visible={confirmVisible}
-        title="Alteracoes nao salvas"
-        message="Voce tem alteracoes nao salvas. Deseja sair sem salvar?"
-        confirmLabel="Sair"
-        cancelLabel="Ficar"
-        onConfirm={() => { setConfirmVisible(false); navigation.goBack(); }}
-        onCancel={() => setConfirmVisible(false)}
-        destructive
-      />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   container: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.screenPadding },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.screenPadding,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headerBack: { padding: spacing.sm },
+  headerTitleWrap: { flex: 1, alignItems: 'center' },
+  headerTitle: { fontSize: 17, fontWeight: '600', color: colors.textPrimary },
+  headerSub: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   scroll: { flex: 1 },
-  errorContainer: { marginHorizontal: spacing.screenPadding, marginBottom: spacing.md, backgroundColor: 'rgba(166,61,64,0.06)', borderRadius: radius.card, padding: spacing.xxxxxxl },
+  errorContainer: { marginHorizontal: spacing.screenPadding, marginBottom: spacing.md, backgroundColor: 'rgba(166,61,64,0.06)', borderRadius: radius.card, padding: spacing.lg },
   errorItem: { ...typography.bodySmall, color: colors.error, marginBottom: spacing.xs },
-  infoBanner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginHorizontal: spacing.screenPadding, marginBottom: spacing.xxxxxxl, backgroundColor: colors.goldOverlay, borderRadius: radius.card, padding: spacing.xxxxxxl },
+  infoBanner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginHorizontal: spacing.screenPadding, marginBottom: spacing.lg, backgroundColor: colors.goldOverlay, borderRadius: radius.card, padding: spacing.lg },
   infoBannerText: { ...typography.bodySmall, color: colors.textSecondary, flex: 1 },
   dayCard: { marginHorizontal: spacing.screenPadding, marginBottom: spacing.sm, backgroundColor: colors.surface, borderRadius: radius.card, borderWidth: 1, borderColor: colors.border, ...elevation.sm },
-  dayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.xxxxxxl },
+  dayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.lg },
   dayHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   dayHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   dayName: { ...typography.body, fontWeight: '600', color: colors.textPrimary },
   dayNameInactive: { color: colors.disabled },
   windowCount: { ...typography.bodySmall, color: colors.textSecondary },
-  dayContent: { paddingHorizontal: spacing.xxxxxxl, paddingBottom: spacing.xxxxxxl },
-  windowCard: { backgroundColor: colors.background, borderRadius: radius.card, padding: spacing.xxxxxxl, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
+  dayContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+  windowCard: { backgroundColor: colors.background, borderRadius: radius.card, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
   windowHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
   windowLabel: { ...typography.bodySmall, fontWeight: '600', color: colors.textPrimary },
-  timeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  timeInputWrap: { flex: 1 },
-  timeInputLabel: { ...typography.caption, color: colors.textSecondary, marginBottom: spacing.xs },
-  timeInput: { height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radius.input, backgroundColor: colors.surface, paddingHorizontal: spacing.md, ...typography.input, color: colors.textPrimary, textAlign: 'center' },
-  timeSeparator: { ...typography.body, color: colors.textSecondary, marginTop: spacing.lg },
-  breakCard: { marginTop: spacing.md, backgroundColor: colors.surface, borderRadius: radius.sm, padding: spacing.xxxxxxl, borderWidth: 1, borderColor: colors.border },
+  timeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 0 },
+  breakSectionLabel: { ...typography.caption, fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase' as const, letterSpacing: 0.3, marginTop: spacing.sm, marginBottom: spacing.xs },
+  breakCard: { marginTop: spacing.md, backgroundColor: colors.surface, borderRadius: radius.sm, padding: spacing.lg, borderWidth: 1, borderColor: colors.border },
   breakHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
-  breakLabelInput: { flex: 1, height: 36, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, backgroundColor: colors.background, paddingHorizontal: spacing.md, ...typography.bodySmall, color: colors.textPrimary, marginRight: spacing.md },
+  breakTitle: { ...typography.bodySmall, fontWeight: '600', color: colors.textPrimary },
+  breakField: { marginBottom: spacing.sm },
+  breakFieldLabel: { ...typography.caption, color: colors.textSecondary, marginBottom: 4 },
+  breakLabelInput: { height: 40, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, backgroundColor: colors.background, paddingHorizontal: spacing.md, ...typography.bodySmall, color: colors.textPrimary },
   addBreakBtn: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md, paddingVertical: spacing.sm },
   addBreakText: { ...typography.bodySmall, color: colors.gold, fontWeight: '500' },
   addWindowBtn: { marginTop: spacing.sm },

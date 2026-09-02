@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -64,111 +64,92 @@ export default function DashboardScreen({ navigation }: any) {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingTop: insets.top + spacing.lg, paddingBottom: Math.max(insets.bottom, 16) + 24 }}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.header}>
-        <View style={styles.headerAccent} />
-        <View>
-          <Text style={styles.headerTitle}>Painel Profissional</Text>
-          <Text style={styles.headerSub}>Visao geral</Text>
-        </View>
+    <View style={styles.container}>
+      <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
+        <Text style={styles.topBarTitle}>Painel Profissional</Text>
+        <Text style={styles.topBarSub}>Visao geral</Text>
       </View>
 
-      <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{todayAppointments.length}</Text>
-          <Text style={styles.statLabel}>Hoje</Text>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{todayAppointments.length}</Text>
+            <Text style={styles.statLabel}>Hoje</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{confirmed}</Text>
+            <Text style={styles.statLabel}>Confirmados</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={[styles.statValue, { color: colors.error }]}>{cancelled}</Text>
+            <Text style={styles.statLabel}>Cancelados</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{upcoming}</Text>
+            <Text style={styles.statLabel}>Proximos</Text>
+          </View>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{confirmed}</Text>
-          <Text style={styles.statLabel}>Confirmados</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={[styles.statValue, { color: colors.error }]}>{cancelled}</Text>
-          <Text style={styles.statLabel}>Cancelados</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{upcoming}</Text>
-          <Text style={styles.statLabel}>Proximos</Text>
-        </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Agenda global</Text>
-        <View style={styles.sectionGap} />
-        {todayAppointments.length === 0 ? (
-          <EmptyState title="Nenhum agendamento hoje" description="A agenda de hoje esta livre." icon="calendar" />
-        ) : (
-          <FlatList
-            data={todayAppointments.slice(0, 5)}
-            keyExtractor={(item) => item.id}
-            renderItem={renderAppointment}
-            scrollEnabled={false}
-          />
-        )}
-        {todayAppointments.length > 5 && (
-          <TouchableOpacity style={styles.viewAllBtn} onPress={() => navigation.navigate('PanelGlobalAgenda')}>
-            <Text style={styles.viewAllText}>Ver todos ({todayAppointments.length})</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Gerenciar</Text>
-        <View style={styles.sectionGap} />
-        <View style={styles.actionsGrid}>
-          <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('PanelGlobalAgenda')} activeOpacity={0.7}>
-            <View style={styles.actionIconWrap}><AppIcon name="calendar" size={18} color="gold" /></View>
-            <Text style={styles.actionLabel}>Agenda</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('PanelScheduleCustomization')} activeOpacity={0.7}>
-            <View style={styles.actionIconWrap}><AppIcon name="settings" size={18} color="gold" /></View>
-            <Text style={styles.actionLabel}>Personalizar{'\n'}agenda</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('PanelServices')} activeOpacity={0.7}>
-            <View style={styles.actionIconWrap}><AppIcon name="sparkles" size={18} color="gold" /></View>
-            <Text style={styles.actionLabel}>Servicos</Text>
-          </TouchableOpacity>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Agenda global</Text>
+          {todayAppointments.length === 0 ? (
+            <EmptyState title="Nenhum agendamento hoje" description="A agenda de hoje esta livre." icon="calendar" />
+          ) : (
+            todayAppointments.slice(0, 5).map((item) => renderAppointment({ item }))
+          )}
+          {todayAppointments.length > 5 && (
+            <TouchableOpacity style={styles.viewAllBtn} onPress={() => navigation.navigate('PanelGlobalAgenda')}>
+              <Text style={styles.viewAllText}>Ver todos ({todayAppointments.length})</Text>
+            </TouchableOpacity>
+          )}
         </View>
-      </View>
-    </ScrollView>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Gerenciar</Text>
+          <View style={styles.actionsGrid}>
+            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('PanelGlobalAgenda')} activeOpacity={0.7}>
+              <View style={styles.actionIconWrap}><AppIcon name="calendar" size={20} color="gold" /></View>
+              <Text style={styles.actionLabel}>Agenda</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('PanelScheduleCustomization')} activeOpacity={0.7}>
+              <View style={styles.actionIconWrap}><AppIcon name="settings" size={20} color="gold" /></View>
+              <Text style={styles.actionLabel}>Personalizar{'\n'}agenda</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('PanelServices')} activeOpacity={0.7}>
+              <View style={styles.actionIconWrap}><AppIcon name="sparkles" size={20} color="gold" /></View>
+              <Text style={styles.actionLabel}>Servicos</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.screenPadding },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.screenPadding,
-    marginBottom: spacing.xl,
-  },
-  headerAccent: {
-    width: 3,
-    height: 24,
-    borderRadius: 2,
-    backgroundColor: colors.gold,
-    marginRight: spacing.md,
-  },
-  headerTitle: { fontSize: 20, fontWeight: '600', color: colors.textPrimary, letterSpacing: -0.3 },
-  headerSub: { fontSize: 13, color: colors.textSecondary, marginTop: 1 },
+  topBar: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: spacing.screenPadding, paddingBottom: spacing.md },
+  topBarTitle: { fontSize: 20, fontWeight: '600', color: colors.textPrimary, letterSpacing: -0.3 },
+  topBarSub: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  scroll: { flex: 1 },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: spacing.screenPadding,
-    marginBottom: spacing.xl,
-    gap: 10,
+    paddingTop: spacing.lg,
+    gap: spacing.sm,
   },
   statCard: {
     flex: 1,
     minWidth: '45%',
     backgroundColor: colors.surface,
     borderRadius: radius.card,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -177,37 +158,36 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: 22, fontWeight: '600', lineHeight: 28, color: colors.textPrimary },
   statLabel: { fontSize: 11, fontWeight: '500', letterSpacing: 0.3, textTransform: 'uppercase' as const, color: colors.textSecondary, marginTop: 2 },
-  section: { marginBottom: 20, paddingHorizontal: spacing.screenPadding },
-  sectionTitle: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
-  sectionGap: { height: 10 },
-  actionsGrid: { flexDirection: 'row', gap: 10 },
+  section: { marginTop: spacing.xl, paddingHorizontal: spacing.screenPadding },
+  sectionTitle: { fontSize: 15, fontWeight: '600', color: colors.textPrimary, marginBottom: spacing.sm },
+  actionsGrid: { flexDirection: 'row', gap: spacing.sm },
   actionCard: {
     flex: 1,
     backgroundColor: colors.surface,
     borderRadius: radius.card,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.sm,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
     ...elevation.sm,
   },
   actionIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
     backgroundColor: colors.goldOverlay,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
+    marginBottom: spacing.sm,
   },
   actionLabel: { fontSize: 12, fontWeight: '500', color: colors.textPrimary, textAlign: 'center' },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginBottom: 8,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.xs,
     borderWidth: 1,
     borderColor: colors.border,
     flexDirection: 'row',

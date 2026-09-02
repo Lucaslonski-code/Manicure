@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppointment, useProfessionals, useMyProfessional, useBooking } from '@hooks';
-import { colors, spacing, typography, radius } from '@theme';
+import { colors, spacing, typography, radius, elevation } from '@theme';
 import StatusBadge from '@components/base/StatusBadge';
-import Divider from '@components/base/Divider';
-import Button from '@components/base/Button';
-import DangerButton from '@components/base/DangerButton';
 import LoadingState from '@components/base/LoadingState';
 import ConfirmationDialog from '@components/base/ConfirmationDialog';
-import ScreenHeader from '@components/base/ScreenHeader';
+import AppIcon from '@components/icons/AppIcon';
 
 export default function AppointmentDetailsScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
@@ -19,7 +16,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
   const { appointment, loading, refetch } = useAppointment(appointmentId);
   const { professionals } = useProfessionals();
   const { professional: myProfessional } = useMyProfessional();
-  const { cancelByAdmin, loading: cancelLoading, removeCancelledByAdmin, loading: deleteLoading } = useBooking();
+  const { cancelByAdmin, removeCancelledByAdmin } = useBooking();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -33,7 +30,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
       await refetch();
     } catch (err: any) {
       setShowCancelDialog(false);
-      Alert.alert('Erro ao cancelar', err?.message || 'Não foi possível cancelar este agendamento.');
+      Alert.alert('Erro ao cancelar', err?.message || 'Nao foi possivel cancelar este agendamento.');
     }
   };
 
@@ -44,19 +41,19 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
       navigation.goBack();
     } catch (err: any) {
       setShowDeleteDialog(false);
-      Alert.alert('Erro ao excluir', err?.message || 'Não foi possível excluir este agendamento.');
+      Alert.alert('Erro ao excluir', err?.message || 'Nao foi possivel excluir este agendamento.');
     }
   };
 
-  if (loading) {
-    return <LoadingState message="Carregando detalhes..." />;
-  }
+  if (loading) return <LoadingState message="Carregando detalhes..." />;
 
   if (!appointment) {
     return (
-      <View style={[styles.center, { paddingTop: insets.top + 24 }]}>
-        <Text style={styles.errorText}>Agendamento não encontrado.</Text>
-        <Button title="Voltar" onPress={() => navigation.goBack()} />
+      <View style={[styles.center, { paddingTop: insets.top + spacing.xl }]}>
+        <Text style={styles.errorText}>Agendamento nao encontrado.</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backToListBtn}>
+          <Text style={styles.backToListText}>Voltar</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -64,86 +61,93 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
   const statusMap: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'default' }> = {
     confirmed: { label: 'Confirmado', variant: 'success' },
     cancelled: { label: 'Cancelado', variant: 'error' },
-    completed: { label: 'Concluído', variant: 'default' },
+    completed: { label: 'Concluido', variant: 'default' },
   };
   const status = statusMap[appointment.status] || { label: appointment.status, variant: 'default' };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 16) + 16 }} showsVerticalScrollIndicator={false}>
-      <ScreenHeader title="Detalhes do agendamento" onBack={() => navigation.goBack()} />
-      <View style={styles.card}>
-        <View style={styles.row}>
-          <Text style={styles.label}>Profissional</Text>
-          <Text style={styles.value}>{professional?.display_name || '—'}</Text>
-        </View>
-        <Divider />
-        <View style={styles.row}>
-          <Text style={styles.label}>Data e horário</Text>
-          <Text style={styles.value}>
-            {format(parseISO(appointment.start_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-          </Text>
-        </View>
-        <Divider />
-        <View style={styles.row}>
-          <Text style={styles.label}>Status</Text>
-          <StatusBadge label={status.label} variant={status.variant} />
-        </View>
-        {appointment.client_note && (
-          <>
-            <Divider />
-            <View style={styles.section}>
-              <Text style={styles.label}>Observação da cliente</Text>
-              <Text style={styles.value}>{appointment.client_note}</Text>
-            </View>
-          </>
-        )}
-        {appointment.admin_note && (
-          <>
-            <Divider />
-            <View style={styles.section}>
-              <Text style={styles.label}>Observação admin</Text>
-              <Text style={styles.value}>{appointment.admin_note}</Text>
-            </View>
-          </>
-        )}
+    <View style={styles.container}>
+      <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <AppIcon name="chevron-left" size={20} color="secondary" />
+        </TouchableOpacity>
+        <Text style={styles.topBarTitle}>Detalhes do agendamento</Text>
+        <View style={{ width: 36 }} />
       </View>
 
-      {isOwner && appointment.status === 'confirmed' && (
-        <View style={styles.actions}>
-          <DangerButton
-            title="Cancelar agendamento"
-            onPress={() => setShowCancelDialog(true)}
-            disabled={cancelLoading}
-          />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <Text style={styles.label}>Profissional</Text>
+            <Text style={styles.value}>{professional?.display_name || '-'}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.row}>
+            <Text style={styles.label}>Data e horario</Text>
+            <Text style={styles.value}>{format(parseISO(appointment.start_at), "dd/MM/yyyy 'as' HH:mm", { locale: ptBR })}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.row}>
+            <Text style={styles.label}>Status</Text>
+            <StatusBadge label={status.label} variant={status.variant} />
+          </View>
+          {appointment.client_note && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.noteSection}>
+                <Text style={styles.label}>Observacao da cliente</Text>
+                <Text style={styles.value}>{appointment.client_note}</Text>
+              </View>
+            </>
+          )}
+          {appointment.admin_note && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.noteSection}>
+                <Text style={styles.label}>Observacao admin</Text>
+                <Text style={styles.value}>{appointment.admin_note}</Text>
+              </View>
+            </>
+          )}
         </View>
-      )}
 
-      {isOwner && appointment.status === 'cancelled' && (
-        <View style={styles.actions}>
-          <DangerButton
-            title="Excluir agendamento"
-            onPress={() => setShowDeleteDialog(true)}
-            disabled={deleteLoading}
-          />
-        </View>
-      )}
+        {isOwner && appointment.status === 'confirmed' && (
+          <View style={styles.actions}>
+            <TouchableOpacity style={styles.dangerBtn} onPress={() => setShowCancelDialog(true)} activeOpacity={0.7}>
+              <Text style={styles.dangerBtnText}>Cancelar agendamento</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-      {!isOwner && (
-        <View style={styles.readOnlyNotice}>
-          <Text style={styles.readOnlyText}>Somente leitura — responsável: {professional?.display_name || 'outro profissional'}</Text>
-        </View>
-      )}
+        {isOwner && appointment.status === 'cancelled' && (
+          <View style={styles.actions}>
+            <TouchableOpacity style={styles.dangerBtn} onPress={() => setShowDeleteDialog(true)} activeOpacity={0.7}>
+              <Text style={styles.dangerBtnText}>Excluir agendamento</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-      {isOwner && appointment.status === 'completed' && (
-        <View style={styles.readOnlyNotice}>
-          <Text style={styles.readOnlyText}>Somente leitura — agendamento concluído</Text>
-        </View>
-      )}
+        {!isOwner && (
+          <View style={styles.readOnlyNotice}>
+            <Text style={styles.readOnlyText}>Somente leitura - responsavel: {professional?.display_name || 'outro profissional'}</Text>
+          </View>
+        )}
+
+        {isOwner && appointment.status === 'completed' && (
+          <View style={styles.readOnlyNotice}>
+            <Text style={styles.readOnlyText}>Somente leitura - agendamento concluido</Text>
+          </View>
+        )}
+      </ScrollView>
 
       <ConfirmationDialog
         visible={showCancelDialog}
         title="Cancelar agendamento"
-        message="Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita."
+        message="Tem certeza que deseja cancelar este agendamento?"
         confirmLabel="Cancelar agendamento"
         onConfirm={handleCancel}
         onCancel={() => setShowCancelDialog(false)}
@@ -153,77 +157,52 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
       <ConfirmationDialog
         visible={showDeleteDialog}
         title="Excluir agendamento"
-        message="Tem certeza que deseja excluir permanentemente este agendamento cancelado? Esta ação não pode ser desfeita."
+        message="Tem certeza que deseja excluir permanentemente este agendamento cancelado?"
         confirmLabel="Excluir"
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteDialog(false)}
         destructive
       />
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.xxxxxxl,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.screenPadding },
+  topBar: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: spacing.screenPadding, paddingBottom: spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backBtn: { padding: spacing.sm },
+  topBarTitle: { fontSize: 17, fontWeight: '600', color: colors.textPrimary, flex: 1, textAlign: 'center' },
+  scroll: { flex: 1 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
     borderWidth: 1,
     borderColor: colors.border,
-    marginHorizontal: spacing.xxxxxxl,
+    marginHorizontal: spacing.screenPadding,
+    marginTop: spacing.lg,
     overflow: 'hidden',
+    ...elevation.sm,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: spacing.xxxxxxl,
-  },
-  section: {
-    padding: spacing.xxxxxxl,
-  },
-  label: {
-    ...typography.label,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-  },
-  value: {
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.xxxxxxl,
-    paddingHorizontal: spacing.screenPadding,
-    marginTop: spacing.xxxxxxl,
-  },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg },
+  divider: { height: 1, backgroundColor: colors.border },
+  noteSection: { padding: spacing.lg },
+  label: { ...typography.bodySmall, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase' as const, letterSpacing: 0.3 },
+  value: { ...typography.body, color: colors.textPrimary, fontWeight: '500' },
+  actions: { paddingHorizontal: spacing.screenPadding, marginTop: spacing.lg },
+  dangerBtn: { height: 48, backgroundColor: colors.error, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center' },
+  dangerBtnText: { ...typography.button, color: '#FFFFFF' },
   readOnlyNotice: {
-    marginTop: spacing.xxxxxxl,
-    marginHorizontal: spacing.xxxxxxl,
-    padding: spacing.xxxxxxl,
+    marginTop: spacing.lg,
+    marginHorizontal: spacing.screenPadding,
+    padding: spacing.lg,
     borderRadius: radius.card,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  readOnlyText: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  errorText: {
-    ...typography.bodySmall,
-    color: colors.error,
-    textAlign: 'center',
-    marginBottom: spacing.xxxxxxl,
-  },
+  readOnlyText: { ...typography.bodySmall, color: colors.textSecondary, textAlign: 'center' },
+  backToListBtn: { marginTop: spacing.lg, backgroundColor: colors.gold, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm, borderRadius: radius.button },
+  backToListText: { ...typography.button, color: '#FFFFFF' },
+  errorText: { ...typography.bodySmall, color: colors.error, textAlign: 'center', marginBottom: spacing.lg },
 });

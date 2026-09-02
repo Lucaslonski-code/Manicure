@@ -1,18 +1,8 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMyProfessionalId, useProfessionalServices, useCreateServiceForProfessional, useDeleteProfessionalService } from '@hooks';
-import { colors, spacing, radius, elevation } from '@theme';
+import { colors, spacing, radius, elevation, typography } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
@@ -93,112 +83,110 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingTop: insets.top + spacing.lg, paddingBottom: Math.max(insets.bottom, 16) + 24 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        bounces={false}
-      >
-        <View style={styles.header}>
-          <View style={styles.headerAccent} />
-          <View style={styles.headerRow}>
-            <View style={styles.headerTextWrap}>
-              <Text style={styles.headerTitle}>Servicos</Text>
-              <Text style={styles.headerSub}>{items.length} servico(s)</Text>
-            </View>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-              <AppIcon name="chevron-left" size={18} color="secondary" />
-            </TouchableOpacity>
+      <View style={styles.container}>
+        <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <AppIcon name="chevron-left" size={20} color="secondary" />
+          </TouchableOpacity>
+          <View style={styles.topBarTitleWrap}>
+            <Text style={styles.topBarTitle}>Servicos</Text>
+            <Text style={styles.topBarSub}>{items.length} servico(s)</Text>
           </View>
+          <View style={{ width: 36 }} />
         </View>
 
-        {/* Create Form */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Novo servico</Text>
-          <View style={styles.sectionGap} />
-          <View style={styles.form}>
-            <View style={styles.field}>
-              <Text style={styles.label}>Nome *</Text>
-              <TextInput
-                style={[styles.input, errors.name && styles.inputError]}
-                value={name}
-                onChangeText={(t) => { setName(t); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }}
-                placeholder="Ex: Alongamento"
-                placeholderTextColor={colors.textSecondary}
-                returnKeyType="next"
-              />
-              {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
-            </View>
-            <View style={styles.field}>
-              <Text style={styles.label}>Descricao</Text>
-              <TextInput
-                style={styles.input}
-                value={description}
-                onChangeText={setDescription}
-                placeholder="Opcional"
-                placeholderTextColor={colors.textSecondary}
-                returnKeyType="next"
-              />
-            </View>
-            <View style={styles.row}>
-              <View style={[styles.field, styles.rowField]}>
-                <Text style={styles.label}>Duracao (min) *</Text>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Novo servico</Text>
+            <View style={styles.form}>
+              <View style={styles.field}>
+                <Text style={styles.label}>Nome *</Text>
                 <TextInput
-                  style={[styles.input, errors.duration && styles.inputError]}
-                  value={duration}
-                  onChangeText={(t) => { setDuration(t.replace(/[^0-9]/g, '')); if (errors.duration) setErrors((p) => ({ ...p, duration: undefined })); }}
-                  placeholder="60"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="numeric"
+                  style={[styles.input, errors.name && styles.inputError]}
+                  value={name}
+                  onChangeText={(t) => { setName(t); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }}
+                  placeholder="Ex: Alongamento"
+                  placeholderTextColor={colors.disabled}
                   returnKeyType="next"
                 />
-                {errors.duration && <Text style={styles.errorText}>{errors.duration}</Text>}
+                {errors.name && <Text style={styles.errorItem}>{errors.name}</Text>}
               </View>
-              <View style={[styles.field, styles.rowField]}>
-                <Text style={styles.label}>Preco (R$)</Text>
+              <View style={styles.field}>
+                <Text style={styles.label}>Descricao</Text>
                 <TextInput
                   style={styles.input}
-                  value={price}
-                  onChangeText={(t) => setPrice(t.replace(/[^0-9.,]/g, ''))}
+                  value={description}
+                  onChangeText={setDescription}
                   placeholder="Opcional"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="decimal-pad"
-                  returnKeyType="done"
+                  placeholderTextColor={colors.disabled}
+                  returnKeyType="next"
                 />
               </View>
-            </View>
-            <TouchableOpacity style={[styles.createBtn, creating && styles.disabled]} onPress={handleCreate} disabled={creating} activeOpacity={0.7}>
-              <AppIcon name="sparkles" size={16} color="surface" />
-              <Text style={styles.createBtnText}>{creating ? 'Criando...' : 'Criar servico'}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* List */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Servicos cadastrados</Text>
-          <View style={styles.sectionGap} />
-          {items.length === 0 ? (
-            <EmptyState title="Nenhum servico" description="Crie o primeiro servico acima." icon="sparkles" />
-          ) : (
-            items.map((item) => (
-              <View key={item.id} style={styles.card}>
-                <View style={styles.cardBody}>
-                  <Text style={styles.cardName}>{item.service.name}</Text>
-                  <Text style={styles.cardMeta}>{item.duration_minutes}min {item.price != null ? `• R$ ${item.price.toFixed(2)}` : ''}</Text>
+              <View style={styles.row}>
+                <View style={[styles.field, styles.rowField]}>
+                  <Text style={styles.label}>Duracao (min) *</Text>
+                  <TextInput
+                    style={[styles.input, errors.duration && styles.inputError]}
+                    value={duration}
+                    onChangeText={(t) => { setDuration(t.replace(/[^0-9]/g, '')); if (errors.duration) setErrors((p) => ({ ...p, duration: undefined })); }}
+                    placeholder="60"
+                    placeholderTextColor={colors.disabled}
+                    keyboardType="numeric"
+                    returnKeyType="next"
+                  />
+                  {errors.duration && <Text style={styles.errorItem}>{errors.duration}</Text>}
                 </View>
-                <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDeleteRequest(item.id, item.service.name)} activeOpacity={0.7}>
-                  <AppIcon name="delete" size={16} color="error" />
-                </TouchableOpacity>
+                <View style={[styles.field, styles.rowField]}>
+                  <Text style={styles.label}>Preco (R$)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={price}
+                    onChangeText={(t) => setPrice(t.replace(/[^0-9.,]/g, ''))}
+                    placeholder="Opcional"
+                    placeholderTextColor={colors.disabled}
+                    keyboardType="decimal-pad"
+                    returnKeyType="done"
+                  />
+                </View>
               </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
+              <TouchableOpacity
+                style={[styles.createBtn, creating && styles.disabled]}
+                onPress={handleCreate}
+                disabled={creating}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.createBtnText}>{creating ? 'Criando...' : 'Criar servico'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Servicos cadastrados</Text>
+            {items.length === 0 ? (
+              <EmptyState title="Nenhum servico" description="Crie o primeiro servico acima." icon="sparkles" />
+            ) : (
+              items.map((item) => (
+                <View key={item.id} style={styles.card}>
+                  <View style={styles.cardBody}>
+                    <Text style={styles.cardName}>{item.service.name}</Text>
+                    <Text style={styles.cardMeta}>{item.duration_minutes}min {item.price != null ? `\u2022 R$ ${item.price.toFixed(2)}` : ''}</Text>
+                  </View>
+                  <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDeleteRequest(item.id, item.service.name)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <AppIcon name="delete" size={18} color="error" />
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+          </View>
+        </ScrollView>
+      </View>
 
       <ConfirmationDialog
         visible={confirmVisible}
@@ -218,50 +206,46 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.screenPadding },
-  header: { paddingHorizontal: spacing.screenPadding, marginBottom: spacing.xl },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerTextWrap: { flex: 1 },
-  headerAccent: { width: 3, height: 24, borderRadius: 2, backgroundColor: colors.gold, marginBottom: spacing.md },
-  headerTitle: { fontSize: 20, fontWeight: '600', color: colors.textPrimary, letterSpacing: -0.3 },
-  headerSub: { fontSize: 13, color: colors.textSecondary, marginTop: 1 },
+  topBar: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: spacing.screenPadding, paddingBottom: spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   backBtn: { padding: spacing.sm },
-  section: { marginBottom: 20, paddingHorizontal: spacing.screenPadding },
-  sectionTitle: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
-  sectionGap: { height: 10 },
-  form: { backgroundColor: colors.surface, borderRadius: radius.card, padding: spacing.md, borderWidth: 1, borderColor: colors.border, ...elevation.sm },
-  field: { marginBottom: 12 },
-  row: { flexDirection: 'row', gap: 12 },
+  topBarTitleWrap: { flex: 1, alignItems: 'center' },
+  topBarTitle: { fontSize: 17, fontWeight: '600', color: colors.textPrimary },
+  topBarSub: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  scroll: { flex: 1 },
+  section: { marginTop: spacing.lg, paddingHorizontal: spacing.screenPadding },
+  sectionTitle: { fontSize: 15, fontWeight: '600', color: colors.textPrimary, marginBottom: spacing.sm },
+  form: { backgroundColor: colors.surface, borderRadius: radius.card, padding: spacing.lg, borderWidth: 1, borderColor: colors.border, ...elevation.sm },
+  field: { marginBottom: spacing.md },
+  row: { flexDirection: 'row', gap: spacing.md },
   rowField: { flex: 1 },
   label: { fontSize: 12, fontWeight: '500', color: colors.textSecondary, marginBottom: 4 },
   input: {
+    height: 44,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.sm,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: colors.textPrimary,
+    borderRadius: radius.input,
     backgroundColor: colors.background,
+    paddingHorizontal: spacing.md,
+    ...typography.input,
+    color: colors.textPrimary,
   },
   inputError: { borderColor: colors.error },
-  errorText: { fontSize: 11, color: colors.error, marginTop: 2 },
+  errorItem: { fontSize: 11, color: colors.error, marginTop: 4 },
   createBtn: {
-    flexDirection: 'row',
+    height: 48,
+    backgroundColor: colors.gold,
+    borderRadius: radius.button,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.gold,
-    borderRadius: radius.sm,
-    paddingVertical: 12,
-    gap: 6,
   },
-  createBtnText: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
+  createBtnText: { ...typography.button, color: '#FFFFFF' },
   disabled: { opacity: 0.6 },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    marginBottom: 8,
+    borderRadius: radius.card,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
     flexDirection: 'row',
@@ -269,7 +253,8 @@ const styles = StyleSheet.create({
     ...elevation.sm,
   },
   cardBody: { flex: 1 },
-  cardName: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
-  cardMeta: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  cardName: { ...typography.body, fontWeight: '600', color: colors.textPrimary },
+  cardMeta: { ...typography.bodySmall, color: colors.textSecondary, marginTop: 2 },
   deleteBtn: { padding: spacing.sm },
+  errorText: { ...typography.bodySmall, color: colors.error },
 });
