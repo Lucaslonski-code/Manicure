@@ -88,8 +88,8 @@ export default function BlockedTimesAdminScreen({ navigation }: any) {
       setEditingBlock(null);
       setReason('');
       Alert.alert('Sucesso', editingBlock ? 'Bloqueio atualizado com sucesso.' : 'Bloqueio criado com sucesso.');
-    } catch {
-      setErrors([editingBlock ? 'Não foi possível atualizar o bloqueio.' : 'Não foi possível criar o bloqueio. Verifique os horários e tente novamente.']);
+    } catch (err: any) {
+      setErrors([err?.message || (editingBlock ? 'Nao foi possivel atualizar o bloqueio.' : 'Nao foi possivel criar o bloqueio.')]);
     }
   }, [professionalId, dateStr, startTime, endTime, reason, validate, create, update, editingBlock, refetch]);
 
@@ -111,8 +111,8 @@ export default function BlockedTimesAdminScreen({ navigation }: any) {
       await removeBlocked(confirmDelete.id);
       await refetch();
       setConfirmDelete(null);
-    } catch {
-      setErrors(['Não foi possível remover o bloqueio.']);
+    } catch (err: any) {
+      Alert.alert('Erro', err?.message || 'Nao foi possivel remover o bloqueio.');
     }
   }, [confirmDelete, removeBlocked, refetch]);
 

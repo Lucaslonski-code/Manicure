@@ -132,11 +132,6 @@ function TimeInput({ label, value, onChange }: { label?: string; value: string; 
     }
   }, [value]);
 
-  const syncToParent = useCallback((text: string) => {
-    lastSyncedRef.current = text;
-    onChange(text);
-  }, [onChange]);
-
   return (
     <View style={localStyles.timeWrap}>
       {label && <Text style={localStyles.timeLabel}>{label}</Text>}
@@ -145,12 +140,8 @@ function TimeInput({ label, value, onChange }: { label?: string; value: string; 
         value={local}
         onChangeText={(text) => {
           setLocal(text);
-        }}
-        onBlur={() => syncToParent(local)}
-        onFocus={() => {
-          if (local === lastSyncedRef.current) {
-            setLocal(local);
-          }
+          lastSyncedRef.current = text;
+          onChange(text);
         }}
         placeholder="HH:MM"
         placeholderTextColor={colors.disabled}
@@ -193,7 +184,10 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
     if (!windowsLoading && professionalId) {
       fetchAllBreaksForProfessional(professionalId)
         .then((brks) => setDayConfigs(buildWindowsFromDB(dbWindows, brks)))
-        .catch(() => setDayConfigs(buildWindowsFromDB(dbWindows, [])));
+        .catch((err) => {
+          setErrors([err?.message || 'Erro ao carregar pausas']);
+          setDayConfigs(buildWindowsFromDB(dbWindows, []));
+        });
     } else if (!windowsLoading) {
       setDayConfigs(buildWindowsFromDB(dbWindows, []));
     }
@@ -327,13 +321,24 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
 
     setErrors([]);
     const windowsInput = buildInput(dayConfigs);
+    if (windowsInput.length === 0) {
+      setErrors(['Ative pelo menos um dia da semana antes de salvar.']);
+      return;
+    }
     try {
       await save(professionalId, windowsInput);
       setHasChanges(false);
       await refetch();
-      Alert.alert('Sucesso', 'Jornada atualizada com sucesso.');
+      Alert.alert('Sucesso', 'Jornada atualizada com sucesso. A nova jornada passa a valer imediatamente.');
     } catch (err: any) {
-      setErrors([err?.message || 'Nao foi possivel salvar a jornada. Verifique os horarios e tente novamente.']);
+      const msg = err?.message || 'Nao foi possivel salvar a jornada.';
+      if (msg.toLowerCase().includes('forbidden') || msg.toLowerCase().includes('403') || msg.toLowerCase().includes('acesso negado')) {
+        setErrors(['Acesso negado. Verifique se voce tem permissao para editar a jornada deste profissional.']);
+      } else if (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('404')) {
+        setErrors(['Profissional nao encontrado. Verifique seu cadastro.']);
+      } else {
+        setErrors([msg]);
+      }
     }
   }, [dayConfigs, professionalId, validate, save, refetch]);
 

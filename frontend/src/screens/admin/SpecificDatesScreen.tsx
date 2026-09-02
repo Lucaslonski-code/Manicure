@@ -125,8 +125,8 @@ export default function SpecificDatesScreen({ navigation }: any) {
       setShowForm(false);
       setSelectedDate(null);
       Alert.alert('Sucesso', 'Exceção salva com sucesso.');
-    } catch {
-      setErrors(['Não foi possível salvar a exceção. Tente novamente.']);
+    } catch (err: any) {
+      Alert.alert('Erro', err?.message || 'Nao foi possivel salvar a excecao.');
     }
   }, [professionalId, selectedDate, isDayOff, startTime, endTime, hasBreak, breakStart, breakEnd, validate, saveOverride, refetch]);
 
@@ -138,8 +138,8 @@ export default function SpecificDatesScreen({ navigation }: any) {
       setConfirmDelete(null);
       setShowForm(false);
       setSelectedDate(null);
-    } catch {
-      setErrors(['Não foi possível remover a exceção.']);
+    } catch (err: any) {
+      Alert.alert('Erro', err?.message || 'Nao foi possivel remover a excecao.');
     }
   }, [confirmDelete, professionalId, deleteOverride, refetch]);
 

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useAppointment, useProfessionals, useMyProfessional, useBooking } from '@hooks';
+import { useAppointment, useProfessionals, useMyProfessional, useBooking, useServices } from '@hooks';
+import { fetchUserById } from '../../services/api';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 import StatusBadge from '@components/base/StatusBadge';
 import LoadingState from '@components/base/LoadingState';
@@ -15,13 +16,22 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
   const { appointmentId } = route.params;
   const { appointment, loading, refetch } = useAppointment(appointmentId);
   const { professionals } = useProfessionals();
+  const { services } = useServices();
   const { professional: myProfessional } = useMyProfessional();
   const { cancelByAdmin, removeCancelledByAdmin } = useBooking();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [clientInfo, setClientInfo] = useState<{ full_name?: string; phone?: string; email?: string } | null>(null);
 
   const professional = appointment ? professionals.find((p) => p.id === appointment.professional_id) : null;
+  const service = appointment ? services.find((s) => s.id === appointment.service_id) : null;
   const isOwner = myProfessional?.id === appointment?.professional_id;
+
+  useEffect(() => {
+    if (appointment?.client_user_id) {
+      fetchUserById(appointment.client_user_id).then(setClientInfo).catch(() => {});
+    }
+  }, [appointment?.client_user_id]);
 
   const handleCancel = async () => {
     try {
@@ -87,6 +97,11 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
           </View>
           <View style={styles.divider} />
           <View style={styles.row}>
+            <Text style={styles.label}>Servico</Text>
+            <Text style={styles.value}>{service?.name || '-'}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.row}>
             <Text style={styles.label}>Data e horario</Text>
             <Text style={styles.value}>{format(parseISO(appointment.start_at), "dd/MM/yyyy 'as' HH:mm", { locale: ptBR })}</Text>
           </View>
@@ -95,6 +110,33 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
             <Text style={styles.label}>Status</Text>
             <StatusBadge label={status.label} variant={status.variant} />
           </View>
+          {clientInfo && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.noteSection}>
+                <Text style={styles.label}>Cliente</Text>
+                <Text style={styles.value}>{clientInfo.full_name || 'Nao informado'}</Text>
+              </View>
+              {clientInfo.phone && (
+                <>
+                  <View style={styles.divider} />
+                  <View style={styles.noteSection}>
+                    <Text style={styles.label}>Telefone</Text>
+                    <Text style={styles.value}>{clientInfo.phone}</Text>
+                  </View>
+                </>
+              )}
+              {clientInfo.email && (
+                <>
+                  <View style={styles.divider} />
+                  <View style={styles.noteSection}>
+                    <Text style={styles.label}>E-mail</Text>
+                    <Text style={styles.value}>{clientInfo.email}</Text>
+                  </View>
+                </>
+              )}
+            </>
+          )}
           {appointment.client_note && (
             <>
               <View style={styles.divider} />

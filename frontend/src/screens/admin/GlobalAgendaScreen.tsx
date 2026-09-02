@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -8,7 +8,8 @@ import {
   getYear, addYears, subYears, eachMonthOfInterval,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useAppointments, useProfessionals } from '@hooks';
+import { useAppointments, useProfessionals, useServices } from '@hooks';
+import { cleanupOldAppointments } from '../../services/api';
 import { colors, spacing, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import StatusBadge from '@components/base/StatusBadge';
@@ -19,7 +20,7 @@ import type { Appointment } from '../../supabase/types';
 type ViewMode = 'month' | 'week' | 'day' | 'year';
 const WEEKDAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-function CompactAppointmentCard({ appointment, professionalName, onPress }: { appointment: Appointment; professionalName: string; onPress: () => void }) {
+function CompactAppointmentCard({ appointment, professionalName, serviceName, onPress }: { appointment: Appointment; professionalName: string; serviceName?: string; onPress: () => void }) {
   const statusMap: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'default' }> = {
     confirmed: { label: 'Confirmado', variant: 'success' },
     cancelled: { label: 'Cancelado', variant: 'error' },
@@ -36,6 +37,7 @@ function CompactAppointmentCard({ appointment, professionalName, onPress }: { ap
       <View style={cardStyles.divider} />
       <View style={cardStyles.infoCol}>
         <Text style={cardStyles.name} numberOfLines={1}>{professionalName}</Text>
+        {serviceName ? <Text style={cardStyles.meta} numberOfLines={1}>{serviceName}</Text> : null}
         <StatusBadge label={status.label} variant={status.variant} />
       </View>
     </TouchableOpacity>
@@ -59,19 +61,30 @@ const cardStyles = StyleSheet.create({
   divider: { width: 1, backgroundColor: colors.border },
   infoCol: { flex: 1, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, justifyContent: 'center', gap: 4 },
   name: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
+  meta: { fontSize: 12, color: colors.textSecondary },
 });
 
 export default function GlobalAgendaScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { appointments, loading, error } = useAppointments();
+  const { appointments, loading, error, refetch } = useAppointments();
   const { professionals } = useProfessionals();
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(new Date());
 
+  useEffect(() => {
+    if (!loading) {
+      cleanupOldAppointments()
+        .then((count) => { if (count > 0) refetch(); })
+        .catch(() => {});
+    }
+  }, [loading]);
+
   const confirmed = useMemo(() => appointments.filter((a) => a.status === 'confirmed'), [appointments]);
 
   const getProfessionalName = useCallback((pid: string) => professionals.find((p) => p.id === pid)?.display_name || 'Prof.', [professionals]);
+  const { services } = useServices();
+  const getServiceName = useCallback((sid: string) => services.find((s) => s.id === sid)?.name || '', [services]);
 
   const appointmentDates = useMemo(() => {
     const dates = new Set<string>();
@@ -282,6 +295,7 @@ export default function GlobalAgendaScreen({ navigation }: any) {
         key={a.id}
         appointment={a}
         professionalName={getProfessionalName(a.professional_id)}
+        serviceName={getServiceName(a.service_id)}
         onPress={() => navigation.navigate('PanelAppointmentDetails', { appointmentId: a.id })}
       />
     ));

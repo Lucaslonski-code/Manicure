@@ -620,6 +620,31 @@ export async function deleteScheduleOverride(professionalId: string, specificDat
   if (error) throw new Error(mapApiError(error));
 }
 
+// ============================================================================
+// Past Appointments Cleanup
+// ============================================================================
+
+export async function cleanupOldAppointments(): Promise<number> {
+  const { data, error } = await supabase.rpc('cleanup_old_appointments');
+  if (error) throw new Error(mapApiError(error));
+  return data || 0;
+}
+
+// ============================================================================
+// Fetch client info for appointment details
+// ============================================================================
+
+export async function fetchUserById(userId: string): Promise<{ full_name?: string; phone?: string; email?: string } | null> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('full_name, phone, email')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data) return null;
+  return data;
+}
+
 export async function fetchNotifications(): Promise<Notification[]> {
   const session = await supabase.auth.getSession();
   const userId = session.data.session?.user.id;
