@@ -7,6 +7,8 @@ import { useAppointment, useProfessionals, useMyProfessional, useBooking, useSer
 import { fetchUserById } from '../../services/api';
 import { colors, spacing, typography, radius, elevation } from '@theme';
 import StatusBadge from '@components/base/StatusBadge';
+import Button from '@components/base/Button';
+import DangerButton from '@components/base/DangerButton';
 import LoadingState from '@components/base/LoadingState';
 import ConfirmationDialog from '@components/base/ConfirmationDialog';
 import AppIcon from '@components/icons/AppIcon';
@@ -61,9 +63,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
     return (
       <View style={[styles.center, { paddingTop: insets.top + spacing.xl }]}>
         <Text style={styles.errorText}>Agendamento nao encontrado.</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backToListBtn}>
-          <Text style={styles.backToListText}>Voltar</Text>
-        </TouchableOpacity>
+        <Button title="Voltar" onPress={() => navigation.goBack()} style={styles.backToListBtn} />
       </View>
     );
   }
@@ -159,17 +159,13 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
 
         {isOwner && appointment.status === 'confirmed' && (
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.dangerBtn} onPress={() => setShowCancelDialog(true)} activeOpacity={0.7}>
-              <Text style={styles.dangerBtnText}>Cancelar agendamento</Text>
-            </TouchableOpacity>
+            <DangerButton title="Cancelar agendamento" onPress={() => setShowCancelDialog(true)} />
           </View>
         )}
 
         {isOwner && appointment.status === 'cancelled' && (
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.dangerBtn} onPress={() => setShowDeleteDialog(true)} activeOpacity={0.7}>
-              <Text style={styles.dangerBtnText}>Excluir agendamento</Text>
-            </TouchableOpacity>
+            <DangerButton title="Excluir agendamento" onPress={() => setShowDeleteDialog(true)} />
           </View>
         )}
 
@@ -232,8 +228,6 @@ const styles = StyleSheet.create({
   label: { ...typography.bodySmall, fontWeight: '500', color: colors.textSecondary, textTransform: 'uppercase' as const, letterSpacing: 0.3 },
   value: { ...typography.body, color: colors.textPrimary, fontWeight: '500' },
   actions: { paddingHorizontal: spacing.screenPadding, marginTop: spacing.lg },
-  dangerBtn: { height: 48, backgroundColor: colors.error, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center' },
-  dangerBtnText: { ...typography.button, color: '#FFFFFF' },
   readOnlyNotice: {
     marginTop: spacing.lg,
     marginHorizontal: spacing.screenPadding,
@@ -244,7 +238,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   readOnlyText: { ...typography.bodySmall, color: colors.textSecondary, textAlign: 'center' },
-  backToListBtn: { marginTop: spacing.lg, backgroundColor: colors.gold, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm, borderRadius: radius.button },
-  backToListText: { ...typography.button, color: '#FFFFFF' },
+  backToListBtn: { marginTop: spacing.lg },
   errorText: { ...typography.bodySmall, color: colors.error, textAlign: 'center', marginBottom: spacing.lg },
 });

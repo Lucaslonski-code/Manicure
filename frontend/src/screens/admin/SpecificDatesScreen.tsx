@@ -7,6 +7,7 @@ import { colors, spacing, typography, radius, elevation, iconSizes } from '@them
 import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
 import SecondaryButton from '@components/base/SecondaryButton';
+import DangerButton from '@components/base/DangerButton';
 import LoadingState from '@components/base/LoadingState';
 import ScreenHeader from '@components/base/ScreenHeader';
 import ConfirmationDialog from '@components/base/ConfirmationDialog';
@@ -201,13 +202,11 @@ export default function SpecificDatesScreen({ navigation }: any) {
             )}
 
             {selectedOverride && (
-              <TouchableOpacity
-                style={styles.deleteBtn}
+              <DangerButton
+                title="Remover excecao"
                 onPress={() => setConfirmDelete(selectedOverride)}
-              >
-                <AppIcon name="delete" size={iconSizes.sm} color="error" />
-                <Text style={styles.deleteBtnText}>Remover exceção</Text>
-              </TouchableOpacity>
+                style={{ marginBottom: spacing.xxxxxxl }}
+              />
             )}
 
             <View style={styles.switchRow}>
@@ -375,8 +374,6 @@ const styles = StyleSheet.create({
   formTitle: { ...typography.body, fontWeight: '600', color: colors.textPrimary, marginBottom: spacing.xxxxxxl },
   errorContainer: { backgroundColor: 'rgba(166,61,64,0.06)', borderRadius: radius.sm, padding: spacing.md, marginBottom: spacing.xxxxxxl },
   errorItem: { ...typography.bodySmall, color: colors.error, marginBottom: spacing.xs },
-  deleteBtn: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xxxxxxl, paddingVertical: spacing.sm },
-  deleteBtnText: { ...typography.bodySmall, color: colors.error, fontWeight: '500' },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xxxxxxl },
   switchLabel: { ...typography.body, color: colors.textPrimary, flex: 1 },
   toggle: {

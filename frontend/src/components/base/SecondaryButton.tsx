@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: spacing.xxxxxxl,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.button,
     alignItems: 'center',
     justifyContent: 'center',

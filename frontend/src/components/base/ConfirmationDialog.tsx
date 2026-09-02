@@ -3,6 +3,7 @@ import { Modal, View, Text, StyleSheet, TouchableWithoutFeedback } from 'react-n
 import { colors, spacing, typography, radius } from '@theme';
 import Button from './Button';
 import SecondaryButton from './SecondaryButton';
+import DangerButton from './DangerButton';
 
 interface ConfirmationDialogProps {
   visible: boolean;
@@ -46,12 +47,21 @@ export default function ConfirmationDialog({
         <Text style={styles.message}>{message}</Text>
         <View style={styles.actions}>
           <SecondaryButton title={cancelLabel} onPress={onCancel} style={styles.cancelBtn} />
-          <Button
-            title={confirmLabel}
-            onPress={onConfirm}
-            loading={loading}
-            style={isDestructive ? { ...styles.confirmBtn, ...styles.destructiveButton } : styles.confirmBtn}
-          />
+          {isDestructive ? (
+            <DangerButton
+              title={confirmLabel}
+              onPress={onConfirm}
+              loading={loading}
+              style={styles.confirmBtn}
+            />
+          ) : (
+            <Button
+              title={confirmLabel}
+              onPress={onConfirm}
+              loading={loading}
+              style={styles.confirmBtn}
+            />
+          )}
         </View>
       </View>
     </Modal>
@@ -100,8 +110,5 @@ const styles = StyleSheet.create({
   },
   confirmBtn: {
     flex: 1,
-  },
-  destructiveButton: {
-    backgroundColor: colors.error,
   },
 });

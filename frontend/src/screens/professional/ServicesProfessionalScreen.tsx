@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMyProfessionalId, useProfessionalServices, useCreateServiceForProfessional, useUpdateProfessionalService, useUpdateServiceCatalog, useDeleteProfessionalService } from '@hooks';
 import { colors, spacing, radius, elevation, typography } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
+import Button from '@components/base/Button';
+import SecondaryButton from '@components/base/SecondaryButton';
 import LoadingState from '@components/base/LoadingState';
 import EmptyState from '@components/base/EmptyState';
 import ConfirmationDialog from '@components/base/ConfirmationDialog';
@@ -224,20 +226,14 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
               </View>
               <View style={styles.formActions}>
                 {editingId && (
-                  <TouchableOpacity style={styles.cancelEditBtn} onPress={resetForm} activeOpacity={0.7}>
-                    <Text style={styles.cancelEditText}>Cancelar</Text>
-                  </TouchableOpacity>
+                  <SecondaryButton title="Cancelar" onPress={resetForm} style={{ flex: 1 }} />
                 )}
-                <TouchableOpacity
-                  style={[styles.createBtn, (creating || updating) && styles.disabled, editingId && { flex: 1 }]}
+                <Button
+                  title={creating ? 'Criando...' : updating ? 'Salvando...' : editingId ? 'Salvar alteracoes' : 'Criar servico'}
                   onPress={editingId ? handleUpdate : handleCreate}
                   disabled={creating || updating}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.createBtnText}>
-                    {creating ? 'Criando...' : updating ? 'Salvando...' : editingId ? 'Salvar alteracoes' : 'Criar servico'}
-                  </Text>
-                </TouchableOpacity>
+                  style={{ flex: 1 }}
+                />
               </View>
             </View>
           </View>
@@ -323,11 +319,6 @@ const styles = StyleSheet.create({
   inputError: { borderColor: colors.error },
   errorItem: { fontSize: 11, color: colors.error, marginTop: 4 },
   formActions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xs },
-  cancelEditBtn: { flex: 1, height: 50, backgroundColor: colors.surface, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
-  cancelEditText: { ...typography.button, color: colors.textSecondary },
-  createBtn: { flex: 2, height: 50, backgroundColor: colors.gold, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center' },
-  createBtnText: { ...typography.button, color: '#FFFFFF' },
-  disabled: { opacity: 0.6 },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,

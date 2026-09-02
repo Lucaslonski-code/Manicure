@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
-import { colors, spacing, radius, typography, touchTarget, elevation } from '@theme';
+import { colors, spacing, radius, typography, componentSizes, elevation } from '@theme';
 
 interface DangerButtonProps {
   title: string;
@@ -24,7 +24,7 @@ export default function DangerButton({ title, onPress, disabled, loading, style,
         styles.button,
         pressed && !disabled && !loading && styles.pressed,
         disabled && styles.disabled,
-        { minHeight: touchTarget.comfortable },
+        { height: componentSizes.buttonHeight },
         style,
       ]}
       accessibilityLabel={title}
@@ -43,9 +43,9 @@ export default function DangerButton({ title, onPress, disabled, loading, style,
 const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.error,
-    paddingVertical: spacing.xxxxxxl,
-    paddingHorizontal: spacing.xxxxxxl,
-    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.button,
     alignItems: 'center',
     justifyContent: 'center',
     ...elevation.sm,
