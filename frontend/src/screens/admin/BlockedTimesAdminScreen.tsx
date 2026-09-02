@@ -74,8 +74,8 @@ export default function BlockedTimesAdminScreen({ navigation }: any) {
     if (!professionalId) return;
 
     setErrors([]);
-    const startAt = `${dateStr}T${startTime}:00`;
-    const endAt = `${dateStr}T${endTime}:00`;
+    const startAt = `${dateStr}T${startTime}:00-03:00`;
+    const endAt = `${dateStr}T${endTime}:00-03:00`;
 
     try {
       if (editingBlock) {

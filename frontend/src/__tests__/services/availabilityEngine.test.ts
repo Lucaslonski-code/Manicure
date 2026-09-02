@@ -411,6 +411,152 @@ describe('availabilityEngine', () => {
     });
   });
 
+  describe('blocked: 14:00-16:00 with -03:00 timezone offset (Supabase TIMESTAMPTZ)', () => {
+    const windows = [makeWorkWindow({ weekday: 1, start_time: '09:00', end_time: '18:00' })];
+    const blocked = [makeBlocked({ start_at: '2026-09-07T14:00:00-03:00', end_at: '2026-09-07T16:00:00-03:00' })];
+    const date = monday(2026, 9, 7);
+
+    it('14:00 is NOT available', () => {
+      const slots = getAvailableSlots(date, 60, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('14:00');
+    });
+
+    it('15:00 is NOT available (inside block)', () => {
+      const slots = getAvailableSlots(date, 60, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('15:00');
+    });
+
+    it('15:30 is NOT available (inside block)', () => {
+      const slots = getAvailableSlots(date, 30, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('15:30');
+    });
+
+    it('16:00 is available (after block ends)', () => {
+      const slots = getAvailableSlots(date, 60, windows, blocked, []);
+      expect(getTimes(slots)).toContain('16:00');
+    });
+
+    it('13:00 is available (before block)', () => {
+      const slots = getAvailableSlots(date, 60, windows, blocked, []);
+      expect(getTimes(slots)).toContain('13:00');
+    });
+
+    it('13:30 is NOT available (30min service 13:30-14:30 crosses block start)', () => {
+      const slots = getAvailableSlots(date, 60, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('13:30');
+    });
+  });
+
+  describe('blocked: 14:15-15:45 with minutes (partial overlap)', () => {
+    const windows = [makeWorkWindow({ weekday: 1, start_time: '09:00', end_time: '18:00' })];
+    const blocked = [makeBlocked({ start_at: '2026-09-07T14:15:00-03:00', end_at: '2026-09-07T15:45:00-03:00' })];
+    const date = monday(2026, 9, 7);
+
+    it('14:00 is NOT available (30min service 14:00-14:30 overlaps block)', () => {
+      const slots = getAvailableSlots(date, 30, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('14:00');
+    });
+
+    it('14:30 is NOT available (30min service 14:30-15:00 inside block)', () => {
+      const slots = getAvailableSlots(date, 30, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('14:30');
+    });
+
+    it('15:00 is NOT available (30min service 15:00-15:30 inside block)', () => {
+      const slots = getAvailableSlots(date, 30, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('15:00');
+    });
+
+    it('15:30 is NOT available (30min service 15:30-16:00 overlaps block end)', () => {
+      const slots = getAvailableSlots(date, 30, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('15:30');
+    });
+
+    it('16:00 is available (after block)', () => {
+      const slots = getAvailableSlots(date, 30, windows, blocked, []);
+      expect(getTimes(slots)).toContain('16:00');
+    });
+
+    it('13:30 is available (before block)', () => {
+      const slots = getAvailableSlots(date, 30, windows, blocked, []);
+      expect(getTimes(slots)).toContain('13:30');
+    });
+  });
+
+  describe('blocked: block duration exceeds service (60min service, 14:00-16:00 block)', () => {
+    const windows = [makeWorkWindow({ weekday: 1, start_time: '09:00', end_time: '18:00' })];
+    const blocked = [makeBlocked({ start_at: '2026-09-07T14:00:00-03:00', end_at: '2026-09-07T16:00:00-03:00' })];
+    const date = monday(2026, 9, 7);
+
+    it('14:00 NOT available (60min service crosses block)', () => {
+      const slots = getAvailableSlots(date, 60, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('14:00');
+    });
+
+    it('13:30 NOT available (60min service 13:30-14:30 crosses block)', () => {
+      const slots = getAvailableSlots(date, 60, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('13:30');
+    });
+
+    it('15:30 NOT available (60min service 15:30-16:30 crosses block end)', () => {
+      const slots = getAvailableSlots(date, 60, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('15:30');
+    });
+
+    it('16:00 available (60min service 16:00-17:00 after block)', () => {
+      const slots = getAvailableSlots(date, 60, windows, blocked, []);
+      expect(getTimes(slots)).toContain('16:00');
+    });
+
+    it('13:00 available (60min service 13:00-14:00 adjacent to block)', () => {
+      const slots = getAvailableSlots(date, 60, windows, blocked, []);
+      expect(getTimes(slots)).toContain('13:00');
+    });
+  });
+
+  describe('blocked: 30min service with 14:00-14:30 block (border case)', () => {
+    const windows = [makeWorkWindow({ weekday: 1, start_time: '09:00', end_time: '18:00' })];
+    const blocked = [makeBlocked({ start_at: '2026-09-07T14:00:00-03:00', end_at: '2026-09-07T14:30:00-03:00' })];
+    const date = monday(2026, 9, 7);
+
+    it('14:00 NOT available (30min service 14:00-14:30 overlaps block)', () => {
+      const slots = getAvailableSlots(date, 30, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('14:00');
+    });
+
+    it('14:30 available (30min service 14:30-15:00 after block)', () => {
+      const slots = getAvailableSlots(date, 30, windows, blocked, []);
+      expect(getTimes(slots)).toContain('14:30');
+    });
+
+    it('13:30 available (30min service 13:30-14:00 adjacent to block)', () => {
+      const slots = getAvailableSlots(date, 30, windows, blocked, []);
+      expect(getTimes(slots)).toContain('13:30');
+    });
+  });
+
+  describe('blocked: block only affects specified date', () => {
+    const windows = [makeWorkWindow({ weekday: 1, start_time: '09:00', end_time: '18:00' })];
+    const blocked = [makeBlocked({ start_at: '2026-09-07T14:00:00-03:00', end_at: '2026-09-07T16:00:00-03:00' })];
+    const nextMonday = monday(2026, 9, 14);
+
+    it('14:00 available on different date', () => {
+      const slots = getAvailableSlots(nextMonday, 60, windows, blocked, []);
+      expect(getTimes(slots)).toContain('14:00');
+    });
+  });
+
+  describe('blocked: block for different professional does not affect', () => {
+    const windows = [makeWorkWindow({ weekday: 1, start_time: '09:00', end_time: '18:00' })];
+    const blocked = [makeBlocked({ professional_id: 'other-pro', start_at: '2026-09-07T14:00:00-03:00', end_at: '2026-09-07T16:00:00-03:00' })];
+    const date = monday(2026, 9, 7);
+
+    it('14:00 available (engine does not filter by professional, caller must)', () => {
+      const slots = getAvailableSlots(date, 60, windows, blocked, []);
+      expect(getTimes(slots)).not.toContain('14:00');
+    });
+  });
+
   describe('blocked: fully blocked day', () => {
     const windows = [makeWorkWindow({ weekday: 1, start_time: '09:00', end_time: '18:00' })];
     const blocked = [makeBlocked({ start_at: '2026-09-07T00:00:00', end_at: '2026-09-07T23:59:00' })];
