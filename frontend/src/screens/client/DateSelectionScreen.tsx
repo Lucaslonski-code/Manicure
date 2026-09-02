@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useWorkWindows, useProfessionalServices } from '@hooks';
+import { useWorkWindows, useProfessionalServices, useScheduleOverrides } from '@hooks';
 import { colors, spacing } from '@theme';
 import ScreenHeader from '@components/base/ScreenHeader';
 import Calendar from '@components/base/Calendar';
@@ -9,6 +9,7 @@ import Button from '@components/base/Button';
 import LoadingState from '@components/base/LoadingState';
 import { isDateAvailable } from '@services/availabilityEngine';
 import { format } from 'date-fns';
+import type { EffectiveWindow } from '../../supabase/types';
 
 export default function DateSelectionScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
@@ -19,6 +20,7 @@ export default function DateSelectionScreen({ route, navigation }: any) {
   };
   const { windows, loading: schedulesLoading } = useWorkWindows(professionalId);
   const { items: professionalServices, loading: servicesLoading } = useProfessionalServices(professionalId);
+  const { overrides, loading: overridesLoading } = useScheduleOverrides(professionalId);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const hasService = useMemo(
@@ -26,9 +28,35 @@ export default function DateSelectionScreen({ route, navigation }: any) {
     [professionalServices, serviceId],
   );
 
+  const overrideMap = useMemo(() => {
+    const map = new Map<string, typeof overrides[0]>();
+    for (const o of overrides) {
+      map.set(o.specific_date, o);
+    }
+    return map;
+  }, [overrides]);
+
   const checkDateAvailable = useCallback(
-    (date: Date) => isDateAvailable(date, windows, hasService),
-    [windows, hasService],
+    (date: Date) => {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const override = overrideMap.get(dateStr);
+
+      if (override) {
+        const effectiveWindows: EffectiveWindow[] = override.is_off
+          ? []
+          : [{
+              window_id: null,
+              start_time: override.start_time || '09:00',
+              end_time: override.end_time || '18:00',
+              is_off: false,
+              source: 'override' as const,
+            }];
+        return isDateAvailable(date, windows, hasService, effectiveWindows);
+      }
+
+      return isDateAvailable(date, windows, hasService);
+    },
+    [windows, hasService, overrideMap],
   );
 
   const handleDateSelect = useCallback((date: Date) => {
@@ -42,7 +70,7 @@ export default function DateSelectionScreen({ route, navigation }: any) {
     }
   };
 
-  if (schedulesLoading || servicesLoading) {
+  if (schedulesLoading || servicesLoading || overridesLoading) {
     return <LoadingState message="Carregando calendário..." />;
   }
 

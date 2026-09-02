@@ -20,39 +20,45 @@ function mapApiError(error: any): string {
   }
   const message = error.message.toLowerCase();
   if (message.includes('row count') || message.includes('no rows')) {
-    return 'Registro não encontrado';
+    return 'Registro nao encontrado';
   }
   if (message.includes('network') || message.includes('fetch')) {
-    return 'Erro de conexão. Verifique sua internet.';
+    return 'Erro de conexao. Verifique sua internet.';
   }
   if (message.includes('unauthorized') || message.includes('401')) {
-    return 'Sessão expirada. Entre novamente.';
+    return 'Sessao expirada. Entre novamente.';
   }
   if (message.includes('forbidden') || message.includes('403')) {
-    return 'Acesso negado';
+    return 'Acesso negado.';
   }
   if (message.includes('not found') || message.includes('404')) {
-    return 'Recurso não encontrado';
+    return 'Recurso nao encontrado.';
   }
   if (message.includes('conflict') || message.includes('409') || message.includes('overlap')) {
-    return 'Horário indisponível ou conflitante';
+    return 'Horario indisponivel ou conflitante.';
   }
   if (message.includes('time outside availability') || message.includes('422')) {
-    return 'Horário fora da disponibilidade';
+    return 'Horario fora da disponibilidade.';
   }
   if (message.includes('blocked') || message.includes('block')) {
-    return 'Horário bloqueado';
+    return 'Horario bloqueado.';
   }
   if (message.includes('service not available') || message.includes('professional not available')) {
-    return 'Serviço ou profissional indisponível';
+    return 'Servico ou profissional indisponivel.';
   }
   if (message.includes('appointment cannot be cancelled') || message.includes('cannot be rescheduled')) {
-    return 'Operação não permitida para este agendamento';
+    return 'Operacao nao permitida para este agendamento.';
   }
   if (message.includes('time conflict')) {
-    return 'Conflito de horário';
+    return 'Conflito de horario.';
   }
-  return 'Erro ao processar solicitação';
+  if (message.includes('permission denied') || message.includes('insufficient privilege')) {
+    return 'Sem permissao para esta operacao.';
+  }
+  if (message.includes('violates row-level security') || message.includes('rls')) {
+    return 'Sem permissao para acessar este recurso.';
+  }
+  return error.message || 'Erro ao processar solicitacao.';
 }
 
 export async function fetchProfessionals(): Promise<Professional[]> {
@@ -142,6 +148,18 @@ export async function updateProfessionalService(
     .from('professional_services')
     .update(updates)
     .eq('id', professionalServiceId);
+
+  if (error) throw new Error(mapApiError(error));
+}
+
+export async function updateServiceCatalog(
+  serviceId: string,
+  updates: { name?: string; description?: string | null; default_duration_minutes?: number }
+): Promise<void> {
+  const { error } = await supabase
+    .from('services')
+    .update(updates)
+    .eq('id', serviceId);
 
   if (error) throw new Error(mapApiError(error));
 }
@@ -394,20 +412,28 @@ export async function editAppointmentByClient(
 }
 
 export async function updateProfileAvatar(userId: string, imageUri: string): Promise<string> {
-  const ext = imageUri.split('.').pop() || 'jpg';
+  const ext = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+  const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
   const fileName = `${userId}/${Date.now()}.${ext}`;
 
   const response = await fetch(imageUri);
+  if (!response.ok) {
+    throw new Error('Nao foi possivel ler a imagem selecionada.');
+  }
   const blob = await response.blob();
 
   const { error: uploadError } = await supabase.storage
     .from('avatars')
     .upload(fileName, blob, {
-      contentType: blob.type || 'image/jpeg',
+      contentType: mimeType,
       upsert: true,
     });
 
-  if (uploadError) throw new Error('Erro ao enviar imagem: ' + (uploadError.message || uploadError.name));
+  if (uploadError) {
+    const msg = uploadError.message || uploadError.name || 'Erro desconhecido';
+    console.error('[updateProfileAvatar] upload error:', msg);
+    throw new Error('Erro ao enviar imagem: ' + msg);
+  }
 
   const { data: urlData } = supabase.storage
     .from('avatars')
@@ -527,10 +553,14 @@ export async function fetchAllWorkWindows(): Promise<(WorkWindow & { professiona
 export async function upsertWorkWindows(professionalId: string, windows: WorkWindowInput[]): Promise<void> {
   const { error } = await supabase.rpc('upsert_work_windows', {
     p_professional_id: professionalId,
-    p_windows: JSON.stringify(windows),
+    p_windows: windows as any,
   });
 
-  if (error) throw new Error(mapApiError(error));
+  if (error) {
+    const msg = error.message || error.details || error.hint || JSON.stringify(error);
+    console.error('[upsertWorkWindows] RPC error:', msg);
+    throw new Error(mapApiError(error));
+  }
 }
 
 export async function fetchEffectiveWindows(professionalId: string, date: string): Promise<EffectiveWindow[]> {

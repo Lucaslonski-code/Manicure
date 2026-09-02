@@ -293,12 +293,14 @@ export default function SpecificDatesScreen({ navigation }: any) {
               <SecondaryButton
                 title="Cancelar"
                 onPress={() => { setShowForm(false); setErrors([]); }}
+                style={{ flex: 1 }}
               />
               <Button
                 title={saving ? 'Salvando...' : 'Salvar'}
                 onPress={handleSave}
                 disabled={saving}
                 loading={saving}
+                style={{ flex: 1 }}
               />
             </View>
           </View>
@@ -389,7 +391,7 @@ const styles = StyleSheet.create({
   timeInputLabel: { ...typography.caption, color: colors.textSecondary, marginBottom: spacing.xs },
   timeInput: { height: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radius.input, backgroundColor: colors.background, paddingHorizontal: spacing.md, ...typography.input, color: colors.textPrimary, textAlign: 'center' },
   timeSeparator: { ...typography.body, color: colors.textSecondary, marginTop: spacing.lg },
-  formActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.md },
+  formActions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
   overridesList: { marginTop: spacing.xxxxxxl },
   listTitle: { ...typography.bodySmall, fontWeight: '600', color: colors.textSecondary, marginBottom: spacing.md, textTransform: 'uppercase', letterSpacing: 0.3 },
   overrideCard: {

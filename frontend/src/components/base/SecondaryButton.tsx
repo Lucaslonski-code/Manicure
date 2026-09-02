@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndicator } from 'react-native';
-import { colors, spacing, radius, typography, touchTarget } from '@theme';
+import { colors, spacing, radius, typography, componentSizes } from '@theme';
 
 interface SecondaryButtonProps {
   title: string;
@@ -24,7 +24,7 @@ export default function SecondaryButton({ title, onPress, disabled, loading, sty
         styles.button,
         pressed && !disabled && !loading && styles.pressed,
         disabled && styles.disabled,
-        { minHeight: touchTarget.comfortable },
+        { height: componentSizes.buttonHeight },
         style,
       ]}
       accessibilityLabel={title}
@@ -45,9 +45,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: spacing.xxxxxxl,
     paddingHorizontal: spacing.xxxxxxl,
-    borderRadius: radius.md,
+    borderRadius: radius.button,
     alignItems: 'center',
     justifyContent: 'center',
   },

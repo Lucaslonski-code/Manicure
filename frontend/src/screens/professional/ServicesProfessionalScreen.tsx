@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useMyProfessionalId, useProfessionalServices, useCreateServiceForProfessional, useUpdateProfessionalService, useDeleteProfessionalService } from '@hooks';
+import { useMyProfessionalId, useProfessionalServices, useCreateServiceForProfessional, useUpdateProfessionalService, useUpdateServiceCatalog, useDeleteProfessionalService } from '@hooks';
 import { colors, spacing, radius, elevation, typography } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import LoadingState from '@components/base/LoadingState';
@@ -23,11 +23,13 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
   const { items, loading: servicesLoading, refetch } = useProfessionalServices(professionalId);
   const { create, loading: creating } = useCreateServiceForProfessional();
   const { update, loading: updating } = useUpdateProfessionalService();
+  const { updateCatalog } = useUpdateServiceCatalog();
   const { remove, loading: deleting } = useDeleteProfessionalService();
 
   const [form, setForm] = useState<FormData>(emptyForm);
   const [errors, setErrors] = useState<{ name?: string; duration?: string }>({});
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
 
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -60,6 +62,7 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
     setForm(emptyForm);
     setErrors({});
     setEditingId(null);
+    setEditingServiceId(null);
   };
 
   const handleCreate = async () => {
@@ -81,6 +84,7 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
 
   const handleEdit = (item: any) => {
     setEditingId(item.id);
+    setEditingServiceId(item.service_id || null);
     setForm({
       name: item.service?.name || '',
       description: item.service?.description || '',
@@ -97,11 +101,24 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
       setErrors({ duration: 'Duracao invalida' });
       return;
     }
+    if (!form.name.trim()) {
+      setErrors({ name: 'Nome obrigatorio' });
+      return;
+    }
     try {
       await update(editingId, {
         duration_minutes: dur,
         price: form.price ? parseFloat(form.price.replace(',', '.')) : null,
       });
+
+      if (editingServiceId) {
+        await updateCatalog(editingServiceId, {
+          name: form.name.trim(),
+          description: form.description.trim() || null,
+          default_duration_minutes: dur,
+        });
+      }
+
       resetForm();
       refetch();
     } catch (err: any) {
@@ -164,7 +181,6 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
                   placeholder="Ex: Alongamento"
                   placeholderTextColor={colors.disabled}
                   returnKeyType="next"
-                  editable={!editingId || true}
                 />
                 {errors.name && <Text style={styles.errorItem}>{errors.name}</Text>}
               </View>
@@ -213,7 +229,7 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
-                  style={[styles.createBtn, (creating || updating) && styles.disabled]}
+                  style={[styles.createBtn, (creating || updating) && styles.disabled, editingId && { flex: 1 }]}
                   onPress={editingId ? handleUpdate : handleCreate}
                   disabled={creating || updating}
                   activeOpacity={0.7}
@@ -233,12 +249,16 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
             ) : (
               items.map((item) => {
                 const isEditing = editingId === item.id;
+                const hasDescription = !!item.service?.description;
                 return (
                   <View key={item.id} style={[styles.card, isEditing && styles.cardEditing]}>
                     <View style={styles.cardBody}>
                       <Text style={styles.cardName}>{item.service?.name || 'Sem nome'}</Text>
+                      {hasDescription && (
+                        <Text style={styles.cardDescription} numberOfLines={2}>{item.service?.description}</Text>
+                      )}
                       <Text style={styles.cardMeta}>
-                        {item.duration_minutes}min {item.price != null ? `\u2022 R$ ${item.price.toFixed(2)}` : ''}
+                        {item.duration_minutes} min {item.price != null ? `\u2022 R$ ${item.price.toFixed(2)}` : ''}
                       </Text>
                     </View>
                     <View style={styles.cardActions}>
@@ -303,9 +323,9 @@ const styles = StyleSheet.create({
   inputError: { borderColor: colors.error },
   errorItem: { fontSize: 11, color: colors.error, marginTop: 4 },
   formActions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xs },
-  cancelEditBtn: { flex: 1, height: 48, backgroundColor: colors.surface, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
+  cancelEditBtn: { flex: 1, height: 50, backgroundColor: colors.surface, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
   cancelEditText: { ...typography.button, color: colors.textSecondary },
-  createBtn: { flex: 2, height: 48, backgroundColor: colors.gold, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center' },
+  createBtn: { flex: 2, height: 50, backgroundColor: colors.gold, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center' },
   createBtnText: { ...typography.button, color: '#FFFFFF' },
   disabled: { opacity: 0.6 },
   card: {
@@ -323,7 +343,8 @@ const styles = StyleSheet.create({
   cardEditing: { borderColor: colors.gold, borderWidth: 1.5 },
   cardBody: { flex: 1 },
   cardName: { ...typography.body, fontWeight: '600', color: colors.textPrimary },
-  cardMeta: { ...typography.bodySmall, color: colors.textSecondary, marginTop: 2 },
+  cardDescription: { fontSize: 13, fontWeight: '400', color: colors.textSecondary, marginTop: 2, lineHeight: 18 },
+  cardMeta: { fontSize: 13, fontWeight: '500', color: colors.gold, marginTop: 4 },
   cardActions: { flexDirection: 'row', gap: spacing.sm },
   editBtn: { padding: spacing.sm },
   deleteBtn: { padding: spacing.sm },

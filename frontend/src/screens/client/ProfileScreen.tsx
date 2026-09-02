@@ -57,8 +57,15 @@ export default function ProfileScreen({ _navigation }: any) {
         const newUrl = await updateAvatar(profile.id, result.assets[0].uri);
         setAvatarUri(newUrl);
         Alert.alert('Sucesso', 'Foto de perfil atualizada!');
-      } catch {
-        Alert.alert('Erro', 'Não foi possível atualizar a foto. Tente novamente.');
+      } catch (err: any) {
+        const msg = err?.message || 'Nao foi possivel atualizar a foto.';
+        if (msg.includes('Bucket not found') || msg.includes('bucket')) {
+          Alert.alert('Erro', 'O armazenamento de fotos nao esta configurado. Entre em contato com o suporte.');
+        } else if (msg.includes('row-level security') || msg.includes('policy')) {
+          Alert.alert('Erro', 'Voce nao tem permissao para enviar fotos. Entre em contato com o suporte.');
+        } else {
+          Alert.alert('Erro', msg);
+        }
       }
     }
   };

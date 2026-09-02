@@ -50,7 +50,7 @@ export default function ConfirmationDialog({
             title={confirmLabel}
             onPress={onConfirm}
             loading={loading}
-            style={isDestructive ? styles.destructiveButton : undefined}
+            style={isDestructive ? { ...styles.confirmBtn, ...styles.destructiveButton } : styles.confirmBtn}
           />
         </View>
       </View>
@@ -91,12 +91,15 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
     gap: spacing.md,
-    marginTop: spacing.sm,
+    marginTop: spacing.lg,
+    alignItems: 'center',
   },
   cancelBtn: {
-    minWidth: 80,
+    flex: 1,
+  },
+  confirmBtn: {
+    flex: 1,
   },
   destructiveButton: {
     backgroundColor: colors.error,

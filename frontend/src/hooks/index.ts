@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase/client';
-import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, deleteCancelledAppointmentAdmin, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows, fetchAllBreaksForProfessional, createServiceForProfessional, updateProfessionalService, deleteProfessionalService } from '../services/api';
+import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, deleteCancelledAppointmentAdmin, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows, fetchAllBreaksForProfessional, createServiceForProfessional, updateProfessionalService, updateServiceCatalog, deleteProfessionalService } from '../services/api';
 import type { Professional, Service, ProfessionalService, BlockedTime, Appointment, BusinessSettings, Notification, WorkWindow, WorkWindowInput, EffectiveWindow, ProfessionalScheduleData, ScheduleBreak } from '../supabase/types';
 import { useNotifications } from './useNotifications';
 import { useAuth } from './useAuth';
@@ -196,6 +196,29 @@ export function useUpdateProfessionalService() {
   }, []);
 
   return { update, loading, error };
+}
+
+export function useUpdateServiceCatalog() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const updateCatalog = useCallback(async (
+    serviceId: string,
+    updates: { name?: string; description?: string | null; default_duration_minutes?: number }
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await updateServiceCatalog(serviceId, updates);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { updateCatalog, loading, error };
 }
 
 export function useDeleteProfessionalService() {

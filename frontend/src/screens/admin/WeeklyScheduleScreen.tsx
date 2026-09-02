@@ -9,6 +9,7 @@ import LoadingState from '@components/base/LoadingState';
 import ConfirmationDialog from '@components/base/ConfirmationDialog';
 import { useMyProfessionalId, useWorkWindows, useSaveWorkWindows } from '@hooks';
 import { fetchAllBreaksForProfessional } from '../../services/api';
+import { supabase } from '../../supabase/client';
 import type { WorkWindow, WorkWindowInput } from '../../supabase/types';
 
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado'];
@@ -326,6 +327,23 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
       return;
     }
     try {
+      const { data: conflicts, error: conflictErr } = await supabase.rpc('check_jornada_conflicts', {
+        p_professional_id: professionalId,
+        p_windows: windowsInput,
+      });
+
+      if (!conflictErr && conflicts && conflicts.length > 0) {
+        const conflictMsg = conflicts.map((c: any) =>
+          `${c.conflict_date}: ${c.reason}`
+        ).join('\n');
+        setErrors([
+          'Conflitos encontrados com agendamentos existentes:',
+          conflictMsg,
+          'Altere a jornada ou cancele os agendamentos antes de salvar.'
+        ]);
+        return;
+      }
+
       await save(professionalId, windowsInput);
       setHasChanges(false);
       await refetch();

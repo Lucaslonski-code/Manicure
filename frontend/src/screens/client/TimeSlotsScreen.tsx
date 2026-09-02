@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useWorkWindows, useBlockedTimes, useProfessionalServices, useScheduleBreaks } from '@hooks';
+import { useWorkWindows, useBlockedTimes, useProfessionalServices, useScheduleBreaks, useEffectiveWindows } from '@hooks';
 import { supabase } from '../../supabase/client';
 import { colors, spacing, radius, elevation } from '@theme';
 import Button from '@components/base/Button';
@@ -26,6 +26,7 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
   const { blockedTimes } = useBlockedTimes(professionalId);
   const { items: professionalServices } = useProfessionalServices(professionalId);
   const { breaks } = useScheduleBreaks(professionalId);
+  const { windows: effectiveWindows, load: loadEffectiveWindows } = useEffectiveWindows(professionalId);
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +72,7 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
     };
 
     load();
+    loadEffectiveWindows(date);
     return () => {
       cancelled = true;
     };
@@ -80,8 +82,9 @@ export default function TimeSlotsScreen({ route, navigation }: any) {
     const targetDate = parseISO(date);
     const now = new Date();
     const windowIds = windows.map(w => w.id);
-    return getAvailableSlots(targetDate, durationMinutes, windows, blockedTimes, appointments, now, undefined, breaks, windowIds);
-  }, [date, durationMinutes, windows, blockedTimes, appointments, breaks]);
+    const effectiveWindowsParam = effectiveWindows && effectiveWindows.length > 0 ? effectiveWindows : undefined;
+    return getAvailableSlots(targetDate, durationMinutes, windows, blockedTimes, appointments, now, effectiveWindowsParam, breaks, windowIds);
+  }, [date, durationMinutes, windows, blockedTimes, appointments, breaks, effectiveWindows]);
 
   const slotTimeStrings = useMemo(
     () => slots.map((s) => formatSlotTime(s.startMinutes)),
