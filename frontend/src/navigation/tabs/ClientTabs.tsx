@@ -8,10 +8,14 @@ import HomeScreen from '@screens/client/HomeScreen';
 import MyAppointmentsScreen from '@screens/client/MyAppointmentsScreen';
 import ProfileScreen from '@screens/client/ProfileScreen';
 import NotificationsScreen from '@screens/client/NotificationsScreen';
+import ProfessionalPanelScreen from '@screens/professional/ProfessionalPanelScreen';
+import { useAuthContext } from '@hooks/AuthContext';
 
 const Tab = createBottomTabNavigator();
 
-function TabBarIcon({ name, focused }: { name: 'home' | 'calendar' | 'bell' | 'user'; focused: boolean }) {
+type IconName = 'home' | 'calendar' | 'bell' | 'user' | 'scissors';
+
+function TabBarIcon({ name, focused }: { name: IconName; focused: boolean }) {
   return (
     <View style={[styles.iconWrap, focused && styles.iconWrapFocused]}>
       <AppIcon name={name} size={20} color={focused ? 'gold' : 'secondary'} />
@@ -21,20 +25,23 @@ function TabBarIcon({ name, focused }: { name: 'home' | 'calendar' | 'bell' | 'u
 
 export default function ClientTabs() {
   const insets = useSafeAreaInsets();
+  const { isProfessional } = useAuthContext();
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ focused }) => {
-          const iconName =
+          const iconName: IconName =
             route.name === 'Home'
               ? 'home'
               : route.name === 'MyAppointments'
                 ? 'calendar'
                 : route.name === 'Notifications'
                   ? 'bell'
-                  : 'user';
+                  : route.name === 'ProfessionalPanel'
+                    ? 'scissors'
+                    : 'user';
           return <TabBarIcon name={iconName} focused={focused} />;
         },
         tabBarLabel: ({ focused, children }) => (
@@ -64,6 +71,13 @@ export default function ClientTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Início' }} />
       <Tab.Screen name="MyAppointments" component={MyAppointmentsScreen} options={{ tabBarLabel: 'Agenda' }} />
+      {isProfessional && (
+        <Tab.Screen
+          name="ProfessionalPanel"
+          component={ProfessionalPanelScreen}
+          options={{ tabBarLabel: 'Painel' }}
+        />
+      )}
       <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ tabBarLabel: 'Notificações' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Perfil' }} />
     </Tab.Navigator>

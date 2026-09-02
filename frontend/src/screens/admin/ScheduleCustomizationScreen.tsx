@@ -7,22 +7,22 @@ import ScreenHeader from '@components/base/ScreenHeader';
 
 const SECTIONS = [
   {
-    key: 'WeeklySchedule',
+    key: 'PanelWeeklySchedule',
     icon: 'calendar' as const,
     title: 'Jornada semanal',
-    description: 'Configure os dias e horários de trabalho recorrentes.',
+    description: 'Configure os dias e horarios de trabalho recorrentes.',
   },
   {
-    key: 'SpecificDates',
+    key: 'PanelSpecificDates',
     icon: 'time' as const,
-    title: 'Datas específicas',
-    description: 'Defina exceções, folgas e horários especiais para datas pontuais.',
+    title: 'Datas especificas',
+    description: 'Defina excecoes, folgas e horarios especiais para datas pontuais.',
   },
   {
-    key: 'BlockedTimesAdmin',
+    key: 'PanelBlockedTimes',
     icon: 'lock' as const,
     title: 'Bloqueios',
-    description: 'Registre indisponibilidades extraordinárias como emergências e compromissos.',
+    description: 'Registre indisponibilidades extraordinarias como emergencias e compromissos.',
   },
 ] as const;
 
@@ -35,7 +35,7 @@ export default function ScheduleCustomizationScreen({ navigation }: any) {
       contentContainerStyle={{ paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, 16) + 16 }}
       showsVerticalScrollIndicator={false}
     >
-      <ScreenHeader title="Personalizar agenda" subtitle="Configure a disponibilidade" />
+      <ScreenHeader title="Personalizar agenda" subtitle="Configure a disponibilidade" onBack={() => navigation.goBack()} />
 
       <View style={styles.list}>
         {SECTIONS.map((section) => (

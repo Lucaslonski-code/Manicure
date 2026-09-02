@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Switch, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, typography, radius, elevation, iconSizes, componentSizes } from '@theme';
+import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
 import SecondaryButton from '@components/base/SecondaryButton';
@@ -11,7 +11,7 @@ import ConfirmationDialog from '@components/base/ConfirmationDialog';
 import { useMyProfessionalId, useWorkWindows, useSaveWorkWindows } from '@hooks';
 import type { WorkWindow, WorkWindowInput } from '../../supabase/types';
 
-const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+const WEEKDAYS = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado'];
 const WEEKDAY_INDICES = [1, 2, 3, 4, 5, 6, 0];
 
 interface WindowData {
@@ -50,8 +50,8 @@ function validateTimeRange(start: string, end: string): boolean {
 }
 
 function validateBreak(breakData: BreakData, windowStart: string, windowEnd: string): string | null {
-  if (!breakData.start_time || !breakData.end_time) return 'Horário da pausa incompleto';
-  if (!validateTimeRange(breakData.start_time, breakData.end_time)) return 'Fim da pausa deve ser após o início';
+  if (!breakData.start_time || !breakData.end_time) return 'Horario da pausa incompleto';
+  if (!validateTimeRange(breakData.start_time, breakData.end_time)) return 'Fim da pausa deve ser apos o inicio';
   const [bsH, bsM] = breakData.start_time.split(':').map(Number);
   const [beH, beM] = breakData.end_time.split(':').map(Number);
   const [wsH, wsM] = windowStart.split(':').map(Number);
@@ -60,8 +60,8 @@ function validateBreak(breakData: BreakData, windowStart: string, windowEnd: str
   const breakEnd = beH * 60 + beM;
   const winStart = wsH * 60 + wsM;
   const winEnd = weH * 60 + weM;
-  if (breakStart < winStart) return 'Pausa não pode começar antes da janela';
-  if (breakEnd > winEnd) return 'Pausa não pode terminar depois da janela';
+  if (breakStart < winStart) return 'Pausa nao pode comecar antes da janela';
+  if (breakEnd > winEnd) return 'Pausa nao pode terminar depois da janela';
   return null;
 }
 
@@ -98,7 +98,7 @@ function buildWindowsFromDB(windows: WorkWindow[], breaks: any[]): DayConfig[] {
   return result;
 }
 
-function buildInput(dayConfigs: DayConfig[], effectiveFrom?: string): WorkWindowInput[] {
+function buildInput(dayConfigs: DayConfig[]): WorkWindowInput[] {
   const inputs: WorkWindowInput[] = [];
   dayConfigs.forEach((day, dayIdx) => {
     if (!day.active) return;
@@ -109,7 +109,6 @@ function buildInput(dayConfigs: DayConfig[], effectiveFrom?: string): WorkWindow
         start_time: win.start_time,
         end_time: win.end_time,
         sort_order: winIdx,
-        effective_from: effectiveFrom || undefined,
         breaks: win.breaks.map((brk, brkIdx) => ({
           start_time: brk.start_time,
           end_time: brk.end_time,
@@ -122,6 +121,37 @@ function buildInput(dayConfigs: DayConfig[], effectiveFrom?: string): WorkWindow
   return inputs;
 }
 
+function StableTimeInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const [local, setLocal] = useState(value);
+  const lastExternalRef = useRef(value);
+
+  useEffect(() => {
+    if (value !== lastExternalRef.current) {
+      lastExternalRef.current = value;
+      setLocal(value);
+    }
+  }, [value]);
+
+  const handleBlur = useCallback(() => {
+    if (local !== lastExternalRef.current) {
+      lastExternalRef.current = local;
+      onChange(local);
+    }
+  }, [local, onChange]);
+
+  return (
+    <TextInput
+      style={styles.timeInput}
+      value={local}
+      onChangeText={setLocal}
+      onBlur={handleBlur}
+      placeholder={placeholder || 'HH:MM'}
+      placeholderTextColor={colors.disabled}
+      keyboardType="numbers-and-punctuation"
+    />
+  );
+}
+
 export default function WeeklyScheduleScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const { professionalId, loading: profLoading } = useMyProfessionalId();
@@ -129,7 +159,6 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
   const { save, loading: saving } = useSaveWorkWindows();
 
   const [dayConfigs, setDayConfigs] = useState<DayConfig[]>(WEEKDAY_INDICES.map(() => ({ active: false, windows: [] })));
-  const [effectiveFrom, setEffectiveFrom] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -245,7 +274,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
       const dayName = WEEKDAYS[WEEKDAY_INDICES[dayIdx]];
       day.windows.forEach((win, winIdx) => {
         if (!validateTimeRange(win.start_time, win.end_time)) {
-          errs.push(`${dayName}: janela ${winIdx + 1} — horário inválido`);
+          errs.push(`${dayName}: janela ${winIdx + 1} - horario invalido`);
         }
         win.breaks.forEach((brk) => {
           const brkErr = validateBreak(brk, win.start_time, win.end_time);
@@ -278,14 +307,14 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
     if (!professionalId) return;
 
     setErrors([]);
-    const windowsInput = buildInput(dayConfigs, effectiveFrom || undefined);
+    const windowsInput = buildInput(dayConfigs);
     try {
       await save(professionalId, windowsInput);
       setHasChanges(false);
       await refetch();
-      Alert.alert('Sucesso', 'Jornada atualizada.');
+      Alert.alert('Sucesso', 'Jornada atualizada com sucesso.');
     } catch {
-      setErrors(['Não foi possível salvar a jornada. Verifique os horários e tente novamente.']);
+      setErrors(['Nao foi possivel salvar a jornada. Verifique os horarios e tente novamente.']);
     }
   }, [dayConfigs, professionalId, validate, save, refetch]);
 
@@ -308,7 +337,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
   if (!professionalId) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Profissional não encontrado.</Text>
+        <Text style={styles.errorText}>Profissional nao encontrado.</Text>
       </View>
     );
   }
@@ -330,17 +359,9 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
           </View>
         )}
 
-        <View style={styles.validitySection}>
-          <Text style={styles.sectionLabel}>Vigência</Text>
-          <Text style={styles.sectionHint}>Data a partir da qual esta jornada passa a valer</Text>
-          <TextInput
-            style={styles.dateInput}
-            placeholder="AAAA-MM-DD"
-            placeholderTextColor={colors.disabled}
-            value={effectiveFrom}
-            onChangeText={setEffectiveFrom}
-            keyboardType="numbers-and-punctuation"
-          />
+        <View style={styles.infoBanner}>
+          <AppIcon name="warning" size={iconSizes.sm} color="gold" />
+          <Text style={styles.infoBannerText}>A jornada salva passa a valer imediatamente.</Text>
         </View>
 
         {WEEKDAY_INDICES.map((weekday, dayIdx) => {
@@ -370,7 +391,7 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
                       {day.windows.length} {day.windows.length === 1 ? 'janela' : 'janelas'}
                     </Text>
                   )}
-                  <AppIcon name={isExpanded ? 'chevron-right' : 'chevron-right'} size={iconSizes.sm} color="secondary" />
+                  <AppIcon name="chevron-right" size={iconSizes.sm} color="secondary" />
                 </View>
               </TouchableOpacity>
 
@@ -382,33 +403,25 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
                         <Text style={styles.windowLabel}>Janela {winIdx + 1}</Text>
                         {day.windows.length > 1 && (
                           <TouchableOpacity onPress={() => removeWindow(dayIdx, winIdx)}>
-                            <AppIcon name="error" size={iconSizes.sm} color="error" />
+                            <AppIcon name="delete" size={iconSizes.sm} color="error" />
                           </TouchableOpacity>
                         )}
                       </View>
 
                       <View style={styles.timeRow}>
                         <View style={styles.timeInputWrap}>
-                          <Text style={styles.timeInputLabel}>Início</Text>
-                          <TextInput
-                            style={styles.timeInput}
+                          <Text style={styles.timeInputLabel}>Inicio</Text>
+                          <StableTimeInput
                             value={win.start_time}
-                            onChangeText={(v) => updateWindow(dayIdx, winIdx, 'start_time', v)}
-                            placeholder="HH:MM"
-                            placeholderTextColor={colors.disabled}
-                            keyboardType="numbers-and-punctuation"
+                            onChange={(v) => updateWindow(dayIdx, winIdx, 'start_time', v)}
                           />
                         </View>
-                        <Text style={styles.timeSeparator}>—</Text>
+                        <Text style={styles.timeSeparator}>-</Text>
                         <View style={styles.timeInputWrap}>
                           <Text style={styles.timeInputLabel}>Fim</Text>
-                          <TextInput
-                            style={styles.timeInput}
+                          <StableTimeInput
                             value={win.end_time}
-                            onChangeText={(v) => updateWindow(dayIdx, winIdx, 'end_time', v)}
-                            placeholder="HH:MM"
-                            placeholderTextColor={colors.disabled}
-                            keyboardType="numbers-and-punctuation"
+                            onChange={(v) => updateWindow(dayIdx, winIdx, 'end_time', v)}
                           />
                         </View>
                       </View>
@@ -424,29 +437,21 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
                               placeholderTextColor={colors.disabled}
                             />
                             <TouchableOpacity onPress={() => removeBreak(dayIdx, winIdx, brkIdx)}>
-                              <AppIcon name="error" size={iconSizes.sm} color="error" />
+                              <AppIcon name="delete" size={iconSizes.sm} color="error" />
                             </TouchableOpacity>
                           </View>
                           <View style={styles.timeRow}>
                             <View style={styles.timeInputWrap}>
-                              <TextInput
-                                style={styles.timeInput}
+                              <StableTimeInput
                                 value={brk.start_time}
-                                onChangeText={(v) => updateBreak(dayIdx, winIdx, brkIdx, 'start_time', v)}
-                                placeholder="HH:MM"
-                                placeholderTextColor={colors.disabled}
-                                keyboardType="numbers-and-punctuation"
+                                onChange={(v) => updateBreak(dayIdx, winIdx, brkIdx, 'start_time', v)}
                               />
                             </View>
-                            <Text style={styles.timeSeparator}>—</Text>
+                            <Text style={styles.timeSeparator}>-</Text>
                             <View style={styles.timeInputWrap}>
-                              <TextInput
-                                style={styles.timeInput}
+                              <StableTimeInput
                                 value={brk.end_time}
-                                onChangeText={(v) => updateBreak(dayIdx, winIdx, brkIdx, 'end_time', v)}
-                                placeholder="HH:MM"
-                                placeholderTextColor={colors.disabled}
-                                keyboardType="numbers-and-punctuation"
+                                onChange={(v) => updateBreak(dayIdx, winIdx, brkIdx, 'end_time', v)}
                               />
                             </View>
                           </View>
@@ -483,8 +488,8 @@ export default function WeeklyScheduleScreen({ navigation }: any) {
 
       <ConfirmationDialog
         visible={confirmVisible}
-        title="Alterações não salvas"
-        message="Você tem alterações não salvas. Deseja sair sem salvar?"
+        title="Alteracoes nao salvas"
+        message="Voce tem alteracoes nao salvas. Deseja sair sem salvar?"
         confirmLabel="Sair"
         cancelLabel="Ficar"
         onConfirm={() => { setConfirmVisible(false); navigation.goBack(); }}
@@ -501,10 +506,8 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   errorContainer: { marginHorizontal: spacing.screenPadding, marginBottom: spacing.md, backgroundColor: 'rgba(166,61,64,0.06)', borderRadius: radius.card, padding: spacing.xxxxxxl },
   errorItem: { ...typography.bodySmall, color: colors.error, marginBottom: spacing.xs },
-  validitySection: { marginHorizontal: spacing.screenPadding, marginBottom: spacing.xxxxxxl },
-  sectionLabel: { ...typography.body, fontWeight: '600', color: colors.textPrimary, marginBottom: spacing.xs },
-  sectionHint: { ...typography.bodySmall, color: colors.textSecondary, marginBottom: spacing.md },
-  dateInput: { height: componentSizes.inputHeight, borderWidth: 1, borderColor: colors.border, borderRadius: radius.input, backgroundColor: colors.surface, paddingHorizontal: spacing.md, ...typography.input, color: colors.textPrimary },
+  infoBanner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginHorizontal: spacing.screenPadding, marginBottom: spacing.xxxxxxl, backgroundColor: colors.goldOverlay, borderRadius: radius.card, padding: spacing.xxxxxxl },
+  infoBannerText: { ...typography.bodySmall, color: colors.textSecondary, flex: 1 },
   dayCard: { marginHorizontal: spacing.screenPadding, marginBottom: spacing.sm, backgroundColor: colors.surface, borderRadius: radius.card, borderWidth: 1, borderColor: colors.border, ...elevation.sm },
   dayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.xxxxxxl },
   dayHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase/client';
-import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, deleteCancelledAppointmentAdmin, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows, fetchAllBreaksForProfessional } from '../services/api';
+import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, deleteCancelledAppointmentAdmin, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows, fetchAllBreaksForProfessional, createServiceForProfessional, updateProfessionalService, deleteProfessionalService } from '../services/api';
 import type { Professional, Service, ProfessionalService, BlockedTime, Appointment, BusinessSettings, Notification, WorkWindow, WorkWindowInput, EffectiveWindow, ProfessionalScheduleData, ScheduleBreak } from '../supabase/types';
 import { useNotifications } from './useNotifications';
 import { useAuth } from './useAuth';
@@ -121,32 +121,101 @@ export function useProfessionalServices(professionalId: string | null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!professionalId) {
       setItems([]);
       setLoading(false);
       return;
     }
 
-    let isMounted = true;
-    setLoading(true);
-
-    fetchProfessionalServices(professionalId).then((data) => {
-      if (!isMounted) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchProfessionalServices(professionalId);
       setItems(data);
-      setLoading(false);
-    }).catch((err) => {
-      if (!isMounted) return;
+    } catch (err: any) {
       setError(err.message);
+    } finally {
       setLoading(false);
-    });
-
-    return () => {
-      isMounted = false;
-    };
+    }
   }, [professionalId]);
 
-  return { items, loading, error };
+  useEffect(() => {
+    let isMounted = true;
+    load().then(() => { if (!isMounted) setItems([]); });
+    return () => { isMounted = false; };
+  }, [load]);
+
+  return { items, loading, error, refetch: load };
+}
+
+export function useCreateServiceForProfessional() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const create = useCallback(async (
+    professionalId: string,
+    name: string,
+    description: string | null,
+    durationMinutes: number,
+    price: number | null
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await createServiceForProfessional(professionalId, name, description, durationMinutes, price);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { create, loading, error };
+}
+
+export function useUpdateProfessionalService() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const update = useCallback(async (
+    professionalServiceId: string,
+    updates: { duration_minutes?: number; price?: number | null; is_active?: boolean }
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await updateProfessionalService(professionalServiceId, updates);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { update, loading, error };
+}
+
+export function useDeleteProfessionalService() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const remove = useCallback(async (professionalServiceId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await deleteProfessionalService(professionalServiceId);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { remove, loading, error };
 }
 
 export function useBlockedTimes(professionalId?: string | null) {

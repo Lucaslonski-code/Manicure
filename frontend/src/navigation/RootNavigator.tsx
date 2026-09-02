@@ -88,7 +88,10 @@ export function resolveRootState(s: {
   if (s.recoveryMode) {
     return 'Recovery';
   }
-  if (s.profile?.role === 'admin' || s.isProfessional) {
+  if (s.isProfessional) {
+    return 'Client';
+  }
+  if (s.profile?.role === 'admin') {
     return 'Admin';
   }
   if (s.profile?.role === 'client') {

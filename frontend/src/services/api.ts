@@ -100,6 +100,61 @@ export async function fetchProfessionalServices(professionalId: string): Promise
   return data || [];
 }
 
+export async function createServiceForProfessional(
+  professionalId: string,
+  name: string,
+  description: string | null,
+  durationMinutes: number,
+  price: number | null
+): Promise<void> {
+  const { data: newService, error: serviceError } = await supabase
+    .from('services')
+    .insert({
+      name,
+      description: description || null,
+      default_duration_minutes: durationMinutes,
+      is_active: true,
+    })
+    .select('id')
+    .single();
+
+  if (serviceError) throw new Error(mapApiError(serviceError));
+  if (!newService) throw new Error('Erro ao criar servico');
+
+  const { error: linkError } = await supabase
+    .from('professional_services')
+    .insert({
+      professional_id: professionalId,
+      service_id: newService.id,
+      duration_minutes: durationMinutes,
+      price: price || null,
+      is_active: true,
+    });
+
+  if (linkError) throw new Error(mapApiError(linkError));
+}
+
+export async function updateProfessionalService(
+  professionalServiceId: string,
+  updates: { duration_minutes?: number; price?: number | null; is_active?: boolean }
+): Promise<void> {
+  const { error } = await supabase
+    .from('professional_services')
+    .update(updates)
+    .eq('id', professionalServiceId);
+
+  if (error) throw new Error(mapApiError(error));
+}
+
+export async function deleteProfessionalService(professionalServiceId: string): Promise<void> {
+  const { error } = await supabase
+    .from('professional_services')
+    .delete()
+    .eq('id', professionalServiceId);
+
+  if (error) throw new Error(mapApiError(error));
+}
+
 export async function fetchBlockedTimes(professionalId?: string | null): Promise<BlockedTime[]> {
   const query = supabase
     .from('blocked_times')

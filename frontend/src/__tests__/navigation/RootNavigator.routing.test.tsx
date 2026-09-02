@@ -67,7 +67,7 @@ describe('resolveRootState (auth -> destination)', () => {
     expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: { ...baseProfile, role: 'invalid' as any }, recoveryMode: false, isProfessional: false })).toBe('Public');
   });
 
-  it('professional with client role -> Admin (via isProfessional)', () => {
-    expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: baseProfile, recoveryMode: false, isProfessional: true })).toBe('Admin');
+  it('professional with client role -> Client (same Home, extra tab)', () => {
+    expect(resolveRootState({ loading: false, session, isEmailVerified: true, profile: baseProfile, recoveryMode: false, isProfessional: true })).toBe('Client');
   });
 });

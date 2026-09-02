@@ -12,7 +12,9 @@ interface ConfirmationDialogProps {
   cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  variant?: 'danger' | 'warning' | 'info';
   destructive?: boolean;
+  loading?: boolean;
 }
 
 export default function ConfirmationDialog({
@@ -23,8 +25,12 @@ export default function ConfirmationDialog({
   cancelLabel = 'Cancelar',
   onConfirm,
   onCancel,
+  variant,
   destructive = false,
+  loading = false,
 }: ConfirmationDialogProps) {
+  const isDestructive = variant === 'danger' || destructive;
+
   return (
     <Modal
       visible={visible}
@@ -36,19 +42,16 @@ export default function ConfirmationDialog({
         <View style={styles.overlay} />
       </TouchableWithoutFeedback>
       <View style={styles.wrapper} accessibilityLabel={`Confirmar ${title}`} accessibilityRole="alert">
-        <Text style={[styles.title, destructive && styles.titleDestructive]}>{title}</Text>
+        <Text style={[styles.title, isDestructive && styles.titleDestructive]}>{title}</Text>
         <Text style={styles.message}>{message}</Text>
         <View style={styles.actions}>
-          <View style={styles.actionButton}>
-            <SecondaryButton title={cancelLabel} onPress={onCancel} />
-          </View>
-          <View style={styles.actionButton}>
-            <Button
-              title={confirmLabel}
-              onPress={onConfirm}
-              style={destructive ? styles.destructiveButton : undefined}
-            />
-          </View>
+          <SecondaryButton title={cancelLabel} onPress={onCancel} style={styles.cancelBtn} />
+          <Button
+            title={confirmLabel}
+            onPress={onConfirm}
+            loading={loading}
+            style={isDestructive ? styles.destructiveButton : undefined}
+          />
         </View>
       </View>
     </Modal>
@@ -92,8 +95,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginTop: spacing.sm,
   },
-  actionButton: {
-    flexShrink: 1,
+  cancelBtn: {
+    minWidth: 80,
   },
   destructiveButton: {
     backgroundColor: colors.error,
