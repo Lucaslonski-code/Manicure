@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
 import { useServices } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
@@ -37,9 +37,13 @@ export default function AdminServicesScreen() {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <View style={styles.cardIconContainer}>
-                <AppIcon name="sparkles" size={iconSizes.md} color="gold" />
-              </View>
+              {item.image_url ? (
+                <Image source={{ uri: item.image_url }} style={styles.cardImage} />
+              ) : (
+                <View style={styles.cardIconContainer}>
+                  <AppIcon name="sparkles" size={iconSizes.md} color="gold" />
+                </View>
+              )}
               <View style={styles.cardContent}>
                 <Text style={styles.name}>{item.name}</Text>
                 <Text style={styles.duration}>{item.default_duration_minutes} min</Text>
@@ -88,6 +92,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.xxxxxxl,
+  },
+  cardImage: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.input,
+    marginRight: spacing.xxxxxxl,
+    backgroundColor: colors.background,
   },
   cardContent: {
     flex: 1,

@@ -1,5 +1,31 @@
 import { supabase } from '../supabase/client';
+import { File as ExpoFile } from 'expo-file-system';
 import type { Professional, Service, ProfessionalService, BlockedTime, Appointment, BusinessSettings, Notification, WorkWindow, ScheduleBreak, ScheduleOverride, EffectiveWindow, EffectiveBreak, WorkWindowInput, ProfessionalScheduleData } from '../supabase/types';
+
+async function readFileAsBlob(imageUri: string, mimeType: string): Promise<Blob> {
+  let file: ExpoFile;
+  try {
+    file = new ExpoFile(imageUri);
+  } catch {
+    throw new Error('Nao foi possivel acessar a imagem selecionada.');
+  }
+
+  if (!file.exists) {
+    throw new Error('O arquivo de imagem selecionado nao existe.');
+  }
+
+  const base64 = await file.base64();
+  if (!base64 || base64.length === 0) {
+    throw new Error('A imagem selecionada esta vazia.');
+  }
+
+  const dataUri = `data:${mimeType};base64,${base64}`;
+  const response = await fetch(dataUri);
+  if (!response.ok) {
+    throw new Error('Erro ao ler a imagem selecionada.');
+  }
+  return response.blob();
+}
 
 async function sendPushNotification(appointmentId: string, event: 'confirmation' | 'cancellation' | 'reschedule'): Promise<void> {
   try {
@@ -112,7 +138,7 @@ export async function createServiceForProfessional(
   description: string | null,
   durationMinutes: number,
   price: number | null
-): Promise<void> {
+): Promise<string> {
   const { data: newService, error: serviceError } = await supabase
     .from('services')
     .insert({
@@ -138,6 +164,8 @@ export async function createServiceForProfessional(
     });
 
   if (linkError) throw new Error(mapApiError(linkError));
+
+  return newService.id;
 }
 
 export async function updateProfessionalService(
@@ -416,11 +444,7 @@ export async function updateProfileAvatar(userId: string, imageUri: string): Pro
   const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
   const fileName = `${userId}/${Date.now()}.${ext}`;
 
-  const response = await fetch(imageUri);
-  if (!response.ok) {
-    throw new Error('Nao foi possivel ler a imagem selecionada.');
-  }
-  const blob = await response.blob();
+  const blob = await readFileAsBlob(imageUri, mimeType);
 
   const { error: uploadError } = await supabase.storage
     .from('avatars')
@@ -449,6 +473,67 @@ export async function updateProfileAvatar(userId: string, imageUri: string): Pro
   if (updateError) throw new Error(mapApiError(updateError));
 
   return publicUrl;
+}
+
+export async function updateServiceImage(serviceId: string, imageUri: string): Promise<string> {
+  const ext = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+  const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+  const fileName = `${serviceId}/${Date.now()}.${ext}`;
+
+  const blob = await readFileAsBlob(imageUri, mimeType);
+
+  const { error: uploadError } = await supabase.storage
+    .from('service-images')
+    .upload(fileName, blob, {
+      contentType: mimeType,
+      upsert: true,
+    });
+
+  if (uploadError) {
+    const msg = uploadError.message || uploadError.name || 'Erro desconhecido';
+    console.error('[updateServiceImage] upload error:', msg);
+    throw new Error('Erro ao enviar imagem: ' + msg);
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('service-images')
+    .getPublicUrl(fileName);
+
+  const publicUrl = urlData.publicUrl;
+
+  const { error: updateError } = await supabase
+    .from('services')
+    .update({ image_url: publicUrl })
+    .eq('id', serviceId);
+
+  if (updateError) throw new Error(mapApiError(updateError));
+
+  return publicUrl;
+}
+
+export async function deleteServiceImage(serviceId: string): Promise<void> {
+  const { data: service, error: fetchError } = await supabase
+    .from('services')
+    .select('image_url')
+    .eq('id', serviceId)
+    .single();
+
+  if (fetchError || !service?.image_url) return;
+
+  const urlParts = service.image_url.split('/');
+  const pathParts = urlParts.slice(urlParts.indexOf('service-images') + 1);
+  const filePath = pathParts.join('/');
+
+  if (filePath) {
+    await supabase.storage.from('service-images').remove([filePath]);
+  }
+
+  const { error: updateError } = await supabase
+    .from('services')
+    .update({ image_url: null })
+    .eq('id', serviceId);
+
+  if (updateError) throw new Error(mapApiError(updateError));
 }
 
 export async function deleteCancelledAppointment(appointmentId: string): Promise<void> {

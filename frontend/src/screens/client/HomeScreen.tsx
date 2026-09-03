@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthContext } from '@hooks/AuthContext';
 import { useProfessionals, useMyAppointments, useServices } from '@hooks';
@@ -47,7 +47,11 @@ export default function HomeScreen({ navigation }: any) {
       activeOpacity={0.7}
     >
       <View style={styles.serviceImageArea}>
-        <AppIcon name="sparkles" size={24} color="gold" />
+        {item.image_url ? (
+          <Image source={{ uri: item.image_url }} style={styles.serviceImage} />
+        ) : (
+          <AppIcon name="sparkles" size={24} color="gold" />
+        )}
       </View>
       <View style={styles.serviceTextArea}>
         <Text style={styles.serviceName} numberOfLines={2}>{item.name}</Text>
@@ -342,6 +346,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.goldOverlay,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  serviceImage: {
+    width: '100%',
+    height: '100%',
   },
   serviceTextArea: {
     paddingHorizontal: 12,

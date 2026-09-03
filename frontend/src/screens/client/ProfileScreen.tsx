@@ -10,6 +10,12 @@ import AppIcon from '@components/icons/AppIcon';
 import DangerButton from '@components/base/DangerButton';
 import Avatar from '@components/base/Avatar';
 
+function cacheBustUrl(url: string): string {
+  if (!url) return url;
+  const separator = url.includes('?') ? '&' : '?';
+  return `${separator}t=${Date.now()}`;
+}
+
 export default function ProfileScreen({ _navigation }: any) {
   const insets = useSafeAreaInsets();
   const { profile, signOut } = useAuthContext();
@@ -55,7 +61,7 @@ export default function ProfileScreen({ _navigation }: any) {
     if (!result.canceled && result.assets[0] && profile?.id) {
       try {
         const newUrl = await updateAvatar(profile.id, result.assets[0].uri);
-        setAvatarUri(newUrl);
+        setAvatarUri(newUrl + cacheBustUrl(newUrl));
         Alert.alert('Sucesso', 'Foto de perfil atualizada!');
       } catch (err: any) {
         const msg = err?.message || 'Nao foi possivel atualizar a foto.';
@@ -94,7 +100,7 @@ export default function ProfileScreen({ _navigation }: any) {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.7} style={styles.avatarTouchable}>
+        <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.7} style={styles.avatarTouchable} disabled={avatarLoading}>
           <Avatar name={profile?.name} source={avatarUri ? { uri: avatarUri } : undefined} size={80} />
           <View style={styles.avatarBadge}>
             <AppIcon name="edit" size={14} color="gold" />

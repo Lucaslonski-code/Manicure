@@ -28,6 +28,7 @@ export interface Service {
   description?: string;
   default_duration_minutes: number;
   is_active: boolean;
+  image_url?: string;
   created_at: string;
   updated_at: string;
 }

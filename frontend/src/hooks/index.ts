@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase/client';
-import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, deleteCancelledAppointmentAdmin, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows, fetchAllBreaksForProfessional, createServiceForProfessional, updateProfessionalService, updateServiceCatalog, deleteProfessionalService } from '../services/api';
+import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, deleteCancelledAppointmentAdmin, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows, fetchAllBreaksForProfessional, createServiceForProfessional, updateProfessionalService, updateServiceCatalog, deleteProfessionalService, updateServiceImage, deleteServiceImage } from '../services/api';
 import type { Professional, Service, ProfessionalService, BlockedTime, Appointment, BusinessSettings, Notification, WorkWindow, WorkWindowInput, EffectiveWindow, ProfessionalScheduleData, ScheduleBreak } from '../supabase/types';
 import { useNotifications } from './useNotifications';
 import { useAuth } from './useAuth';
@@ -159,11 +159,11 @@ export function useCreateServiceForProfessional() {
     description: string | null,
     durationMinutes: number,
     price: number | null
-  ) => {
+  ): Promise<string> => {
     try {
       setLoading(true);
       setError(null);
-      await createServiceForProfessional(professionalId, name, description, durationMinutes, price);
+      return await createServiceForProfessional(professionalId, name, description, durationMinutes, price);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -239,6 +239,46 @@ export function useDeleteProfessionalService() {
   }, []);
 
   return { remove, loading, error };
+}
+
+export function useUpdateServiceImage() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const uploadImage = useCallback(async (serviceId: string, imageUri: string): Promise<string> => {
+    try {
+      setLoading(true);
+      setError(null);
+      return await updateServiceImage(serviceId, imageUri);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { uploadImage, loading, error };
+}
+
+export function useDeleteServiceImage() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const removeImage = useCallback(async (serviceId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await deleteServiceImage(serviceId);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { removeImage, loading, error };
 }
 
 export function useBlockedTimes(professionalId?: string | null) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProfessionalServices, useProfessional } from '@hooks';
 import { colors, spacing, typography, radius, elevation } from '@theme';
@@ -23,9 +23,13 @@ export default function ServiceSelectionScreen({ route, navigation }: any) {
         onPress={() => navigation.navigate('DateSelection', { professionalId, serviceId: item.id })}
         activeOpacity={0.7}
       >
-        <View style={styles.serviceIcon}>
-          <AppIcon name="sparkles" size={20} color="gold" />
-        </View>
+        {item.image_url ? (
+          <Image source={{ uri: item.image_url }} style={styles.serviceImage} />
+        ) : (
+          <View style={styles.serviceIcon}>
+            <AppIcon name="sparkles" size={20} color="gold" />
+          </View>
+        )}
         <View style={styles.cardContent}>
           <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
           <View style={styles.metaRow}>
@@ -133,6 +137,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+  },
+  serviceImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    marginRight: 12,
+    backgroundColor: colors.background,
   },
   cardContent: {
     flex: 1,

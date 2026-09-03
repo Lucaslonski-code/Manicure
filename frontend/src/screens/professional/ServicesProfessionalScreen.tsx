@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useMyProfessionalId, useProfessionalServices, useCreateServiceForProfessional, useUpdateProfessionalService, useUpdateServiceCatalog, useDeleteProfessionalService } from '@hooks';
+import * as ImagePicker from 'expo-image-picker';
+import { useMyProfessionalId, useProfessionalServices, useCreateServiceForProfessional, useUpdateProfessionalService, useUpdateServiceCatalog, useDeleteProfessionalService, useUpdateServiceImage, useDeleteServiceImage } from '@hooks';
 import { colors, spacing, radius, elevation, typography } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
@@ -23,19 +24,24 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const { professionalId, loading: pidLoading } = useMyProfessionalId();
   const { items, loading: servicesLoading, refetch } = useProfessionalServices(professionalId);
-  const { create, loading: creating } = useCreateServiceForProfessional();
-  const { update, loading: updating } = useUpdateProfessionalService();
+  const { create } = useCreateServiceForProfessional();
+  const { update } = useUpdateProfessionalService();
   const { updateCatalog } = useUpdateServiceCatalog();
   const { remove, loading: deleting } = useDeleteProfessionalService();
+  const { uploadImage } = useUpdateServiceImage();
+  const { removeImage } = useDeleteServiceImage();
 
   const [form, setForm] = useState<FormData>(emptyForm);
   const [errors, setErrors] = useState<{ name?: string; duration?: string }>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
 
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [pendingDeleteLabel, setPendingDeleteLabel] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const loading = pidLoading || servicesLoading;
 
@@ -65,22 +71,51 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
     setErrors({});
     setEditingId(null);
     setEditingServiceId(null);
+    setSelectedImageUri(null);
+    setExistingImageUrl(null);
+  };
+
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissao necessaria', 'Permita o acesso a galeria para selecionar uma foto.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.7,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setSelectedImageUri(result.assets[0].uri);
+    }
   };
 
   const handleCreate = async () => {
     if (!validate()) return;
+    setSaving(true);
     try {
-      await create(
+      const newServiceId = await create(
         professionalId,
         form.name.trim(),
         form.description.trim() || null,
         parseInt(form.duration, 10),
         form.price ? parseFloat(form.price.replace(',', '.')) : null
       );
+
+      if (selectedImageUri && newServiceId) {
+        await uploadImage(newServiceId, selectedImageUri);
+      }
+
       resetForm();
       refetch();
     } catch (err: any) {
       Alert.alert('Erro ao criar servico', err?.message || 'Verifique os dados e tente novamente.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -93,6 +128,8 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
       duration: String(item.duration_minutes || ''),
       price: item.price != null ? String(item.price) : '',
     });
+    setExistingImageUrl(item.service?.image_url || null);
+    setSelectedImageUri(null);
     setErrors({});
   };
 
@@ -107,6 +144,7 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
       setErrors({ name: 'Nome obrigatorio' });
       return;
     }
+    setSaving(true);
     try {
       await update(editingId, {
         duration_minutes: dur,
@@ -119,12 +157,18 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
           description: form.description.trim() || null,
           default_duration_minutes: dur,
         });
+
+        if (selectedImageUri) {
+          await uploadImage(editingServiceId, selectedImageUri);
+        }
       }
 
       resetForm();
       refetch();
     } catch (err: any) {
       Alert.alert('Erro ao atualizar servico', err?.message || 'Verifique os dados e tente novamente.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -197,6 +241,39 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
                   returnKeyType="next"
                 />
               </View>
+              <View style={styles.field}>
+                <Text style={styles.label}>Foto do servico (opcional)</Text>
+                <TouchableOpacity style={styles.imagePickerBtn} onPress={handlePickImage} activeOpacity={0.7}>
+                  {selectedImageUri ? (
+                    <Image source={{ uri: selectedImageUri }} style={styles.imagePreview} />
+                  ) : existingImageUrl ? (
+                    <Image source={{ uri: existingImageUrl }} style={styles.imagePreview} />
+                  ) : (
+                    <View style={styles.imagePlaceholder}>
+                      <AppIcon name="add" size={20} color="secondary" />
+                      <Text style={styles.imagePlaceholderText}>Selecionar foto</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+                {(selectedImageUri || existingImageUrl) && (
+                  <TouchableOpacity
+                    style={styles.removeImageBtn}
+                    onPress={async () => {
+                      if (existingImageUrl && editingServiceId) {
+                        try {
+                          await removeImage(editingServiceId);
+                          setExistingImageUrl(null);
+                        } catch {
+                          setExistingImageUrl(null);
+                        }
+                      }
+                      setSelectedImageUri(null);
+                    }}
+                  >
+                    <Text style={styles.removeImageText}>Remover foto</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
               <View style={styles.row}>
                 <View style={[styles.field, styles.rowField]}>
                   <Text style={styles.label}>Duracao (min) *</Text>
@@ -229,9 +306,9 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
                   <SecondaryButton title="Cancelar" onPress={resetForm} style={{ flex: 1 }} />
                 )}
                 <Button
-                  title={creating ? 'Criando...' : updating ? 'Salvando...' : editingId ? 'Salvar alteracoes' : 'Criar servico'}
+                  title={saving ? (editingId ? 'Salvando...' : 'Criando...') : editingId ? 'Salvar alteracoes' : 'Criar servico'}
                   onPress={editingId ? handleUpdate : handleCreate}
-                  disabled={creating || updating}
+                  disabled={saving}
                   style={{ flex: 1 }}
                 />
               </View>
@@ -246,8 +323,12 @@ export default function ServicesProfessionalScreen({ navigation }: any) {
               items.map((item) => {
                 const isEditing = editingId === item.id;
                 const hasDescription = !!item.service?.description;
+                const hasImage = !!item.service?.image_url;
                 return (
                   <View key={item.id} style={[styles.card, isEditing && styles.cardEditing]}>
+                    {hasImage && (
+                      <Image source={{ uri: item.service!.image_url }} style={styles.cardImage} />
+                    )}
                     <View style={styles.cardBody}>
                       <Text style={styles.cardName}>{item.service?.name || 'Sem nome'}</Text>
                       {hasDescription && (
@@ -319,6 +400,40 @@ const styles = StyleSheet.create({
   inputError: { borderColor: colors.error },
   errorItem: { fontSize: 11, color: colors.error, marginTop: 4 },
   formActions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xs },
+  imagePickerBtn: {
+    height: 100,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    backgroundColor: colors.background,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+    borderRadius: radius.card,
+  },
+  imagePlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  imagePlaceholderText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  removeImageBtn: {
+    marginTop: 6,
+    alignItems: 'center',
+  },
+  removeImageText: {
+    fontSize: 12,
+    color: colors.error,
+    fontWeight: '500',
+  },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
@@ -332,6 +447,13 @@ const styles = StyleSheet.create({
     ...elevation.sm,
   },
   cardEditing: { borderColor: colors.gold, borderWidth: 1.5 },
+  cardImage: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.sm,
+    marginRight: 12,
+    backgroundColor: colors.background,
+  },
   cardBody: { flex: 1 },
   cardName: { ...typography.body, fontWeight: '600', color: colors.textPrimary },
   cardDescription: { fontSize: 13, fontWeight: '400', color: colors.textSecondary, marginTop: 2, lineHeight: 18 },
