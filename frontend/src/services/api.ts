@@ -2,7 +2,7 @@ import { supabase } from '../supabase/client';
 import { File as ExpoFile } from 'expo-file-system';
 import type { Professional, Service, ProfessionalService, BlockedTime, Appointment, BusinessSettings, Notification, WorkWindow, ScheduleBreak, ScheduleOverride, EffectiveWindow, EffectiveBreak, WorkWindowInput, ProfessionalScheduleData } from '../supabase/types';
 
-async function readFileAsBlob(imageUri: string, mimeType: string): Promise<Blob> {
+async function readFileAsArrayBuffer(imageUri: string): Promise<ArrayBuffer> {
   let file: ExpoFile;
   try {
     file = new ExpoFile(imageUri);
@@ -19,12 +19,12 @@ async function readFileAsBlob(imageUri: string, mimeType: string): Promise<Blob>
     throw new Error('A imagem selecionada esta vazia.');
   }
 
-  const dataUri = `data:${mimeType};base64,${base64}`;
-  const response = await fetch(dataUri);
-  if (!response.ok) {
-    throw new Error('Erro ao ler a imagem selecionada.');
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
   }
-  return response.blob();
+  return bytes.buffer;
 }
 
 async function sendPushNotification(appointmentId: string, event: 'confirmation' | 'cancellation' | 'reschedule'): Promise<void> {
@@ -444,11 +444,11 @@ export async function updateProfileAvatar(userId: string, imageUri: string): Pro
   const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
   const fileName = `${userId}/${Date.now()}.${ext}`;
 
-  const blob = await readFileAsBlob(imageUri, mimeType);
+  const buffer = await readFileAsArrayBuffer(imageUri);
 
   const { error: uploadError } = await supabase.storage
     .from('avatars')
-    .upload(fileName, blob, {
+    .upload(fileName, buffer, {
       contentType: mimeType,
       upsert: true,
     });
@@ -480,11 +480,11 @@ export async function updateServiceImage(serviceId: string, imageUri: string): P
   const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
   const fileName = `${serviceId}/${Date.now()}.${ext}`;
 
-  const blob = await readFileAsBlob(imageUri, mimeType);
+  const buffer = await readFileAsArrayBuffer(imageUri);
 
   const { error: uploadError } = await supabase.storage
     .from('service-images')
-    .upload(fileName, blob, {
+    .upload(fileName, buffer, {
       contentType: mimeType,
       upsert: true,
     });
