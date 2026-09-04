@@ -6,9 +6,9 @@ import Button from '@components/base/Button';
 import BrandLogo from '@components/base/BrandLogo';
 import { colors, spacing, typography } from '@theme';
 
-export default function EmailConfirmationScreen({ route, navigation }: any) {
+export default function EmailConfirmationScreen({ route, _navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { resend, loading } = useAuthContext();
+  const { resend, loading, signOut } = useAuthContext();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const email = route?.params?.email || '';
@@ -27,16 +27,26 @@ export default function EmailConfirmationScreen({ route, navigation }: any) {
     }
   };
 
+  const handleBackToLogin = async () => {
+    try {
+      await signOut();
+    } catch {
+      // signOut failure — user will be redirected by auth state change
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
       <View style={[styles.content, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg }]}>
         <View style={styles.brandContainer}>
           <BrandLogo size={80} />
         </View>
-        <Text style={styles.title}>Verifique seu e-mail</Text>
+        <Text style={styles.title}>Confirme seu e-mail</Text>
         <Text style={styles.text}>
           Enviamos um link de confirmação para{'\n'}
-          {email ? <Text style={styles.email}>{email}</Text> : ' seu e-mail.'}
+          {email ? <Text style={styles.email}>{email}</Text> : ' seu e-mail.'}{'\n\n'}
+          Para acessar o aplicativo, abra o e-mail recebido e clique no link de confirmação.{'\n'}
+          Somente após a confirmação você poderá fazer login.
         </Text>
 
         <View style={styles.form}>
@@ -49,7 +59,7 @@ export default function EmailConfirmationScreen({ route, navigation }: any) {
             loading={loading}
             style={styles.resendButton}
           />
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <TouchableOpacity onPress={handleBackToLogin}>
             <Text style={styles.link}>Voltar para login</Text>
           </TouchableOpacity>
         </View>

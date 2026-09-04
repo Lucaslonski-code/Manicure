@@ -65,12 +65,23 @@ describe('authService', () => {
   describe('signIn', () => {
     it('deve autenticar com sucesso', async () => {
       (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
-        data: { user: { id: 'user-1' } },
+        data: { user: { id: 'user-1', email_confirmed_at: '2025-01-01T00:00:00Z' } },
         error: null,
       });
 
       const result = await signIn('maria@example.com', 'senha123');
       expect(result.success).toBe(true);
+    });
+
+    it('deve bloquear login quando e-mail nao esta confirmado', async () => {
+      (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
+        data: { user: { id: 'user-1', email_confirmed_at: null } },
+        error: null,
+      });
+
+      const result = await signIn('maria@example.com', 'senha123');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Confirme seu e-mail');
     });
 
     it('deve retornar erro com credenciais inválidas', async () => {

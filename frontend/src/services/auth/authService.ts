@@ -8,7 +8,7 @@ export interface AuthResult {
   userId?: string;
 }
 
-const AUTH_REDIRECT = 'appmanicure://auth/confirm';
+const AUTH_REDIRECT = process.env.EXPO_PUBLIC_EMAIL_CONFIRM_REDIRECT_URL || 'appmanicure://auth/confirm';
 
 // emailRedirectTo/redirectTo garantem que, após confirmar o e-mail ou
 // redefinir a senha, o usuário retorne ao aplicativo mobile via deep link
@@ -26,7 +26,7 @@ function getAuthError(message: string): string {
 
   // E-mail
   if (lower.includes('email not confirmed') || lower.includes('email_not_confirmed')) {
-    return 'Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada.';
+    return 'Login bloqueado. Confirme seu e-mail antes de acessar o aplicativo. Verifique sua caixa de entrada e clique no link de confirmação.';
   }
   if (lower.includes('user already registered') || lower.includes('user_already_exists')) {
     return 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.';
@@ -141,6 +141,11 @@ export async function signIn(email: string, password: string): Promise<AuthResul
     if (!data.user) {
       console.error('[AUTH_SERVICE] signIn returned user=null without error');
       return { success: false, error: 'Credenciais inválidas' };
+    }
+
+    if (!data.user.email_confirmed_at) {
+      console.warn('[AUTH_SERVICE] signIn BLOCKED — email not confirmed for user %s', data.user.id);
+      return { success: false, error: 'Login bloqueado. Confirme seu e-mail antes de acessar o aplicativo. Verifique sua caixa de entrada e clique no link de confirmação.' };
     }
 
     console.log('[AUTH_SERVICE] signIn SUCCESS — user_id=%s', data.user.id);

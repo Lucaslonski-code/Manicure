@@ -69,9 +69,7 @@ export default function HomeScreen({ navigation }: any) {
       {/* Header — logo + avatar */}
       <View style={styles.header}>
         <View style={styles.logoRow}>
-          <View style={styles.logoIcon}>
-            <AppIcon name="sparkles" size={20} color="gold" />
-          </View>
+          <Image source={require('../../../assets/icon.png')} style={styles.logoIcon} />
           <Text style={styles.logoText}>AppManicure</Text>
         </View>
         <TouchableOpacity
@@ -195,9 +193,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: radius.sm,
-    backgroundColor: colors.goldOverlay,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   logoText: {
     fontSize: 16,
