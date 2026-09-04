@@ -212,7 +212,18 @@ export function getAvailableSlots(
   if (effectiveWindows !== undefined) {
     if (effectiveWindows && effectiveWindows.length > 0) {
       windows = effectiveWindows
-        .map((ew) => buildWindowFromEffectiveWindow(ew))
+        .map((ew) => {
+          const win = buildWindowFromEffectiveWindow(ew);
+          if (!win || !breaks || !ew.window_id) return win;
+          const windowBreaks = breaks
+            .filter((brk) => brk.work_window_id === ew.window_id)
+            .sort((a, b) => a.sort_order - b.sort_order || a.start_time.localeCompare(b.start_time))
+            .map((brk) => ({
+              startMinutes: timeToMinutes(brk.start_time),
+              endMinutes: timeToMinutes(brk.end_time),
+            }));
+          return { ...win, breaks: windowBreaks };
+        })
         .filter((w): w is WorkWindowInternal => w !== null);
     }
   } else if (isNewWorkWindowSystem(availabilityOrSchedules)) {

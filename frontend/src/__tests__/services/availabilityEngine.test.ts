@@ -955,6 +955,138 @@ describe('availabilityEngine', () => {
   });
 
   // ==========================================================================
+  // EFFECTIVE WINDOW + BREAKS (the exact bug scenario)
+  // ==========================================================================
+
+  describe('EffectiveWindow + breaks: 08:00-18:00 with break 10:00-12:00', () => {
+    const windowId = 'w1';
+    const date = monday(2026, 9, 7);
+    const effective: EffectiveWindow[] = [{ window_id: windowId, start_time: '08:00', end_time: '18:00', is_off: false, source: 'work_window' }];
+    const breaks = [makeBreak({ work_window_id: windowId, start_time: '10:00', end_time: '12:00' })];
+
+    it('09:00 is available (before break)', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).toContain('09:00');
+    });
+
+    it('10:00 is NOT available (in break)', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).not.toContain('10:00');
+    });
+
+    it('11:00 is NOT available (in break)', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).not.toContain('11:00');
+    });
+
+    it('12:00 is available (after break)', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).toContain('12:00');
+    });
+
+    it('13:00 is available', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).toContain('13:00');
+    });
+
+    it('09:30 service crosses break boundary → NOT available', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).not.toContain('09:30');
+    });
+  });
+
+  describe('EffectiveWindow + breaks: 08:00-18:00 with two breaks', () => {
+    const windowId = 'w1';
+    const date = monday(2026, 9, 7);
+    const effective: EffectiveWindow[] = [{ window_id: windowId, start_time: '08:00', end_time: '18:00', is_off: false, source: 'work_window' }];
+    const breaks = [
+      makeBreak({ work_window_id: windowId, start_time: '10:00', end_time: '12:00', sort_order: 0 }),
+      makeBreak({ work_window_id: windowId, start_time: '15:00', end_time: '16:00', sort_order: 1 }),
+    ];
+
+    it('09:00 is available (first work period)', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).toContain('09:00');
+    });
+
+    it('10:00 is NOT available (first break)', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).not.toContain('10:00');
+    });
+
+    it('13:00 is available (between breaks)', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).toContain('13:00');
+    });
+
+    it('15:00 is NOT available (second break)', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).not.toContain('15:00');
+    });
+
+    it('16:00 is available (after second break)', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).toContain('16:00');
+    });
+  });
+
+  describe('EffectiveWindow + breaks: without breaks, all slots available', () => {
+    const windowId = 'w1';
+    const date = monday(2026, 9, 7);
+    const effective: EffectiveWindow[] = [{ window_id: windowId, start_time: '08:00', end_time: '18:00', is_off: false, source: 'work_window' }];
+
+    it('10:00 IS available when no breaks provided', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective);
+      expect(getTimes(slots)).toContain('10:00');
+    });
+  });
+
+  describe('EffectiveWindow + breaks + blocked + appointment', () => {
+    const windowId = 'w1';
+    const date = monday(2026, 9, 7);
+    const effective: EffectiveWindow[] = [{ window_id: windowId, start_time: '08:00', end_time: '18:00', is_off: false, source: 'work_window' }];
+    const breaks = [makeBreak({ work_window_id: windowId, start_time: '12:00', end_time: '13:00' })];
+    const blocked = [makeBlocked({ start_at: '2026-09-07T14:00:00', end_at: '2026-09-07T15:00:00' })];
+    const appt = makeAppointment({ start_at: '2026-09-07T09:00:00', end_at: '2026-09-07T10:00:00' });
+
+    it('09:00 NOT available (appointment)', () => {
+      const slots = getAvailableSlots(date, 60, [], blocked, [appt], undefined, effective, breaks);
+      expect(getTimes(slots)).not.toContain('09:00');
+    });
+
+    it('12:00 NOT available (break)', () => {
+      const slots = getAvailableSlots(date, 60, [], blocked, [appt], undefined, effective, breaks);
+      expect(getTimes(slots)).not.toContain('12:00');
+    });
+
+    it('14:00 NOT available (blocked)', () => {
+      const slots = getAvailableSlots(date, 60, [], blocked, [appt], undefined, effective, breaks);
+      expect(getTimes(slots)).not.toContain('14:00');
+    });
+
+    it('10:00 available (between appointment and break)', () => {
+      const slots = getAvailableSlots(date, 60, [], blocked, [appt], undefined, effective, breaks);
+      expect(getTimes(slots)).toContain('10:00');
+    });
+
+    it('15:00 available (after block)', () => {
+      const slots = getAvailableSlots(date, 60, [], blocked, [appt], undefined, effective, breaks);
+      expect(getTimes(slots)).toContain('15:00');
+    });
+  });
+
+  describe('EffectiveWindow + breaks: different window_id does not match', () => {
+    const date = monday(2026, 9, 7);
+    const effective: EffectiveWindow[] = [{ window_id: 'w1', start_time: '08:00', end_time: '18:00', is_off: false, source: 'work_window' }];
+    const breaks = [makeBreak({ work_window_id: 'w_OTHER', start_time: '10:00', end_time: '12:00' })];
+
+    it('10:00 IS available (break belongs to different window)', () => {
+      const slots = getAvailableSlots(date, 60, [], [], [], undefined, effective, breaks);
+      expect(getTimes(slots)).toContain('10:00');
+    });
+  });
+
+  // ==========================================================================
   // NOW FILTERING (past slots excluded for today)
   // ==========================================================================
 
