@@ -545,28 +545,17 @@ export async function deleteServiceImage(serviceId: string): Promise<void> {
   if (updateError) throw new Error(mapApiError(updateError));
 }
 
-export async function deleteCancelledAppointment(appointmentId: string): Promise<void> {
+export async function deleteAppointmentByClient(appointmentId: string): Promise<void> {
   const { error } = await supabase.rpc('delete_appointment_by_client', {
     p_appointment_id: appointmentId,
   });
   if (error) throw new Error(mapApiError(error));
 }
 
-export async function deleteCancelledAppointmentAdmin(appointmentId: string): Promise<void> {
-  const { data: appointment, error: fetchError } = await supabase
-    .from('appointments')
-    .select('status')
-    .eq('id', appointmentId)
-    .single();
-
-  if (fetchError || !appointment) throw new Error('Agendamento não encontrado');
-  if (appointment.status !== 'cancelled') throw new Error('Somente agendamentos cancelados podem ser excluídos');
-
-  const { error } = await supabase
-    .from('appointments')
-    .delete()
-    .eq('id', appointmentId);
-
+export async function deleteAppointmentByAdmin(appointmentId: string): Promise<void> {
+  const { error } = await supabase.rpc('delete_appointment_by_admin', {
+    p_appointment_id: appointmentId,
+  });
   if (error) throw new Error(mapApiError(error));
 }
 

@@ -7,6 +7,7 @@ import AccountDeletionScreen from '@screens/admin/AccountDeletionScreen';
 import AvailabilityScreen from '@screens/admin/AvailabilityScreen';
 import BlockedTimesScreen from '@screens/admin/BlockedTimesScreen';
 import AppointmentDetailsScreen from '@screens/admin/AppointmentDetailsScreen';
+import FilteredAppointmentsScreen from '@screens/admin/FilteredAppointmentsScreen';
 import AdminProfessionalsScreen from '@screens/admin/AdminProfessionalsScreen';
 import AdminServicesScreen from '@screens/admin/AdminServicesScreen';
 import ScheduleCustomizationScreen from '@screens/admin/ScheduleCustomizationScreen';
@@ -22,6 +23,9 @@ export type AdminStackParamList = {
   Availability: undefined;
   BlockedTimes: undefined;
   AppointmentDetails: { appointmentId: string };
+  FilteredAppointments: { filter: 'today' | 'confirmed' | 'cancelled' | 'upcoming' };
+  PanelFilteredAppointments: { filter: 'today' | 'confirmed' | 'cancelled' | 'upcoming' };
+  PanelAppointmentDetails: { appointmentId: string };
   AdminProfessionals: undefined;
   AdminServices: undefined;
   ScheduleCustomization: undefined;
@@ -42,6 +46,9 @@ export default function AdminStack() {
       <Stack.Screen name="Availability" component={AvailabilityScreen} />
       <Stack.Screen name="BlockedTimes" component={BlockedTimesScreen} />
       <Stack.Screen name="AppointmentDetails" component={AppointmentDetailsScreen} />
+      <Stack.Screen name="FilteredAppointments" component={FilteredAppointmentsScreen} />
+      <Stack.Screen name="PanelFilteredAppointments" component={FilteredAppointmentsScreen} />
+      <Stack.Screen name="PanelAppointmentDetails" component={AppointmentDetailsScreen} />
       <Stack.Screen name="AdminProfessionals" component={AdminProfessionalsScreen} />
       <Stack.Screen name="AdminServices" component={AdminServicesScreen} />
       <Stack.Screen name="ScheduleCustomization" component={ScheduleCustomizationScreen} />

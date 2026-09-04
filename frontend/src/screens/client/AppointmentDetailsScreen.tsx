@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useAppointment, useBooking, useProfessionals, useServices } from '@hooks';
+import { useAppointment, useBooking, useProfessionals, useServices, useDeleteAppointment } from '@hooks';
 import { colors, spacing, typography, radius, elevation, iconSizes } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import Button from '@components/base/Button';
@@ -17,9 +17,11 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
   const { appointmentId } = route.params;
   const { appointment, loading, refetch } = useAppointment(appointmentId);
   const { cancel, loading: cancelLoading } = useBooking();
+  const { remove: removeAppointment, loading: deleteLoading } = useDeleteAppointment();
   const { professionals } = useProfessionals();
   const { services } = useServices();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const professional = appointment ? professionals.find((p) => p.id === appointment.professional_id) : null;
   const service = appointment ? services.find((s) => s.id === appointment.service_id) : null;
@@ -31,6 +33,16 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
       refetch();
     } catch {
       setShowCancelDialog(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await removeAppointment(appointmentId);
+      setShowDeleteDialog(false);
+      navigation.goBack();
+    } catch {
+      setShowDeleteDialog(false);
     }
   };
 
@@ -77,6 +89,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
   };
   const status = statusMap[appointment.status] || { label: appointment.status, variant: 'default' };
   const isConfirmed = appointment.status === 'confirmed';
+  const isCancelled = appointment.status === 'cancelled';
 
   return (
     <ScrollView
@@ -200,7 +213,14 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
       {/* Actions */}
       <View style={styles.actions}>
         {isConfirmed && (
-          <DangerButton title="Cancelar agendamento" onPress={() => setShowCancelDialog(true)} disabled={cancelLoading} />
+          <>
+            <DangerButton title="Cancelar agendamento" onPress={() => setShowCancelDialog(true)} disabled={cancelLoading} />
+            <View style={{ height: 12 }} />
+            <Button title={deleteLoading ? 'Excluindo...' : 'Excluir agendamento'} onPress={() => setShowDeleteDialog(true)} disabled={deleteLoading} />
+          </>
+        )}
+        {isCancelled && (
+          <Button title={deleteLoading ? 'Excluindo...' : 'Excluir agendamento'} onPress={() => setShowDeleteDialog(true)} disabled={deleteLoading} />
         )}
       </View>
 
@@ -211,6 +231,16 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
         confirmLabel="Cancelar agendamento"
         onConfirm={handleCancel}
         onCancel={() => setShowCancelDialog(false)}
+        destructive
+      />
+
+      <ConfirmationDialog
+        visible={showDeleteDialog}
+        title="Excluir agendamento"
+        message="Tem certeza que deseja excluir permanentemente este agendamento? Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteDialog(false)}
         destructive
       />
     </ScrollView>

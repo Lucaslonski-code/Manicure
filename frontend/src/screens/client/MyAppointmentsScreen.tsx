@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useFocusEffect } from '@react-navigation/native';
-import { useMyAppointments, useProfessionals, useDeleteCancelledAppointment } from '@hooks';
+import { useMyAppointments, useProfessionals, useDeleteAppointment } from '@hooks';
 import type { Appointment } from '../../supabase/types';
 import { colors, spacing, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
@@ -19,7 +19,7 @@ export default function MyAppointmentsScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const { appointments, loading, error, refetch } = useMyAppointments();
   const { professionals } = useProfessionals();
-  const { remove } = useDeleteCancelledAppointment();
+  const { remove } = useDeleteAppointment();
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   useFocusEffect(
@@ -67,7 +67,7 @@ export default function MyAppointmentsScreen({ navigation }: any) {
 
   const renderAppointment = ({ item }: { item: Appointment }) => {
     const s = statusMap[item.status] || { label: item.status, variant: 'default' as const };
-    const isCancelled = item.status === 'cancelled';
+    const isDeletable = item.status !== 'completed';
     return (
       <TouchableOpacity
         style={styles.card}
@@ -75,7 +75,7 @@ export default function MyAppointmentsScreen({ navigation }: any) {
         activeOpacity={0.7}
       >
         <View style={styles.cardIcon}>
-          <AppIcon name={isCancelled ? 'close' : 'calendar'} size={20} color={isCancelled ? 'error' : 'gold'} />
+          <AppIcon name={isDeletable ? 'close' : 'calendar'} size={20} color={isDeletable ? 'error' : 'gold'} />
         </View>
         <View style={styles.cardContent}>
           <Text style={styles.professional} numberOfLines={1}>{getProfessionalName(item.professional_id)}</Text>
@@ -83,12 +83,12 @@ export default function MyAppointmentsScreen({ navigation }: any) {
         </View>
         <View style={styles.cardActions}>
           <StatusBadge label={s.label} variant={s.variant} />
-          {isCancelled && (
+          {isDeletable && (
             <TouchableOpacity
               style={styles.trashButton}
               onPress={() => setDeleteTarget(item.id)}
               activeOpacity={0.6}
-              accessibilityLabel="Excluir agendamento cancelado"
+              accessibilityLabel="Excluir agendamento"
             >
               <AppIcon name="delete" size={18} color="error" />
             </TouchableOpacity>
@@ -151,7 +151,7 @@ export default function MyAppointmentsScreen({ navigation }: any) {
       <ConfirmationDialog
         visible={!!deleteTarget}
         title="Excluir agendamento"
-        message="Tem certeza que deseja excluir este agendamento cancelado? Esta ação não pode ser desfeita."
+        message="Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita."
         confirmLabel="Excluir"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}

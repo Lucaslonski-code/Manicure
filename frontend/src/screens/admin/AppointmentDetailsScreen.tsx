@@ -160,6 +160,8 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
         {isOwner && appointment.status === 'confirmed' && (
           <View style={styles.actions}>
             <DangerButton title="Cancelar agendamento" onPress={() => setShowCancelDialog(true)} />
+            <View style={{ height: 12 }} />
+            <DangerButton title="Excluir agendamento" onPress={() => setShowDeleteDialog(true)} />
           </View>
         )}
 
@@ -195,7 +197,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
       <ConfirmationDialog
         visible={showDeleteDialog}
         title="Excluir agendamento"
-        message="Tem certeza que deseja excluir permanentemente este agendamento cancelado?"
+        message="Tem certeza que deseja excluir permanentemente este agendamento? Esta ação não pode ser desfeita."
         confirmLabel="Excluir"
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteDialog(false)}
