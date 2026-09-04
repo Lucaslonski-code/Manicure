@@ -53,4 +53,8 @@ export interface AuthClient {
     error: { message: string } | null;
   }>;
   initialize(): Promise<{ error: { message: string } | null }>;
+  exchangeCodeForSession(code: string): Promise<{
+    data: { session: Session | null; user: User | null };
+    error: { message: string } | null;
+  }>;
 }

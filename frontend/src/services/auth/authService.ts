@@ -189,7 +189,11 @@ export async function resetPassword(email: string): Promise<AuthResult> {
 export async function resendConfirmation(email: string): Promise<AuthResult> {
   try {
     console.log('[AUTH_SERVICE] resendConfirmation called — email_len=%d', email.length);
-    const { data, error } = await supabase.auth.resend({ type: 'signup', email });
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: AUTH_REDIRECT },
+    });
 
     console.log('[AUTH_SERVICE] resendConfirmation response — error=%s data=%s',
       error ? `${error.status || 'no-status'}/${error.message}` : 'null',

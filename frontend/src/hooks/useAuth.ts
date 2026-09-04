@@ -185,6 +185,27 @@ export function useAuth(): AuthState & {
 
     const processDeepLink = async (url: string | null) => {
       if (!url || !isMounted) return;
+
+      // Fluxo PKCE: Supabase redireciona com ?code=... (email confirmation, password recovery)
+      const codeMatch = url.match(/[?&]code=([^&#]+)/);
+      if (codeMatch && codeMatch[1]) {
+        try {
+          console.log('[USE_AUTH] processDeepLink — PKCE code detected');
+          const lowerUrl = url.toLowerCase();
+          if (lowerUrl.includes('recovery') || lowerUrl.includes('new_password') || lowerUrl.includes('reset')) {
+            setRecoveryMode(true);
+          }
+          const { error } = await authClient.exchangeCodeForSession(codeMatch[1]);
+          if (error) {
+            console.error('[USE_AUTH] exchangeCodeForSession error:', error);
+          }
+        } catch (err) {
+          console.error('[USE_AUTH] exchangeCodeForSession exception:', err);
+        }
+        return;
+      }
+
+      // Fluxo implícito: tokens no hash (#access_token=...&refresh_token=...)
       const tokens = extractTokensFromUrl(url);
       if (tokens.access_token && tokens.refresh_token) {
         try {

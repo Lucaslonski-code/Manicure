@@ -4,7 +4,7 @@
  *  - Item 2: Confirmação de e-mail obrigatória antes do login
  */
 
-import { signIn, signUp } from '@services/auth/authService';
+import { signIn, signUp, resendConfirmation } from '@services/auth/authService';
 import { resolveRootState } from '@navigation/RootNavigator';
 import type { Profile } from '../../supabase/types';
 import * as fs from 'fs';
@@ -356,6 +356,200 @@ describe('Item 2 — Confirmação de e-mail', () => {
       );
       expect(envSource).toContain('EXPO_PUBLIC_EMAIL_CONFIRM_REDIRECT_URL');
       expect(envSource).toContain('appmanicure://auth/confirm');
+    });
+
+    it('AUTH_REDIRECT usa variavel de ambiente com fallback', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '../../services/auth/authService.ts'),
+        'utf-8',
+      );
+      expect(source).toContain("process.env.EXPO_PUBLIC_EMAIL_CONFIRM_REDIRECT_URL || 'appmanicure://auth/confirm'");
+    });
+  });
+
+  describe('resendConfirmation — redirect configurado', () => {
+    it('resendConfirmation passa emailRedirectTo com AUTH_REDIRECT', async () => {
+      (supabase.auth.resend as jest.Mock).mockResolvedValue({ error: null });
+
+      const result = await resendConfirmation('maria@example.com');
+      expect(result.success).toBe(true);
+      expect(supabase.auth.resend).toHaveBeenCalledWith({
+        type: 'signup',
+        email: 'maria@example.com',
+        options: { emailRedirectTo: 'appmanicure://auth/confirm' },
+      });
+    });
+  });
+
+  describe('Deep link — processamento PKCE (code param)', () => {
+    it('useAuth.ts contem extractTokensFromUrl que parseia hash e query', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '../../hooks/useAuth.ts'),
+        'utf-8',
+      );
+      expect(source).toContain('extractTokensFromUrl');
+      expect(source).toContain('hashIndex');
+      expect(source).toContain('queryIndex');
+    });
+
+    it('useAuth.ts processa PKCE code parameter via regex', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '../../hooks/useAuth.ts'),
+        'utf-8',
+      );
+      expect(source).toContain("url.match(/[?&]code=([^&#]+)/)");
+      expect(source).toContain('exchangeCodeForSession');
+    });
+
+    it('useAuth.ts processa tokens implicitos via setSession', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '../../hooks/useAuth.ts'),
+        'utf-8',
+      );
+      expect(source).toContain('access_token');
+      expect(source).toContain('refresh_token');
+      expect(source).toContain('authClient.setSession');
+    });
+
+    it('AuthClient type declara exchangeCodeForSession', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '../../types/auth.ts'),
+        'utf-8',
+      );
+      expect(source).toContain('exchangeCodeForSession(code: string)');
+    });
+
+    it('processDeepLink detecta recovery/new_password/reset e setRecoveryMode', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '../../hooks/useAuth.ts'),
+        'utf-8',
+      );
+      expect(source).toContain("lowerUrl.includes('recovery')");
+      expect(source).toContain("lowerUrl.includes('new_password')");
+      expect(source).toContain("lowerUrl.includes('reset')");
+      expect(source).toContain('setRecoveryMode(true)');
+    });
+  });
+
+  describe('Deep link — URL de confirmacao', () => {
+    it('URL de confirmacao PKCE tem formato correto', () => {
+      const url = 'appmanicure://auth/confirm?code=abc123&type=signup';
+      const codeMatch = url.match(/[?&]code=([^&#]+)/);
+      expect(codeMatch).not.toBeNull();
+      expect(codeMatch![1]).toBe('abc123');
+    });
+
+    it('URL de confirmacao implicita tem tokens no hash', () => {
+      const url = 'appmanicure://auth/confirm#access_token=xyz&refresh_token=abc&type=signup';
+      const hashIndex = url.indexOf('#');
+      expect(hashIndex).toBeGreaterThan(0);
+      const hash = url.substring(hashIndex + 1);
+      const params = new URLSearchParams(hash);
+      expect(params.get('access_token')).toBe('xyz');
+      expect(params.get('refresh_token')).toBe('abc');
+    });
+
+    it('URL de recovery PKCE contem code e recovery', () => {
+      const url = 'appmanicure://auth/confirm?code=recovery123&type=magiclink&recovery=true';
+      const codeMatch = url.match(/[?&]code=([^&#]+)/);
+      expect(codeMatch).not.toBeNull();
+      expect(codeMatch![1]).toBe('recovery123');
+      expect(url.toLowerCase()).toContain('recovery');
+    });
+
+    it('URL de confirmacao sem code nem tokens e ignorada', () => {
+      const url = 'appmanicure://auth/confirm';
+      const codeMatch = url.match(/[?&]code=([^&#]+)/);
+      expect(codeMatch).toBeNull();
+      const hashIndex = url.indexOf('#');
+      expect(hashIndex).toBe(-1);
+    });
+  });
+
+  describe('Fluxo completo — verificacao de integridade', () => {
+    it('signUp envia emailRedirectTo', async () => {
+      (supabase.auth.signUp as jest.Mock).mockResolvedValue({
+        data: { user: { id: 'user-1', email_confirmed_at: null } },
+        error: null,
+      });
+
+      const result = await signUp('Maria', 'maria@example.com', '11999999999', 'senha123');
+      expect(result.success).toBe(true);
+      const call = (supabase.auth.signUp as jest.Mock).mock.calls[0][0];
+      expect(call.options.emailRedirectTo).toBe('appmanicure://auth/confirm');
+    });
+
+    it('signIn bloqueia quando email nao confirmado', async () => {
+      (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
+        data: { user: { id: 'user-1', email_confirmed_at: null } },
+        error: null,
+      });
+
+      const result = await signIn('maria@example.com', 'senha123');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Confirme seu e-mail');
+    });
+
+    it('signIn permite quando email confirmado', async () => {
+      (supabase.auth.signInWithPassword as jest.Mock).mockResolvedValue({
+        data: { user: { id: 'user-1', email_confirmed_at: '2025-01-01T00:00:00Z' } },
+        error: null,
+      });
+
+      const result = await signIn('maria@example.com', 'senha123');
+      expect(result.success).toBe(true);
+    });
+
+    it('processDeepLink esta presente no bootstrap do useAuth', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '../../hooks/useAuth.ts'),
+        'utf-8',
+      );
+      expect(source).toContain('await processDeepLink(initialUrl)');
+      expect(source).toContain('linkingSubscription = Linking.addEventListener');
+    });
+
+    it('RootNavigator.mapeia appointment deep links', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '../../navigation/RootNavigator.tsx'),
+        'utf-8',
+      );
+      expect(source).toContain('appointment/:appointmentId');
+      expect(source).toContain('Linking.createURL');
+    });
+
+    it('app.json configura scheme para deep links', () => {
+      const appSource = fs.readFileSync(
+        path.join(__dirname, '../../../app.json'),
+        'utf-8',
+      );
+      expect(appSource).toContain('"scheme": "appmanicure"');
+    });
+  });
+
+  describe('Supabase client — configuracao auth', () => {
+    it('detectSessionInUrl desabilitado (React Native)', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '../../supabase/client.ts'),
+        'utf-8',
+      );
+      expect(source).toContain('detectSessionInUrl: false');
+    });
+
+    it('skipAutoInitialize habilitado (bootstrap manual)', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '../../supabase/client.ts'),
+        'utf-8',
+      );
+      expect(source).toContain('skipAutoInitialize: true');
+    });
+
+    it('persistSession habilitado', () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, '../../supabase/client.ts'),
+        'utf-8',
+      );
+      expect(source).toContain('persistSession: true');
     });
   });
 });

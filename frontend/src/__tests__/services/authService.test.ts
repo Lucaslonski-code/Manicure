@@ -128,12 +128,16 @@ describe('authService', () => {
   });
 
   describe('resendConfirmation', () => {
-    it('deve reenviar confirmação com sucesso', async () => {
+    it('deve reenviar confirmação com emailRedirectTo', async () => {
       (supabase.auth.resend as jest.Mock).mockResolvedValue({ error: null });
 
       const result = await resendConfirmation('maria@example.com');
       expect(result.success).toBe(true);
-      expect(supabase.auth.resend).toHaveBeenCalledWith({ type: 'signup', email: 'maria@example.com' });
+      expect(supabase.auth.resend).toHaveBeenCalledWith({
+        type: 'signup',
+        email: 'maria@example.com',
+        options: { emailRedirectTo: 'appmanicure://auth/confirm' },
+      });
     });
   });
 
