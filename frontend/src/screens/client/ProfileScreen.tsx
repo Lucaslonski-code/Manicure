@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuthContext } from '@hooks/AuthContext';
-import { useNotifications, useUpdateProfileAvatar } from '@hooks';
+import { useNotifications, useUpdateProfileAvatar, useUpdateProfile } from '@hooks';
 import { colors, spacing, radius, elevation } from '@theme';
 import AppIcon from '@components/icons/AppIcon';
 import DangerButton from '@components/base/DangerButton';
+import Button from '@components/base/Button';
 import Avatar from '@components/base/Avatar';
 
 function cacheBustUrl(url: string): string {
@@ -18,10 +19,14 @@ function cacheBustUrl(url: string): string {
 
 export default function ProfileScreen({ _navigation }: any) {
   const insets = useSafeAreaInsets();
-  const { profile, signOut } = useAuthContext();
+  const { profile, signOut, setProfile } = useAuthContext();
   const { permissionStatus, register, token } = useNotifications();
   const { updateAvatar, loading: avatarLoading } = useUpdateProfileAvatar();
+  const { update: updateProfileFn, loading: profileLoading } = useUpdateProfile();
   const [avatarUri, setAvatarUri] = useState<string | undefined>(profile?.avatar_url || undefined);
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState(profile?.name || '');
+  const [editPhone, setEditPhone] = useState(profile?.phone || '');
 
   const handleToggleNotifications = async () => {
     try {
@@ -76,6 +81,33 @@ export default function ProfileScreen({ _navigation }: any) {
     }
   };
 
+  const handleStartEdit = () => {
+    setEditName(profile?.name || '');
+    setEditPhone(profile?.phone || '');
+    setEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditing(false);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!profile?.id) return;
+    const trimmedName = editName.trim();
+    if (!trimmedName) {
+      Alert.alert('Erro', 'O nome nao pode estar vazio.');
+      return;
+    }
+    try {
+      await updateProfileFn(profile.id, { name: trimmedName, phone: editPhone.trim() });
+      setProfile({ ...profile, name: trimmedName, phone: editPhone.trim() });
+      setEditing(false);
+      Alert.alert('Sucesso', 'Perfil atualizado!');
+    } catch (err: any) {
+      Alert.alert('Erro', err?.message || 'Nao foi possivel atualizar o perfil.');
+    }
+  };
+
   const handleLogout = async () => {
     Alert.alert('Sair', 'Deseja realmente sair da conta?', [
       { text: 'Cancelar', style: 'cancel' },
@@ -112,14 +144,32 @@ export default function ProfileScreen({ _navigation }: any) {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Informações pessoais</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Informações pessoais</Text>
+          {!editing && (
+            <TouchableOpacity onPress={handleStartEdit} activeOpacity={0.7}>
+              <AppIcon name="edit" size={16} color="gold" />
+            </TouchableOpacity>
+          )}
+        </View>
         <View style={styles.card}>
           <View style={styles.row}>
             <View style={styles.labelRow}>
               <AppIcon name="person" size={16} color="gold" />
               <Text style={styles.label}>Nome</Text>
             </View>
-            <Text style={styles.value} numberOfLines={1}>{profile?.name || '—'}</Text>
+            {editing ? (
+              <TextInput
+                style={styles.input}
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="Seu nome"
+                placeholderTextColor={colors.disabled}
+                autoCapitalize="words"
+              />
+            ) : (
+              <Text style={styles.value} numberOfLines={1}>{profile?.name || '—'}</Text>
+            )}
           </View>
           <View style={styles.rowDivider} />
           <View style={styles.row}>
@@ -135,9 +185,33 @@ export default function ProfileScreen({ _navigation }: any) {
               <AppIcon name="phone" size={16} color="gold" />
               <Text style={styles.label}>Telefone</Text>
             </View>
-            <Text style={styles.value} numberOfLines={1}>{profile?.phone || '—'}</Text>
+            {editing ? (
+              <TextInput
+                style={styles.input}
+                value={editPhone}
+                onChangeText={setEditPhone}
+                placeholder="Telefone"
+                placeholderTextColor={colors.disabled}
+                keyboardType="phone-pad"
+              />
+            ) : (
+              <Text style={styles.value} numberOfLines={1}>{profile?.phone || '—'}</Text>
+            )}
           </View>
         </View>
+        {editing && (
+          <View style={styles.editActions}>
+            <Button
+              title={profileLoading ? 'Salvando...' : 'Salvar'}
+              onPress={handleSaveProfile}
+              disabled={profileLoading}
+              loading={profileLoading}
+            />
+            <TouchableOpacity onPress={handleCancelEdit} style={styles.cancelEditBtn} activeOpacity={0.7}>
+              <Text style={styles.cancelEditText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -219,13 +293,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: spacing.screenPadding,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   sectionTitle: {
     fontSize: 11,
     fontWeight: '500',
     letterSpacing: 0.3,
     textTransform: 'uppercase',
     color: colors.textSecondary,
-    marginBottom: 8,
   },
   card: {
     backgroundColor: colors.surface,
@@ -249,6 +328,32 @@ const styles = StyleSheet.create({
   label: { fontSize: 13, color: colors.textSecondary },
   value: { fontSize: 13, fontWeight: '500', color: colors.textPrimary, flexShrink: 1, textAlign: 'right', maxWidth: 160 },
   valueSm: { fontSize: 13, fontWeight: '500', color: colors.textPrimary },
+  input: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.textPrimary,
+    textAlign: 'right',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: colors.background,
+    maxWidth: 180,
+  },
+  editActions: {
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  cancelEditBtn: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  cancelEditText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
   logoutButton: {
     minHeight: 40,
     paddingVertical: spacing.sm,

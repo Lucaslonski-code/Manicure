@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase/client';
-import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, deleteCancelledAppointment, deleteCancelledAppointmentAdmin, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows, fetchAllBreaksForProfessional, createServiceForProfessional, updateProfessionalService, updateServiceCatalog, deleteProfessionalService, updateServiceImage, deleteServiceImage } from '../services/api';
+import { fetchProfessionals, fetchProfessionalById, fetchServices, fetchProfessionalServices, fetchBlockedTimes, fetchAllBlockedTimes, createBlockedTime, updateBlockedTime, deleteBlockedTime, fetchAppointments, fetchMyAppointments, fetchAppointmentById, createAppointment, cancelAppointment, rescheduleAppointment, cancelAppointmentByAdmin, deleteAppointment, fetchBusinessSettings, fetchNotifications, editAppointmentByClient, updateProfileAvatar, updateProfile, deleteCancelledAppointment, deleteCancelledAppointmentAdmin, fetchScheduleOverrides, upsertScheduleOverride, deleteScheduleOverride, fetchWorkWindows, upsertWorkWindows, fetchEffectiveWindows, fetchProfessionalScheduleData, fetchAllWorkWindows, fetchAllBreaksForProfessional, createServiceForProfessional, updateProfessionalService, updateServiceCatalog, deleteProfessionalService, updateServiceImage, deleteServiceImage } from '../services/api';
 import type { Professional, Service, ProfessionalService, BlockedTime, Appointment, BusinessSettings, Notification, WorkWindow, WorkWindowInput, EffectiveWindow, ProfessionalScheduleData, ScheduleBreak } from '../supabase/types';
 import { useNotifications } from './useNotifications';
 import { useAuth } from './useAuth';
@@ -654,6 +654,26 @@ export function useUpdateProfileAvatar() {
   }, []);
 
   return { updateAvatar, loading, error };
+}
+
+export function useUpdateProfile() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const update = useCallback(async (userId: string, updates: { name?: string; phone?: string }) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await updateProfile(userId, updates);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { update, loading, error };
 }
 
 // ============================================================================

@@ -23,7 +23,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
   const { cancelByAdmin, removeCancelledByAdmin } = useBooking();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [clientInfo, setClientInfo] = useState<{ full_name?: string; phone?: string; email?: string } | null>(null);
+  const [clientInfo, setClientInfo] = useState<{ name?: string; phone?: string; email?: string } | null>(null);
 
   const professional = appointment ? professionals.find((p) => p.id === appointment.professional_id) : null;
   const service = appointment ? services.find((s) => s.id === appointment.service_id) : null;
@@ -115,7 +115,7 @@ export default function AppointmentDetailsScreen({ route, navigation }: any) {
               <View style={styles.divider} />
               <View style={styles.noteSection}>
                 <Text style={styles.label}>Cliente</Text>
-                <Text style={styles.value}>{clientInfo.full_name || 'Nao informado'}</Text>
+                <Text style={styles.value}>{clientInfo.name || 'Nao informado'}</Text>
               </View>
               {clientInfo.phone && (
                 <>

@@ -80,6 +80,7 @@ describe('LoginScreen forensic validation', () => {
       resetPassword: jest.fn(),
       updatePassword: jest.fn(),
       resend: jest.fn(),
+      setProfile: jest.fn(),
     });
   });
 
@@ -110,6 +111,7 @@ describe('LoginScreen forensic validation', () => {
       resetPassword: jest.fn(),
       updatePassword: jest.fn(),
       resend: jest.fn(),
+      setProfile: jest.fn(),
     });
 
     const element = React.createElement(LoginScreen, { navigation: mockNavigation });
@@ -158,6 +160,7 @@ describe('LoginScreen offline resilience', () => {
       resetPassword: jest.fn(),
       updatePassword: jest.fn(),
       resend: jest.fn(),
+      setProfile: jest.fn(),
     });
   });
 
@@ -197,6 +200,7 @@ describe('LoginScreen public navigation paths', () => {
       resetPassword: jest.fn(),
       updatePassword: jest.fn(),
       resend: jest.fn(),
+      setProfile: jest.fn(),
     });
   });
 

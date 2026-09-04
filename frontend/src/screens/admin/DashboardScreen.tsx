@@ -76,22 +76,22 @@ export default function DashboardScreen({ navigation }: any) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
+          <TouchableOpacity style={styles.statCard} onPress={() => navigation.navigate('PanelFilteredAppointments', { filter: 'today' })} activeOpacity={0.7}>
             <Text style={styles.statValue}>{todayAppointments.length}</Text>
             <Text style={styles.statLabel}>Hoje</Text>
-          </View>
-          <View style={styles.statCard}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statCard} onPress={() => navigation.navigate('PanelFilteredAppointments', { filter: 'confirmed' })} activeOpacity={0.7}>
             <Text style={styles.statValue}>{confirmed}</Text>
             <Text style={styles.statLabel}>Confirmados</Text>
-          </View>
-          <View style={styles.statCard}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statCard} onPress={() => navigation.navigate('PanelFilteredAppointments', { filter: 'cancelled' })} activeOpacity={0.7}>
             <Text style={[styles.statValue, { color: colors.error }]}>{cancelled}</Text>
             <Text style={styles.statLabel}>Cancelados</Text>
-          </View>
-          <View style={styles.statCard}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statCard} onPress={() => navigation.navigate('PanelFilteredAppointments', { filter: 'upcoming' })} activeOpacity={0.7}>
             <Text style={styles.statValue}>{upcoming}</Text>
             <Text style={styles.statLabel}>Proximos</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>

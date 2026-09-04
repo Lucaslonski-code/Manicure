@@ -11,6 +11,7 @@ type AuthContextValue = AuthState & {
   resend: (email: string) => Promise<void>;
   recoveryMode: boolean;
   profileError: string;
+  setProfile: React.Dispatch<React.SetStateAction<import('../supabase/types').Profile | null>>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);

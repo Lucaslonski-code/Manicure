@@ -43,6 +43,7 @@ export function useAuth(): AuthState & {
   resend: (email: string) => Promise<void>;
   recoveryMode: boolean;
   profileError: string;
+  setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
 } {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -366,7 +367,7 @@ const { data: { subscription } }: { data: { subscription: Subscription } } = aut
 
   const typedSession = useMemo(() => session ? { user: session.user } : null, [session]);
 
-  return useMemo(() => ({ session: typedSession, profile, loading, isEmailVerified, recoveryMode, profileError, isProfessional, professionalId, signUp, signIn, signOut, resetPassword, updatePassword, resend }), [
-    typedSession, profile, loading, isEmailVerified, recoveryMode, profileError, isProfessional, professionalId, signUp, signIn, signOut, resetPassword, updatePassword, resend
+  return useMemo(() => ({ session: typedSession, profile, loading, isEmailVerified, recoveryMode, profileError, isProfessional, professionalId, signUp, signIn, signOut, resetPassword, updatePassword, resend, setProfile }), [
+    typedSession, profile, loading, isEmailVerified, recoveryMode, profileError, isProfessional, professionalId, signUp, signIn, signOut, resetPassword, updatePassword, resend, setProfile
   ]);
 }

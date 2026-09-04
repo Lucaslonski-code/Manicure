@@ -475,6 +475,15 @@ export async function updateProfileAvatar(userId: string, imageUri: string): Pro
   return publicUrl;
 }
 
+export async function updateProfile(userId: string, updates: { name?: string; phone?: string }): Promise<void> {
+  const { error } = await supabase
+    .from('users')
+    .update(updates)
+    .eq('id', userId);
+
+  if (error) throw new Error(mapApiError(error));
+}
+
 export async function updateServiceImage(serviceId: string, imageUri: string): Promise<string> {
   const ext = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
   const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
@@ -537,25 +546,9 @@ export async function deleteServiceImage(serviceId: string): Promise<void> {
 }
 
 export async function deleteCancelledAppointment(appointmentId: string): Promise<void> {
-  const session = await supabase.auth.getSession();
-  const userId = session.data.session?.user.id;
-  if (!userId) throw new Error('Não autenticado');
-
-  const { data: appointment, error: fetchError } = await supabase
-    .from('appointments')
-    .select('status, client_user_id')
-    .eq('id', appointmentId)
-    .single();
-
-  if (fetchError || !appointment) throw new Error('Agendamento não encontrado');
-  if (appointment.client_user_id !== userId) throw new Error('Acesso negado');
-  if (appointment.status !== 'cancelled') throw new Error('Somente agendamentos cancelados podem ser excluídos');
-
-  const { error } = await supabase
-    .from('appointments')
-    .delete()
-    .eq('id', appointmentId);
-
+  const { error } = await supabase.rpc('delete_appointment_by_client', {
+    p_appointment_id: appointmentId,
+  });
   if (error) throw new Error(mapApiError(error));
 }
 
@@ -749,10 +742,10 @@ export async function cleanupOldAppointments(): Promise<number> {
 // Fetch client info for appointment details
 // ============================================================================
 
-export async function fetchUserById(userId: string): Promise<{ full_name?: string; phone?: string; email?: string } | null> {
+export async function fetchUserById(userId: string): Promise<{ name?: string; phone?: string; email?: string } | null> {
   const { data, error } = await supabase
     .from('users')
-    .select('full_name, phone, email')
+    .select('name, phone, email')
     .eq('id', userId)
     .single();
 
